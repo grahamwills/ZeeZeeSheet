@@ -22,28 +22,6 @@ class Directive(Dict):
         pairs = {tuple(p.split("=")) for p in parts[1:]}
         super().__init__(pairs)
 
-
-class Context():
-    output_file : str
-    canvas: Canvas
-    page_width: int
-    page_height: int
-    styles: Dict[str, Any]
-    debug: bool
-
-    def __init__(self, output_file, styles: Dict, debug: bool = False) -> None:
-        pagesize = letter
-        self.canvas = Canvas(output_file, pagesize=pagesize)
-        self.page_width = int(pagesize[0])
-        self.page_height = int(pagesize[1])
-        self.styles = styles
-        self.debug = debug
-
-    def finish(self):
-        self.canvas.showPage()
-        self.canvas.save()
-
-
 class Margins(NamedTuple):
     left: int
     right: int

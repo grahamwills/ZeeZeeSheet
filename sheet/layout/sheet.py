@@ -1,16 +1,17 @@
 from __future__ import annotations
 from typing import Tuple, Union
 
-from common import Context, Margins, Rect, configured_logger
+from common import  Margins, Rect, configured_logger
 from layout.block import BlockLayout
 from model import Block, Section, Sheet
+from pdf import PDF
 from render import EmptyPlacedContent, PlacedContent
 
 LOGGER = configured_logger(__name__)
 
 
 class Placement:
-    context: Context
+    context: PDF
     target: Union[Sheet, Section, Block]
     children: Tuple[Placement]
     content_method: str
@@ -19,7 +20,7 @@ class Placement:
     # Placed
     placed_content: PlacedContent
 
-    def __init__(self, target: Union[Sheet, Section, Block], context: Context):
+    def __init__(self, target: Union[Sheet, Section, Block], context: PDF):
         self.context = context
         self.padding = target.padding
         self.target = target
@@ -65,7 +66,7 @@ class Placement:
 
     def draw(self):
         if self.placed_content:
-            self.placed_content.draw(self.context.canvas, debug=self.context.debug)
+            self.placed_content.draw(self.context, debug=self.context.debug)
         for c in self.children:
             c.draw()
 
@@ -79,7 +80,7 @@ def dump(placed: Placement, indent=0):
             dump(i, indent + 1)
 
 
-def layout_sheet(sheet:Sheet, context:Context):
+def layout_sheet(sheet:Sheet, context:PDF):
     M = sheet.margin
     outer = Rect(left=0, top=0, right=context.page_width, bottom=context.page_height) - Margins(M, M, M, M)
     placement = Placement(sheet, context)

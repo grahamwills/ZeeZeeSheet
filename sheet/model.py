@@ -7,7 +7,7 @@ from typing import Dict, List, OrderedDict, Tuple
 
 from colour import Color
 
-from common import Context
+from pdf import PDF
 
 BLACK = Color('black')
 
@@ -60,7 +60,7 @@ class Element:
         else:
             return self.value
 
-    def resolve_style(self, context: Context) -> Style:
+    def resolve_style(self, context: PDF) -> Style:
         return context.styles[self.style or 'default']
 
     def replace_style(self, style: str):

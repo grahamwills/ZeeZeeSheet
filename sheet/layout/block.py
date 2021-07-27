@@ -4,8 +4,9 @@ from typing import Callable, NamedTuple, Optional
 
 from reportlab.platypus import Paragraph, Table, TableStyle
 
-from common import Context, Directive, Margins, Rect
+from common import Directive, Margins, Rect
 from model import Block, Run
+from pdf import PDF
 from render import EmptyPlacedContent, PlacedContent, PlacedGroup, PlacedParagraph, PlacedRect, as_one_line, \
     descender, \
     run_to_html
@@ -17,26 +18,26 @@ class BorderDetails(NamedTuple):
 
 
 # Creates insets for the next step and placed items to be drawn
-BorderPreLayout = Callable[[Block, Rect, str, Context], BorderDetails]
+BorderPreLayout = Callable[[Block, Rect, str, PDF], BorderDetails]
 
 # Creates placed items to be drawn as the final border
-BorderPostLayout = Callable[[Block, Rect, str, Context], Optional[PlacedContent]]
+BorderPostLayout = Callable[[Block, Rect, str, PDF], Optional[PlacedContent]]
 
 # Creates placed items to be drawn in the main section
-ContentLayout = Callable[[Block, Rect, Context], Optional[PlacedContent]]
+ContentLayout = Callable[[Block, Rect, PDF], Optional[PlacedContent]]
 
 
 class BlockLayout:
     block: Block
     bounds: Rect
     title_style: str
-    context: Context
+    context: PDF
 
     pre_layout: BorderPreLayout
     content_layout: ContentLayout
     post_layout: BorderPostLayout
 
-    def __init__(self, block: Block, bounds: Rect, context: Context):
+    def __init__(self, block: Block, bounds: Rect, context: PDF):
         self.context = context
         self.bounds = bounds
         self.block = block
@@ -71,12 +72,12 @@ class BlockLayout:
         return PlacedGroup(items)
 
 
-def paragraph_layout(block: Block, bounds: Rect, context: Context) -> PlacedContent:
+def paragraph_layout(block: Block, bounds: Rect, context: PDF) -> PlacedContent:
     results = []
     b = bounds
     for item in block.content:
         p = Paragraph(run_to_html(item, context))
-        w, h = p.wrapOn(context.canvas, b.width, b.height)
+        w, h = p.wrapOn(context, b.width, b.height)
         dh = max(0, w - b.width)
         dv = max(0, h - b.height)
         if dh > 0 or dv > 0:
@@ -96,7 +97,7 @@ def paragraph_layout(block: Block, bounds: Rect, context: Context) -> PlacedCont
         return PlacedGroup(results)
 
 
-def table_layout(block: Block, bounds: Rect, context: Context) -> PlacedContent:
+def table_layout(block: Block, bounds: Rect, context: PDF) -> PlacedContent:
     cells = []
     for run in block.content:
         row = []
@@ -118,11 +119,11 @@ def table_layout(block: Block, bounds: Rect, context: Context) -> PlacedContent:
     table = Table(cells)
 
     table.setStyle(TableStyle(commands))
-    w, h = table.wrapOn(context.canvas, bounds.width, 1000)
+    w, h = table.wrapOn(context, bounds.width, 1000)
     return PlacedParagraph(bounds.resize(width=w, height=h), table)
 
 
-def banner_pre_layout(block: Block, bounds: Rect, style_name: str, context: Context) -> BorderDetails:
+def banner_pre_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> BorderDetails:
     style = context.styles[style_name]
     if style.has_border():
         line_width = int(style.borderWidth)
@@ -155,7 +156,7 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, context: Cont
     return BorderDetails(group, margins)
 
 
-def banner_post_layout(block: Block, bounds: Rect, style_name: str, context: Context) -> Optional[PlacedContent]:
+def banner_post_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> Optional[PlacedContent]:
     style = context.styles[style_name]
     if style.has_border():
         return PlacedRect(bounds, style, fill=0, stroke=1)
@@ -163,11 +164,11 @@ def banner_post_layout(block: Block, bounds: Rect, style_name: str, context: Con
         return None
 
 
-def no_pre_layout(block: Block, bounds: Rect, style_name: str, context: Context) -> BorderDetails:
+def no_pre_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> BorderDetails:
     return BorderDetails(None, Margins.simple(0))
 
 
-def no_post_layout(block: Block, bounds: Rect, style_name: str, context: Context) -> Optional[PlacedContent]:
+def no_post_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> Optional[PlacedContent]:
     return None
 
 

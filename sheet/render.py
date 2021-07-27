@@ -7,8 +7,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Paragraph, Table, TableStyle
 
-from common import Context, Margins, Rect
+from common import Margins, Rect
 from model import Element, ElementType, Run, Style
+from pdf import PDF
 
 
 def y(canvas: Canvas, y):
@@ -99,7 +100,7 @@ class PlacedRect(PlacedContent):
             rect(canvas, self.bounds, fill=fill, stroke=stroke)
 
 
-def element_to_html(e: Element, context: Context):
+def element_to_html(e: Element, context: PDF):
     if e.which == ElementType.TEXT:
         txt = e.value
         if e.modifiers:
@@ -117,15 +118,15 @@ def element_to_html(e: Element, context: Context):
         return str(e)
 
 
-def run_to_html(run: Run, context: Context):
+def run_to_html(run: Run, context: PDF):
     return "".join(element_to_html(e, context) for e in run.items)
 
 
-def as_one_line(run: Run, context: Context, width: int):
+def as_one_line(run: Run, context: PDF, width: int):
     if not any(e.which == ElementType.SPACER for e in run.items):
         # No spacers -- nice and simple
         p = run_to_para(run, context)
-        w, h = p.wrapOn(context.canvas, width, 1000)
+        w, h = p.wrapOn(context, width, 1000)
         return p, w, h
 
     # Make a one-row table
@@ -157,7 +158,7 @@ def as_one_line(run: Run, context: Context, width: int):
 
     table.setStyle(TableStyle(commands))
 
-    w, h = table.wrapOn(context.canvas, width, 1000)
+    w, h = table.wrapOn(context, width, 1000)
 
     return table, w, h
 
