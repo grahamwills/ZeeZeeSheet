@@ -123,7 +123,7 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF) -> 
         line_width = 0
 
     inset = line_width + block.padding
-    margins = Margins.simple(inset)
+    margins = Margins.all_equal(inset)
 
     placed = []
 
@@ -135,7 +135,7 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF) -> 
         title_bounds = title_bounds.resize(height=height)
 
         if style.background:
-            plaque = (bounds - Margins.simple(line_width)).resize(height=plaque_height)
+            plaque = (bounds - Margins.all_equal(line_width)).resize(height=plaque_height)
             placed.append(rect_content(plaque, style, fill=1, stroke=0))
 
         descent = pdf.descender(style)
@@ -157,7 +157,7 @@ def banner_post_layout(block: Block, bounds: Rect, style_name: str, context: PDF
 
 
 def no_pre_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> BorderDetails:
-    return BorderDetails(None, Margins.simple(0))
+    return BorderDetails(None, Margins.all_equal(0))
 
 
 def no_post_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> Optional[PlacedContent]:

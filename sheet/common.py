@@ -38,7 +38,7 @@ class Margins(NamedTuple):
         return "[l=%d, r=%d, t=%d, b=%d]" % self
 
     @classmethod
-    def simple(cls, size: int) -> Margins:
+    def all_equal(cls, size: int) -> Margins:
         return Margins(size, size, size, size)
 
 

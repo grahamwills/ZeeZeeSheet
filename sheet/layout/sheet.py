@@ -10,54 +10,34 @@ from render import PlacedContent, empty_content
 LOGGER = configured_logger(__name__)
 
 
-class Placement:
+class BlockPlacement:
     context: PDF
-    target: Union[Sheet, Section, Block]
-    children: List[Placement]
+    target: Block
     content_method: str
     border_method: str
 
     # Placed
     placed_content: PlacedContent
 
-    def __init__(self, target: Union[Sheet, Section, Block], context: PDF):
+    def __init__(self, target: Block, context: PDF):
         self.context = context
         self.padding = target.padding
         self.target = target
-        if isinstance(target, Block):
-            self.content_method = target.renderers[1]
-            if target.title:
-                self.border_method = target.renderers[0]
-            else:
-                self.border_method = 'none'
-            self.children = []
+        self.content_method = target.renderers[1]
+        if target.title:
+            self.border_method = target.renderers[0]
         else:
-            self.children = [Placement(item, context) for item in target.content]
-            self.content_method = 'none'
             self.border_method = 'none'
+        self.children = []
 
     def __str__(self):
-        if self.children:
-            return "§ items=%d" % len(self.children)
-        else:
-            return "§ content=%s" % self.target
+        return "§ content=%s" % self.target
 
     def place(self, bounds: Rect) -> Rect:
         self.placed_bounds = bounds
-        if self.children:
-            # Stack everything vertically
-            available = bounds
-            for child in self.children:
-                sub_area = child.place(available)
-                available = Rect(top=sub_area.bottom + self.target.padding,
-                                 left=available.left, right=available.right, bottom=available.bottom)
-            rect = Rect(top=bounds.top, left=bounds.left, right=bounds.right, bottom=available.top)
-            self.placed_content = empty_content(rect)
-        else:
-            layout = BlockLayout(self.target, bounds, self.context)
-            layout.set_methods(self.border_method, self.content_method)
-            self.placed_content = layout.layout()
-
+        layout = BlockLayout(self.target, bounds, self.context)
+        layout.set_methods(self.border_method, self.content_method)
+        self.placed_content = layout.layout()
         LOGGER.info("Placed %s: %s", self.target, self.placed_bounds)
         return self.placed_content.bounds if self.placed_content else None
 
@@ -70,19 +50,75 @@ class Placement:
         for c in self.children:
             c.draw()
 
+class SectionPlacement:
+    children: List[BlockPlacement]
+    padding: int
 
-def dump(placed: Placement, indent=0):
-    if not placed.children:
-        print("  " * indent + str(placed.target))
-    else:
-        print("  " * indent + str(placed))
-        for i in placed.children:
-            dump(i, indent + 1)
+    def __init__(self, target: Section, context: PDF):
+        self.padding = target.padding
+        self.children = [BlockPlacement(item, context) for item in target.content]
+
+    def __str__(self):
+        return "§ blocks=%d" % len(self.children)
+
+    def place(self, bounds: Rect) -> Rect:
+        self.placed_bounds = bounds
+        # Stack everything vertically
+        available = bounds
+        for child in self.children:
+            sub_area = child.place(available)
+            available = Rect(top=sub_area.bottom + self.padding,
+                             left=available.left, right=available.right, bottom=available.bottom)
+        rect = Rect(top=bounds.top, left=bounds.left, right=bounds.right, bottom=available.top)
+        self.placed_content = empty_content(rect)
+
+        LOGGER.info("Placed Section: %s", self.placed_bounds)
+        return self.placed_content.bounds if self.placed_content else None
+
+    def set_placed_bounds(self, bounds: Rect):
+        self.placed_bounds = bounds
+
+    def draw(self):
+        for c in self.children:
+            c.draw()
+
+class SheetPlacement:
+    children: List[SectionPlacement]
+    padding: int
+
+    def __init__(self, target: Sheet, context: PDF):
+        self.padding = target.padding
+        self.children = [SectionPlacement(item, context) for item in target.content]
+
+    def __str__(self):
+        return "Sheet sections=%d" % len(self.children)
+
+    def place(self, bounds: Rect) -> Rect:
+        self.placed_bounds = bounds
+        # Stack everything vertically
+        available = bounds
+        for child in self.children:
+            sub_area = child.place(available)
+            available = Rect(top=sub_area.bottom + self.padding,
+                             left=available.left, right=available.right, bottom=available.bottom)
+        rect = Rect(top=bounds.top, left=bounds.left, right=bounds.right, bottom=available.top)
+        self.placed_content = empty_content(rect)
+
+        LOGGER.info("Placed Sheet: %s", self.placed_bounds)
+        return self.placed_content.bounds if self.placed_content else None
+
+    def set_placed_bounds(self, bounds: Rect):
+        self.placed_bounds = bounds
+
+    def draw(self):
+        for c in self.children:
+            c.draw()
+
+
 
 
 def layout_sheet(sheet:Sheet, context:PDF):
-    M = sheet.margin
-    outer = Rect(left=0, top=0, right=context.page_width, bottom=context.page_height) - Margins(M, M, M, M)
-    placement = Placement(sheet, context)
+    outer = Rect(left=0, top=0, right=context.page_width, bottom=context.page_height) - Margins.all_equal(sheet.margin)
+    placement = SheetPlacement(sheet, context)
     placement.place(outer)
     placement.draw()
