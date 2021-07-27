@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List, Tuple, Union
 
+import common
 from common import  Margins, Rect, configured_logger
 from layout.block import BlockLayout
 from model import Block, Section, Sheet
@@ -15,7 +16,7 @@ class BlockPlacement:
     pdf: PDF
 
     # Placed
-    placed_content: PlacedContent
+    placed: PlacedContent
 
     def __init__(self, target: Block, context: PDF):
         self.pdf = context
@@ -27,14 +28,12 @@ class BlockPlacement:
 
     def place(self, bounds: Rect) -> Rect:
         layout = BlockLayout(self.target, bounds, self.pdf)
-        self.placed_content = layout.layout()
-        content_bounds = self.placed_content.bounds
-        LOGGER.info("Placed %s: %s", self.target, content_bounds)
-        return content_bounds
+        self.placed = layout.layout()
+        LOGGER.info("Placed %s: %s", self.target, self.placed.bounds)
+        return self.placed.bounds
 
     def draw(self):
-        if self.placed_content:
-            self.placed_content.draw(self.pdf)
+        self.placed.draw(self.pdf)
 
 
 def stack_vertically(bounds, children, padding):
@@ -47,6 +46,13 @@ def stack_vertically(bounds, children, padding):
     return Rect(top=bounds.top, left=bounds.left, right=bounds.right, bottom=available.top)
 
 
+def choose_method(method: common.Command):
+    if method.command == 'stack':
+        return stack_vertically
+    else:
+        raise ValueError("unknown layout method for section: '%s'" % method.command)
+
+
 class SectionPlacement:
     target: Union[Section, Sheet]
     children: List
@@ -55,12 +61,13 @@ class SectionPlacement:
     def __init__(self, target: Section, children:List):
         self.target = target
         self.children = children
+        self.method = choose_method(target.layout_method)
 
     def __str__(self):
         return "%s(%d children)" % (type(self.target).__name__, len(self.children))
 
     def place(self, bounds: Rect) -> Rect:
-        rect = stack_vertically(bounds, self.children, self.target.padding)
+        rect = self.method(bounds, self.children, self.target.padding)
         LOGGER.info("Placed %s: %s", self, rect)
         return rect
 

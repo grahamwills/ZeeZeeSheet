@@ -5,10 +5,36 @@ import logging
 import logging.config
 import os
 from collections import namedtuple
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, NamedTuple
+from typing import Dict, NamedTuple, Optional, Tuple
 
 import yaml
+
+@dataclass
+class Command:
+    tag: Optional[str]
+    command: str
+    options: Dict
+
+def parse_directive(txt: str) -> Command:
+    """ Converts a string into an optionally tagged command"""
+    colon_index = txt.find(':')
+    if colon_index < 0:
+        tag = None
+    else:
+        tag = txt[:colon_index].strip()
+        txt = txt[colon_index + 1:]
+    items = txt.strip().split()
+    command = items[0]
+    options = dict()
+    for o in items[1:]:
+        pair = o.split('=')
+        if len(pair) == 1:
+            options[pair[0]] = 'True'
+        else:
+            options[pair[0]] = pair[1]
+    return Command(tag, command, options)
 
 
 class Margins(NamedTuple):

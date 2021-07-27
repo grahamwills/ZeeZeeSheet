@@ -44,9 +44,9 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def __init__(self, document, sheet: Sheet):
         super().__init__(document)
-        self.section_layout_method = 'flow cols=1'
-        self.title_display_method = 'banner'
-        self.style = 'default'
+        self.section_layout_method = common.parse_directive('stack')
+        self.title_display_method = common.parse_directive('banner')
+        self.style = common.parse_directive('default')
         self.state = ReadState.READY
         self.sheet = sheet
 
@@ -60,21 +60,19 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         self.next_is_italic = False
 
     def visit_comment(self, node: docutils.nodes.comment) -> None:
-        txt = node.astext().split(':')
-        if len(txt) != 2:
-            raise ValueError("Bad comment directive: '%s'", node.astext())
-        command = txt[0].strip()
-        value = txt[1].strip()
-        if command == 'section':
-            self.section_layout_method = value
-        elif command == 'title':
-            self.title_display_method = value
-        elif command == 'style':
-            self.style = value
+        command = common.parse_directive(node.astext())
+        if not command.tag:
+            raise ValueError("Comment directive did not have a tag: '%s'", node.astext())
+        if command.tag == 'section':
+            self.section_layout_method = command
+        elif command.tag == 'title':
+            self.title_display_method = command
+        elif command.tag == 'style':
+            self.style = command.command
         else:
             raise ValueError("Unknown comment directive: '%s', line=%d", command, line_of(node))
 
-        LOGGER.info("Processed comment name='%s' value='%s'", command, value)
+        LOGGER.info("Processed comment '%s'", command)
         raise docutils.nodes.SkipChildren
 
     def visit_title(self, node: docutils.nodes.title) -> None:
@@ -181,6 +179,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
     def _ensure_section(self) -> Section:
         if not self.current_section:
             self.current_section = Section()
+            self.current_section.layout_method = self.section_layout_method
             self.sheet.content.append(self.current_section)
         return self.current_section
 

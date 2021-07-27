@@ -1,10 +1,11 @@
 """ Defines layout methods """
 from __future__ import annotations
 
-from typing import Callable, Dict, NamedTuple, Optional
+from typing import Callable, NamedTuple, Optional
 
 from reportlab.platypus import Table, TableStyle
 
+import common
 from common import Margins, Rect
 from model import Block, Run
 from pdf import PDF, as_one_line
@@ -25,15 +26,6 @@ BorderPostLayout = Callable[[Block, Rect, str, PDF], Optional[PlacedContent]]
 # Creates placed items to be drawn in the main section
 ContentLayout = Callable[[Block, Rect, PDF], Optional[PlacedContent]]
 
-class Directive(Dict):
-    name: str
-
-    def __init__(self, text: str):
-        parts = text.split()
-        self.name = parts[0].strip().lower()
-        pairs = {tuple(p.split("=")) for p in parts[1:]}
-        super().__init__(pairs)
-
 
 class BlockLayout:
     block: Block
@@ -51,17 +43,16 @@ class BlockLayout:
         self.block = block
         self.set_methods(block.title_method)
 
-    def set_methods(self, title_method: str):
-        title = Directive(title_method)
-        self.title_style = title.get('style', 'default')
-        if title.name == 'none':
+    def set_methods(self, title: common.Command):
+        self.title_style = title.options.get('style', 'default')
+        if title.command in {'hidden', 'none'}:
             self.pre_layout = no_pre_layout
             self.post_layout = no_post_layout
-        elif title.name == 'banner':
+        elif title.command == 'banner':
             self.pre_layout = banner_pre_layout
             self.post_layout = banner_post_layout
         else:
-            raise ValueError("unknown title method '%s'" % title_method)
+            raise ValueError("unknown title method '%s'" % title.command)
 
         # Just the one method so far
         if self.block.needs_table():

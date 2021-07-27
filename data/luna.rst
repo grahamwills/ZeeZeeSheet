@@ -1,5 +1,5 @@
 .. section: stack columns=4
-.. title: none
+.. title: hidden
 .. style: title
 
 Lunathien Calenmaethor

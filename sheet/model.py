@@ -7,6 +7,8 @@ from typing import Dict, List, OrderedDict, Tuple
 
 from colour import Color
 
+import common
+
 BLACK = Color('black')
 
 
@@ -127,25 +129,26 @@ class Block:
 @dataclass
 class Section:
     content: List[Block] = field(default_factory=list)
-    layout_spec: str = 'columns=1'
+    layout_method: str = None
     padding: int = 4
 
     def add_block(self, block: Block):
         self.content.append(block)
 
     def print(self):
-        print("  Section layout_spec='%s', padding=%d" % (self.layout_spec, self.padding))
+        print("  " + str(self))
         for b in self.content:
             b.print()
 
     def __str__(self):
-        return "Section(%d blocks, layout='%s'" % (len(self.content), self.layout_spec)
+        return "Section(%d blocks, layout='%s'" % (len(self.content), self.layout_method)
 
 
 @dataclass
 class Sheet:
     content: List[Section] = field(default_factory=list)
     styles: Dict[str, Style] = field(default_factory=OrderedDict)
+    layout_method: str = common.parse_directive('stack')
     margin: int = 36
     padding: int = 4
 
