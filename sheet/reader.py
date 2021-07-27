@@ -4,9 +4,10 @@ import docutils.frontend
 import docutils.nodes
 import docutils.parsers.rst
 import docutils.utils
+from colour import Color
 
 import common
-from model import Block, Section, Sheet
+from model import BLACK, Block, Section, Sheet, Style
 
 LOGGER = common.configured_logger(__name__)
 
@@ -135,7 +136,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
         if self.processing_styles:
             if self.state in {ReadState.IN_CONTENT_ITEM, ReadState.IN_CONTENT}:
-                self.sheet.modify_style(self.current_style_def_name, txt)
+                _modify_style(self.sheet.styles, self.current_style_def_name, txt)
             else:
                 self.current_style_def_name = txt
             return
@@ -196,8 +197,45 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             return 'I'
         return None
 
+def _modify_style(styles, key, txt):
+    if not styles:
+        # Ensure there is a default style
+        styles['default'] = Style(font='Times', size=10, color=BLACK, align='left')
 
-def read(file) -> Sheet:
+    s = styles.get(key, None)
+    if not s:
+        s = Style()
+    items = dict((k.strip(), v.strip()) for k, v in tuple(pair.split('=') for pair in txt.split()))
+    if not 'inherit' in items:
+        items['inherit'] = 'default'
+    for k, v in items.items():
+        if k == 'inherit':
+            parent = styles[v]
+            s.color = s.color or parent.color
+            s.size = s.size or parent.size
+            s.font = s.font or parent.font
+            s.align = s.align or parent.align
+            s.background = s.background or parent.background
+        elif k in {'color', 'foreground', 'fg'}:
+            s.color = Color(v)
+        elif k in {'background', 'bg'}:
+            s.background = Color(v)
+        elif k in {'size', 'fontSize', 'fontsize'}:
+            s.size = float(v)
+        elif k in {'font', 'family', 'face'}:
+            s.font = str(v)
+        elif k in {'align', 'alignment'}:
+            s.align = str(v)
+        elif k in {'border', 'borderColor'}:
+            s.borderColor = Color(v) if v and not v in {'none', 'None'} else None
+        elif k in {'width', 'borderWidth'}:
+            s.borderWidth = float(v)
+        else:
+            raise ValueError("Illegal style definition: %s" % k)
+    styles[key] = s
+
+
+def read_sheet(file) -> Sheet:
     with open(file, 'r') as file:
         data = file.read()
 

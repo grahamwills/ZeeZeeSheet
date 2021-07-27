@@ -5,12 +5,11 @@ import logging
 import logging.config
 import os
 from collections import namedtuple
-from dataclasses import dataclass
-from numbers import Number
 from pathlib import Path
 from typing import Any, Dict, NamedTuple
 
 import yaml
+from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen.canvas import Canvas
 
 
@@ -24,22 +23,25 @@ class Directive(Dict):
         super().__init__(pairs)
 
 
-@dataclass
 class Context():
+    output_file : str
     canvas: Canvas
     page_width: int
     page_height: int
     styles: Dict[str, Any]
     debug: bool
 
-    def __init__(self, canvas: Canvas, styles: Dict[str, Any], debug: bool = False) -> None:
-        self.canvas = canvas
-        self.page_width = int(canvas._pagesize[0])
-        self.page_height = int(canvas._pagesize[1])
+    def __init__(self, output_file, styles: Dict, debug: bool = False) -> None:
+        pagesize = letter
+        self.canvas = Canvas(output_file, pagesize=pagesize)
+        self.page_width = int(pagesize[0])
+        self.page_height = int(pagesize[1])
         self.styles = styles
-        self.content_renderer = lambda x: None
-        self.border_renderer = lambda x: None
         self.debug = debug
+
+    def finish(self):
+        self.canvas.showPage()
+        self.canvas.save()
 
 
 class Margins(NamedTuple):
@@ -62,19 +64,6 @@ class Margins(NamedTuple):
         return Margins(size, size, size, size)
 
 
-def _make_consistent(low, high, size, description):
-    n = (low is None) + (high is None) + (size is None)
-    if n == 0 and low + size != high:
-        raise ValueError("Inconsistent specification of three arguments: " + description)
-    if n > 1:
-        raise ValueError("Must specify at least two arguments of: " + description)
-    if low is None:
-        return high - size, high, size
-    if high is None:
-        return low, low + size, size
-    if size is None:
-        return low, high, high - low
-
 
 class Rect(namedtuple('Rect', 'left right top bottom width height')):
 
@@ -88,8 +77,8 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
         return u
 
     def __new__(cls, left=None, right=None, top=None, bottom=None, width=None, height=None):
-        left, right, width = _make_consistent(left, right, width, "left, right, width")
-        top, bottom, height = _make_consistent(top, bottom, height, "top, bottom, height")
+        left, right, width = _consistent(left, right, width, "left, right, width")
+        top, bottom, height = _consistent(top, bottom, height, "top, bottom, height")
         return super().__new__(cls, left, right, top, bottom, width, height)
 
     def __add__(self, off: Margins) -> Rect:
@@ -120,12 +109,27 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
                     width=self.width if width is None else width,
                     height=self.height if height is None else height)
 
+def _consistent(low, high, size, description):
+    n = (low is None) + (high is None) + (size is None)
+    if n == 0 and low + size != high:
+        raise ValueError("Inconsistent specification of three arguments: " + description)
+    if n > 1:
+        raise ValueError("Must specify at least two arguments of: " + description)
+    if low is None:
+        return high - size, high, size
+    if high is None:
+        return low, low + size, size
+    if size is None:
+        return low, high, high - low
+
+
+# LOGGING #######################################################################################################
 
 _logging_initialized = False
 
 
 def _initialize_logging():
-    path = Path(__file__).parent.joinpath('logging.yaml')
+    path = Path(__file__).parent.joinpath('resources/logging.yaml')
     if os.path.exists(path):
         with open(path, 'rt') as f:
             try:
@@ -156,64 +160,3 @@ def configured_logger(name: str):
         _initialize_logging()
         _logging_initialized = True
     return logging.getLogger(name)
-
-
-class DetailedLocationFormatter(logging.Formatter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        pass
-
-    def format(self, record: logging.LogRecord):
-        #  "%(asctime)s | %(name)-24s %(funcName)-20.20s %(lineno)-3d | %(threadName)-12.12s | %(levelname)-8s | %(
-        #  message)s"
-        ex = ' | ' + super().formatException(record.exc_info) if record.exc_info else ''
-
-        return "%s | %-12s | %-40s | %-8s | %s%s" % (
-            self.formatTime(record),
-            record.threadName,
-            self.trunc(record.funcName, record.lineno, record.name, 40),
-            record.levelname,
-            record.getMessage(),
-            ex
-        )
-
-    def join(self, name, funcName, lineno):
-        txt = name + '.' + funcName + ':' + str(lineno)
-        return txt, len(txt)
-
-    def trunc(self, funcName, lineno, name, N):
-        s, n = self.join(name, funcName, lineno)
-        if n <= N:
-            return s
-        return '\u2026' + s[n - N + 1:]
-
-
-def pretty(item, max_items=4, max_len=30) -> str:
-    """ return a prettified string of anything"""
-
-    if isinstance(item, Number):
-        if 1000 <= abs(item) < 1e7:
-            return (str(round(item)))
-        return "{:.4g}".format(item)
-
-    if isinstance(item, dict):
-        return '{' + ", ".join(["%s:%s" % (pretty(p[0]), pretty(p[1])) for p in item.items()]) + "}"
-
-    if isinstance(item, list):
-        start = ", ".join(pretty(p) for p in item[:max_items])
-        if len(item) > max_items:
-            return "[%s, …]" % start
-        else:
-            return "[%s]" % start
-
-    if isinstance(item, Path):
-        return pretty(item.name)
-
-    txt = str(item)
-    if len(txt) > max_len:
-        txt = txt[:max_len - 1] + '…'
-
-    if isinstance(item, str) and ' ' in item:
-        txt = "'" + txt + "'"
-
-    return txt

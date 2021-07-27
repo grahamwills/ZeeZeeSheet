@@ -158,42 +158,6 @@ class Sheet:
     margin: int = 36
     padding: int = 4
 
-    def modify_style(self, key, txt):
-        if not self.styles:
-            # Ensure there is a default style
-            self.styles['default'] = Style(font='Times', size=10, color=BLACK, align='left')
-
-        s = self.styles.get(key, None)
-        if not s:
-            s = Style()
-        items = dict((k.strip(), v.strip()) for k, v in tuple(pair.split('=') for pair in txt.split()))
-        if not 'inherit' in items:
-            items['inherit'] = 'default'
-        for k, v in items.items():
-            if k == 'inherit':
-                parent = self.styles[v]
-                s.color = s.color or parent.color
-                s.size = s.size or parent.size
-                s.font = s.font or parent.font
-                s.align = s.align or parent.align
-                s.background = s.background or parent.background
-            elif k in {'color', 'foreground', 'fg'}:
-                s.color = Color(v)
-            elif k in {'background', 'bg'}:
-                s.background = Color(v)
-            elif k in {'size', 'fontSize', 'fontsize'}:
-                s.size = float(v)
-            elif k in {'font', 'family', 'face'}:
-                s.font = str(v)
-            elif k in {'align', 'alignment'}:
-                s.align = str(v)
-            elif k in {'border', 'borderColor'}:
-                s.borderColor = Color(v) if v and not v in {'none', 'None'} else None
-            elif k in {'width', 'borderWidth'}:
-                s.borderWidth = float(v)
-            else:
-                raise ValueError("Illegal style definition: %s" % k)
-        self.styles[key] = s
 
     def print(self):
         print("Sheet margin=%d, padding=%d" % (self.margin, self.padding))

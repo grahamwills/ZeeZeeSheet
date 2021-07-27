@@ -8,10 +8,6 @@ formatters:
     format: "%(asctime)s | %(name)-24s %(funcName)-20.20s %(lineno)-3d | %(threadName)-12.12s | %(levelname)-8s | %(message)s"
     datefmt: "%Y-%m-%d %H:%M:%S"
 
-  custom:
-    format: "%(asctime)s | %(name)-24s %(funcName)-20.20s %(lineno)-3d | %(threadName)-12.12s | %(levelname)-8s | %(message)s"
-    class: sheet.common.DetailedLocationFormatter
-
 handlers:
   console:
     class: logging.StreamHandler
@@ -23,7 +19,7 @@ handlers:
     class: logging.handlers.TimedRotatingFileHandler
     backupCount: 5
     level: DEBUG
-    formatter: custom
+    formatter: logfile
     filename: ../tmp/logs/log-zee-sheet.txt
     encoding: utf8
     when: midnight

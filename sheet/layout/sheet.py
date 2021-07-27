@@ -1,10 +1,8 @@
-""" Methods to place items """
 from __future__ import annotations
-
 from typing import Tuple, Union
 
-from common import Context, Rect, configured_logger
-from layout import BlockLayout
+from common import Context, Margins, Rect, configured_logger
+from layout.block import BlockLayout
 from model import Block, Section, Sheet
 from render import EmptyPlacedContent, PlacedContent
 
@@ -81,5 +79,9 @@ def dump(placed: Placement, indent=0):
             dump(i, indent + 1)
 
 
-def layout(placed: Placement, bounds: Rect):
-    placed.place(bounds)
+def layout_sheet(sheet:Sheet, context:Context):
+    M = sheet.margin
+    outer = Rect(left=0, top=0, right=context.page_width, bottom=context.page_height) - Margins(M, M, M, M)
+    placement = Placement(sheet, context)
+    placement.place(outer)
+    placement.draw()

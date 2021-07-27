@@ -1,4 +1,5 @@
 """ Defines layout methods """
+from __future__ import annotations
 from typing import Callable, NamedTuple, Optional
 
 from reportlab.platypus import Paragraph, Table, TableStyle
@@ -168,3 +169,5 @@ def no_pre_layout(block: Block, bounds: Rect, style_name: str, context: Context)
 
 def no_post_layout(block: Block, bounds: Rect, style_name: str, context: Context) -> Optional[PlacedContent]:
     return None
+
+
