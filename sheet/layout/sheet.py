@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 from common import  Margins, Rect, configured_logger
 from layout.block import BlockLayout
 from model import Block, Section, Sheet
 from pdf import PDF
-from render import EmptyPlacedContent, PlacedContent
+from render import PlacedContent, empty_content
 
 LOGGER = configured_logger(__name__)
 
@@ -13,7 +13,7 @@ LOGGER = configured_logger(__name__)
 class Placement:
     context: PDF
     target: Union[Sheet, Section, Block]
-    children: Tuple[Placement]
+    children: List[Placement]
     content_method: str
     border_method: str
 
@@ -30,9 +30,9 @@ class Placement:
                 self.border_method = target.renderers[0]
             else:
                 self.border_method = 'none'
-            self.children = tuple()
+            self.children = []
         else:
-            self.children = tuple(Placement(item, context) for item in target.content)
+            self.children = [Placement(item, context) for item in target.content]
             self.content_method = 'none'
             self.border_method = 'none'
 
@@ -52,21 +52,21 @@ class Placement:
                 available = Rect(top=sub_area.bottom + self.target.padding,
                                  left=available.left, right=available.right, bottom=available.bottom)
             rect = Rect(top=bounds.top, left=bounds.left, right=bounds.right, bottom=available.top)
-            self.placed_content = EmptyPlacedContent(rect)
+            self.placed_content = empty_content(rect)
         else:
             layout = BlockLayout(self.target, bounds, self.context)
             layout.set_methods(self.border_method, self.content_method)
             self.placed_content = layout.layout()
 
         LOGGER.info("Placed %s: %s", self.target, self.placed_bounds)
-        return self.placed_content.bounds
+        return self.placed_content.bounds if self.placed_content else None
 
     def set_placed_bounds(self, bounds: Rect):
         self.placed_bounds = bounds
 
     def draw(self):
         if self.placed_content:
-            self.placed_content.draw(self.context, debug=self.context.debug)
+            self.placed_content.draw(self.context)
         for c in self.children:
             c.draw()
 
