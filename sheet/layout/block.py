@@ -40,6 +40,7 @@ class BlockLayout:
         self.pdf = context
         self.bounds = bounds
         self.block = block
+        self.set_methods(block.renderers[0], block.renderers[1])
 
     def set_methods(self, title_method: str, content_method: str):
         title = Directive(title_method)

@@ -118,7 +118,7 @@ class Block:
             print("     -", c)
 
     def __str__(self):
-        return "Block('%s' with %d runs'" % (self.title, len(self.content))
+        return "Block('%s' with %d runs)" % (self.title, len(self.content))
 
     def set_renderers(self, border, content):
         self.renderers = (border, content)
