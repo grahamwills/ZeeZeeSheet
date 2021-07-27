@@ -129,7 +129,7 @@ class Block:
 @dataclass
 class Section:
     content: List[Block] = field(default_factory=list)
-    layout_method: str = None
+    layout_method: common.Command = None
     padding: int = 4
 
     def add_block(self, block: Block):

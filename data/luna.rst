@@ -1,22 +1,24 @@
-.. section: stack columns=4
+.. section: stack columns=3
 .. title: hidden
 .. style: title
 
 Lunathien Calenmaethor
-======================
+ - Lunathien Calenmaethor
 
-.. style: default
 
-Basic Info
+Logo
 
 .. image:: data/13thAgelogo.png
    :height: 100
-   :align: left
 
-- Race      | Wood Elf
-- Class     | Druid
-- Gender    | Female
-- Age       | 62
+.. style: default
+
+
+Basic Info
+ - Race      | Wood Elf
+ - Class     | Druid
+ - Gender    | Female
+ - Age       | 62
 
 Attributes
  - Strength     | 8  | -1
@@ -123,7 +125,7 @@ Styles
 default
   family=Times-Roman size=9 borderColor=black
 title
-  size=24 color=white family=Helvetica
+  size=20 color=red family=Helvetica
 
 heading
   color=white background=black align=center family=Helvetica

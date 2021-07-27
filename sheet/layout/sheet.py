@@ -1,12 +1,15 @@
 from __future__ import annotations
-from typing import List, Tuple, Union
+
+import functools
+from typing import List, Union
 
 import common
 from common import  Margins, Rect, configured_logger
 from layout.block import BlockLayout
+from layout.section import stack_vertically
 from model import Block, Section, Sheet
 from pdf import PDF
-from render import PlacedContent, empty_content
+from render import PlacedContent
 
 LOGGER = configured_logger(__name__)
 
@@ -36,19 +39,9 @@ class BlockPlacement:
         self.placed.draw(self.pdf)
 
 
-def stack_vertically(bounds, children, padding):
-    # Stack everything vertically
-    available = bounds
-    for child in children:
-        sub_area = child.place(available)
-        available = Rect(top=sub_area.bottom + padding,
-                         left=available.left, right=available.right, bottom=available.bottom)
-    return Rect(top=bounds.top, left=bounds.left, right=bounds.right, bottom=available.top)
-
-
 def choose_method(method: common.Command):
     if method.command == 'stack':
-        return stack_vertically
+        return functools.partial(stack_vertically, **method.options)
     else:
         raise ValueError("unknown layout method for section: '%s'" % method.command)
 
