@@ -1,6 +1,5 @@
-.. layout: flow cols=4
+.. section: stack columns=4
 .. title: none
-
 .. style: title
 
 Lunathien Calenmaethor
@@ -35,7 +34,7 @@ Defenses
 
 ---------------------------------------------------------------
 
-.. layout: flow cols=3
+.. section: stack columns=3
 .. title: banner style=heading_blue
 
 

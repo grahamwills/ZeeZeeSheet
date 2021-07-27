@@ -12,22 +12,21 @@ LOGGER = configured_logger(__name__)
 
 class BlockPlacement:
     target: Block
-    context: PDF
+    pdf: PDF
 
     # Placed
     placed_content: PlacedContent
 
     def __init__(self, target: Block, context: PDF):
-        self.context = context
+        self.pdf = context
         self.padding = target.padding
         self.target = target
-        self.children = []
 
     def __str__(self):
         return "§ content=%s" % self.target
 
     def place(self, bounds: Rect) -> Rect:
-        layout = BlockLayout(self.target, bounds, self.context)
+        layout = BlockLayout(self.target, bounds, self.pdf)
         self.placed_content = layout.layout()
         content_bounds = self.placed_content.bounds
         LOGGER.info("Placed %s: %s", self.target, content_bounds)
@@ -35,9 +34,18 @@ class BlockPlacement:
 
     def draw(self):
         if self.placed_content:
-            self.placed_content.draw(self.context)
-        for c in self.children:
-            c.draw()
+            self.placed_content.draw(self.pdf)
+
+
+def stack_vertically(bounds, children, padding):
+    # Stack everything vertically
+    available = bounds
+    for child in children:
+        sub_area = child.place(available)
+        available = Rect(top=sub_area.bottom + padding,
+                         left=available.left, right=available.right, bottom=available.bottom)
+    return Rect(top=bounds.top, left=bounds.left, right=bounds.right, bottom=available.top)
+
 
 class SectionPlacement:
     target: Union[Section, Sheet]
@@ -52,18 +60,9 @@ class SectionPlacement:
         return "%s(%d children)" % (type(self.target).__name__, len(self.children))
 
     def place(self, bounds: Rect) -> Rect:
-        self.placed_bounds = bounds
-        # Stack everything vertically
-        available = bounds
-        for child in self.children:
-            sub_area = child.place(available)
-            available = Rect(top=sub_area.bottom + self.target.padding,
-                             left=available.left, right=available.right, bottom=available.bottom)
-        rect = Rect(top=bounds.top, left=bounds.left, right=bounds.right, bottom=available.top)
-        self.placed_content = empty_content(rect)
-
-        LOGGER.info("Placed %s: %s", self, self.placed_bounds)
-        return self.placed_content.bounds if self.placed_content else None
+        rect = stack_vertically(bounds, self.children, self.target.padding)
+        LOGGER.info("Placed %s: %s", self, rect)
+        return rect
 
     def draw(self):
         for c in self.children:

@@ -44,8 +44,8 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def __init__(self, document, sheet: Sheet):
         super().__init__(document)
-        self.content_renderer = 'flow cols=1'
-        self.border_renderer = 'banner'
+        self.section_layout_method = 'flow cols=1'
+        self.title_display_method = 'banner'
         self.style = 'default'
         self.state = ReadState.READY
         self.sheet = sheet
@@ -65,10 +65,10 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             raise ValueError("Bad comment directive: '%s'", node.astext())
         command = txt[0].strip()
         value = txt[1].strip()
-        if command == 'layout':
-            self.content_renderer = value
+        if command == 'section':
+            self.section_layout_method = value
         elif command == 'title':
-            self.border_renderer = value
+            self.title_display_method = value
         elif command == 'style':
             self.style = value
         else:
@@ -144,7 +144,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         modifiers = self._text_modifiers()
         if self.state in {ReadState.READY, ReadState.STARTING_SECTION}:
             self.current_block = Block()
-            self.current_block.set_renderers(self.border_renderer, self.content_renderer)
+            self.current_block.title_method = self.title_display_method
             self._ensure_section().add_block(self.current_block)
             LOGGER.info("Defining title '%s', style=%s, mods=%s", txt, self.style, modifiers)
             self.current_block.add_title()

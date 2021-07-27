@@ -6,21 +6,10 @@ import logging.config
 import os
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Dict, NamedTuple
+from typing import Dict, NamedTuple
 
 import yaml
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen.canvas import Canvas
 
-
-class Directive(Dict):
-    name: str
-
-    def __init__(self, text: str):
-        parts = text.split()
-        self.name = parts[0].strip().lower()
-        pairs = {tuple(p.split("=")) for p in parts[1:]}
-        super().__init__(pairs)
 
 class Margins(NamedTuple):
     left: int
@@ -40,7 +29,6 @@ class Margins(NamedTuple):
     @classmethod
     def all_equal(cls, size: int) -> Margins:
         return Margins(size, size, size, size)
-
 
 
 class Rect(namedtuple('Rect', 'left right top bottom width height')):
@@ -86,6 +74,7 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
         return Rect(left=self.left, top=self.top,
                     width=self.width if width is None else width,
                     height=self.height if height is None else height)
+
 
 def _consistent(low, high, size, description):
     n = (low is None) + (high is None) + (size is None)

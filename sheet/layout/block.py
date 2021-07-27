@@ -1,11 +1,11 @@
 """ Defines layout methods """
 from __future__ import annotations
 
-from typing import Callable, NamedTuple, Optional
+from typing import Callable, Dict, NamedTuple, Optional
 
 from reportlab.platypus import Table, TableStyle
 
-from common import Directive, Margins, Rect
+from common import Margins, Rect
 from model import Block, Run
 from pdf import PDF, as_one_line
 from render import PlacedContent, empty_content, flowable_content, grouped_content, rect_content
@@ -25,6 +25,15 @@ BorderPostLayout = Callable[[Block, Rect, str, PDF], Optional[PlacedContent]]
 # Creates placed items to be drawn in the main section
 ContentLayout = Callable[[Block, Rect, PDF], Optional[PlacedContent]]
 
+class Directive(Dict):
+    name: str
+
+    def __init__(self, text: str):
+        parts = text.split()
+        self.name = parts[0].strip().lower()
+        pairs = {tuple(p.split("=")) for p in parts[1:]}
+        super().__init__(pairs)
+
 
 class BlockLayout:
     block: Block
@@ -40,9 +49,9 @@ class BlockLayout:
         self.pdf = context
         self.bounds = bounds
         self.block = block
-        self.set_methods(block.renderers[0], block.renderers[1])
+        self.set_methods(block.title_method)
 
-    def set_methods(self, title_method: str, content_method: str):
+    def set_methods(self, title_method: str):
         title = Directive(title_method)
         self.title_style = title.get('style', 'default')
         if title.name == 'none':
@@ -157,9 +166,9 @@ def banner_post_layout(block: Block, bounds: Rect, style_name: str, context: PDF
         return None
 
 
-def no_pre_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> BorderDetails:
+def no_pre_layout(*_) -> BorderDetails:
     return BorderDetails(None, Margins.all_equal(0))
 
 
-def no_post_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> Optional[PlacedContent]:
+def no_post_layout(*_) -> Optional[PlacedContent]:
     return None

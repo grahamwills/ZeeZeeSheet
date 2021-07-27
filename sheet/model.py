@@ -97,7 +97,7 @@ class Run:
 class Block:
     title: Run = None
     content: List[Run] = field(default_factory=list)
-    renderers: Tuple[str, str] = ('banner', 'paragraph')
+    title_method = 'banner'
     padding: int = 4
 
     def add_title(self):
@@ -118,15 +118,11 @@ class Block:
             print("     -", c)
 
     def __str__(self):
-        return "Block('%s' with %d runs)" % (self.title, len(self.content))
-
-    def set_renderers(self, border, content):
-        self.renderers = (border, content)
+        return "Block('%s' with %d runs)'" % (self.title, len(self.content))
 
     def needs_table(self) -> bool:
         """ If dividers in any run"""
         return any(e.which in {ElementType.SPACER, ElementType.DIVIDER} for run in self.content for e in run.items)
-
 
 @dataclass
 class Section:
