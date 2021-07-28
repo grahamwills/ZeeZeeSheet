@@ -6,7 +6,7 @@ from typing import List, Union
 import common
 from common import  Margins, Rect, configured_logger
 from layout.block import BlockLayout
-from layout.section import stack_vertically
+from layout.section import stack_in_columns
 from model import Block, Section, Sheet
 from pdf import PDF
 from render import PlacedContent
@@ -42,7 +42,7 @@ class BlockPlacement:
 
 def choose_method(method: common.Command):
     if method.command == 'stack':
-        return functools.partial(stack_vertically, **method.options)
+        return functools.partial(stack_in_columns, **method.options)
     else:
         raise ValueError("unknown layout method for section: '%s'" % method.command)
 
