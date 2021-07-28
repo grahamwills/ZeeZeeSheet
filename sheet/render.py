@@ -10,13 +10,14 @@ from model import Style
 from pdf import PDF
 
 
+
 class PlacedContent:
-    bounds: Optional[Rect]
+    bounds: Rect
     margins: Optional[Margins]
     draw: Callable[[PDF], None]
 
-    def __init__(self, bounds: Optional[Rect], draw: Callable[[PDF], None]) -> None:
-        self.bounds = bounds
+    def __init__(self, bounds: Rect, draw: Callable[[PDF], None]):
+        self.bounds = bounds.round()
         self.draw = draw
 
 
@@ -51,3 +52,4 @@ def rect_content(bounds: Rect, style: Style, fill, stroke):
             pdf.stroke_rect(bounds, style)
 
     return PlacedContent(bounds, _draw)
+

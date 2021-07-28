@@ -7,15 +7,17 @@ import os
 from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, NamedTuple, Optional, Tuple
+from typing import Dict, NamedTuple, Optional
 
 import yaml
+
 
 @dataclass
 class Command:
     tag: Optional[str]
     command: str
     options: Dict
+
 
 def parse_directive(txt: str) -> Command:
     """ Converts a string into an optionally tagged command"""
@@ -92,6 +94,9 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
 
     def valid(self) -> bool:
         return self.left <= self.right and self.top <= self.bottom
+
+    def round(self) -> Rect:
+        return Rect(left=round(self.left), right=round(self.right), top=round(self.top), bottom=round(self.bottom))
 
     def move(self, *, dx=0, dy=0) -> Rect:
         return Rect(left=self.left + dx, top=self.top + dy, width=self.width, height=self.height)
