@@ -2,6 +2,7 @@ from typing import Dict
 
 from colour import Color
 from reportlab.lib import pagesizes
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, Table, TableStyle
@@ -53,10 +54,26 @@ class PDF(canvas.Canvas):
     def draw_flowable(self, paragraph, bounds):
         paragraph.drawOn(self, bounds.left, self.page_height - bounds.bottom)
 
-    def make_paragraph(self, run: Run, align='left', autoleading='off'):
+    def make_paragraph(self, run: Run, align='left'):
+        style = self.style(run.base_style())
+
+        """
+    font: str = None
+    align: str = None
+    size: float = None
+    color: Color = None
+    background: Color = None
+    borderColor: Color = None
+    borderWidth: float = 0.5
+        
+        """
+
+        pStyle = ParagraphStyle(name='a', fontName=style.font, fontSize=style.size, leading=style.size*1.2)
+
+
         html = "".join(_element_to_html(e, self) for e in run.items)
-        html = "<para autoleading='%s' align='%s'>%s</para>" % (autoleading, align, html)
-        return Paragraph(html)
+        html = "<para autoleading='off' align='%s'>%s</para>" % (align, html)
+        return Paragraph(html, pStyle)
 
     def descender(self, style:Style) -> float:
         return -pdfmetrics.getDescent(style.font, style.size)
@@ -83,7 +100,7 @@ def _element_to_html(e: Element, pdf: PDF):
 def as_one_line(run: Run, context: PDF, width: int):
     if not any(e.which == ElementType.SPACER for e in run.items):
         # No spacers -- nice and simple
-        p = context.make_paragraph(run, autoleading='min')
+        p = context.make_paragraph(run)
         w, h = p.wrapOn(context, width, 1000)
         return p, w, h
 
@@ -109,7 +126,7 @@ def as_one_line(run: Run, context: PDF, width: int):
                 align = "right"
             else:
                 align = 'center'
-            para = context.make_paragraph(sub, align=align, autoleading='min')
+            para = context.make_paragraph(sub, align=align)
             paragraphs.append(para)
 
     table = Table([paragraphs])

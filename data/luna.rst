@@ -3,7 +3,6 @@
 .. style: title
 
 Lunathien Calenmaethor
- - Lunathien Calenmaethor
 
 
 Logo
@@ -103,12 +102,13 @@ Beast Form -- Daily []
  - **Quick action**
  - You leave your humanoid form behind and assume the form of a deadly
    predator such as a wolf, panther, tiger, bear, wolverine or lion.
- - **Beast Form Attack**
-    - **Melee Attack** +6 vs AC
-    - *Natural Even Hit*: 2d10+4
-    - *Natural Odd Hit*: 2d6+4
-    - *Miss*: Repeat the attack against the same or a different target.
-      This has no miss effect.
+
+Beast Form Attack
+ - **Melee Attack** +6 vs AC
+ - *Natural Even Hit*: 2d10+4
+ - *Natural Odd Hit*: 2d6+4
+ - *Miss*: Repeat the attack against the same or a different target.
+   This has no miss effect.
 
 Aspect of the Bear -- Daily []
  - **Quick action**
@@ -123,7 +123,7 @@ Styles
 ------
 
 default
-  family=Times-Roman size=9 borderColor=black
+  family=Times-Roman size=9 borderColor=black background=#eeeeee
 title
   size=20 color=red family=Helvetica
 

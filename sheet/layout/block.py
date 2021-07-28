@@ -67,8 +67,13 @@ class BlockLayout:
         content = self.content_layout(self.block, inner, self.pdf)
         inner = Rect(left=bounds.left, right=bounds.right, top=bounds.top,
                      bottom=content.bounds.bottom + pre.insets.bottom)
+        style = self.pdf.style(self.block.base_style())
+        if style.background:
+            back = rect_content(inner, style, fill=1, stroke=0)
+        else:
+            back = None
         post = self.post_layout(self.block, inner, self.title_style, self.pdf)
-        items = [p for p in [pre.placed, content, post] if p]
+        items = [p for p in [back, pre.placed, content, post] if p]
         return grouped_content(items)
 
 
@@ -132,7 +137,9 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF) -> 
         title_mod = Run([e.replace_style(style_name) for e in block.title.items])
         title_bounds = bounds - margins
         paragraph, w, height = as_one_line(title_mod, pdf, title_bounds.width)
-        plaque_height = height + 2 * block.padding
+
+        # We remove the extra leading the paragraph gacve us at the bottom (0.2 * font-size)
+        plaque_height = height + 2 * block.padding - style.size * 0.2
         title_bounds = title_bounds.resize(height=height)
 
         if style.background:

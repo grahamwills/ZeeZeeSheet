@@ -27,11 +27,11 @@ handlers:
 
 loggers:
   layout.section:
-    level: DEBUG
+    level: WARNING
     handlers: [ console ]
     propagate: no
 
 
 root:
-  level: WARNING
+  level: DEBUG
   handlers: [ console, file ]

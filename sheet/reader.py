@@ -234,6 +234,7 @@ def _modify_style(styles, key, txt):
     styles[key] = s
 
 
+
 def read_sheet(file) -> Sheet:
     with open(file, 'r') as file:
         data = file.read()
@@ -242,6 +243,7 @@ def read_sheet(file) -> Sheet:
 
     sheet = Sheet()
     doc.walk(SheetVisitor(doc, sheet))
+    sheet.fixup()
 
     sheet.print()
     return sheet

@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, OrderedDict, Tuple
+from typing import Dict, List, Optional, OrderedDict, Tuple
 
 from colour import Color
 
@@ -94,10 +94,14 @@ class Run:
     def valid(self):
         return len(self.items) > 0
 
+    def base_style(self) ->  str:
+        #  Lazy, just use the first
+        return self.items[0].style
+
 
 @dataclass
 class Block:
-    title: Run = None
+    title: Optional[Run] = None
     content: List[Run] = field(default_factory=list)
     title_method = 'banner'
     padding: int = 4
@@ -129,6 +133,21 @@ class Block:
     def __hash__(self):
         return id(self)
 
+    def fixup(self, parent:Section):
+        if not self.content:
+            if self.title:
+                # Move the title to the content
+                self.content = [self.title]
+                self.title = None
+            else:
+                # Nothing is defined so kill this
+                parent.content.remove(self)
+
+    def base_style(self) ->  str:
+        #  Lazy, just use the first
+        return self.content[0].base_style()
+
+
 @dataclass
 class Section:
     content: List[Block] = field(default_factory=list)
@@ -145,6 +164,10 @@ class Section:
 
     def __str__(self):
         return "Section(%d blocks, layout='%s'" % (len(self.content), self.layout_method)
+
+    def fixup(self, parent:Sheet):
+        for c in self.content:
+            c.fixup(self)
 
 
 @dataclass
@@ -166,3 +189,7 @@ class Sheet:
 
     def __str__(self):
         return "Sheet(%d sections, %d styles" % (len(self.content), len(self.styles))
+
+    def fixup(self):
+        for c in self.content:
+            c.fixup(self)

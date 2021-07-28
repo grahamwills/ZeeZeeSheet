@@ -32,7 +32,6 @@ class BlockPlacement:
     def place(self, bounds: Rect) -> Rect:
         layout = BlockLayout(self.target, bounds, self.pdf)
         self.placed = layout.layout()
-        LOGGER.info("Placed %s: %s", self.target, self.placed.bounds)
         return self.placed.bounds
 
 
