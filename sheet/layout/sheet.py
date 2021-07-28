@@ -35,6 +35,7 @@ class BlockPlacement:
         LOGGER.info("Placed %s: %s", self.target, self.placed.bounds)
         return self.placed.bounds
 
+
     def draw(self):
         self.placed.draw(self.pdf)
 

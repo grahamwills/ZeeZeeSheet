@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import itertools
 import statistics
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List, NamedTuple, Tuple
 
 import numpy as np
 from scipy import optimize
@@ -38,108 +37,121 @@ def param_badness(params: np.ndarray) -> float:
     return sum(max(0.0, v - 1) + max(0.0, -v) for v in list(params)) + sum(v == 0 for v in list(params)) * 1e-2 \
            + max(0.0, -last) + (last == 0) * 1e-2
 
-def score_extents(extents: List[Rect]) -> float:
-    extents.sort(key=lambda e: e.bottom)
-    dev = statistics.stdev(x.bottom for x in extents)
 
-    # We want to allocate more room to the lowest, so we create a score to help that even if
-    # it does not change the lowests right for this configuration
-    factor = 0
-    wt = 0
-    for i, r in enumerate(extents):
-        wt += i * i
-        factor += i * i * r.width
-    width_factor = factor / wt
-    return dev - width_factor * 1e-4
+@lru_cache()
+def estimate_single_size(layout: SectionLayout, index: int, width: int) -> float:
+    r = Rect(left=0, top=0, width=width, height=100000)
+    return layout.items[index].place(r).bottom
+
+
+def place_single(layout: SectionLayout, index: int, r: Rect) -> float:
+    return layout.items[index].place(r).bottom
+
+
+def score_extents(extents: [float], column_divs: [(int, int)]) -> float:
+    dev = statistics.stdev(extents)
+
+    # pairs = list(zip(extents, column_divs))
+    # pairs.sort(key=lambda x:x[0])
+    #
+    # # We want to allocate more room to the lowest, so we create a score to help that even if
+    # # it does not change the lowests right for this configuration
+    # factor = 0
+    # wt = 0
+    # for i, r in enumerate(pairs):
+    #     wt += i
+    #     factor += i * (r[1][1] - r[1][0])
+    # width_factor = factor / wt
+    return dev  # - width_factor * 1e-4
+
+
+class LayoutDetails(NamedTuple):
+    column_divisions: List[(int, int)]
+    allocation_divisions: List[(int, int)]
+    bounds: Rect
+    score: float
 
 
 class SectionLayout:
     items: List
     bounds: Rect
     padding: int
+    optimizing: bool
 
-
-    def __init__(self, items: List, bounds: Rect, padding: int) -> None:
+    def __init__(self, items: List, bounds: Rect, padding: int):
         self.padding = padding
         self.bounds = bounds
         self.items = items
+        self.optimizing = False
+        self.optimal_allocation = dict()
 
-    def place_in_single_column(self, children, bd: Rect) -> Rect:
-        lowest = bd.top
-        for child in children:
-            available = Rect(top=lowest + self.padding, left=bd.left, right=bd.right, bottom=bd.bottom)
-            placed = child.place(available)
-            lowest = placed.bottom
-        return Rect(top=bd.top, left=bd.left, right=bd.right, bottom=lowest)
+    def place_in_single_column(self, start: int, end: int, bd: Rect) -> float:
+        lowest = bd.top - self.padding
+        for i in range(start, end):
+            if self.optimizing:
+                lowest += estimate_single_size(self, i, bd.width) + self.padding
+            else:
+                available = Rect(top=lowest + self.padding, left=bd.left, right=bd.right, bottom=bd.bottom)
+                lowest = place_single(self, i, available)
+        return lowest
 
-
-    def place_in_columns(self, column_divisions, allocation_divisions) -> Tuple[float, Rect]:
+    def place_in_columns(self, column_divisions, allocation_divisions) -> LayoutDetails:
         k = len(column_divisions) - 1
         n = len(self.items)
 
         extents = []
         for loc, idx in zip(column_divisions, allocation_divisions):
             b = Rect(left=loc[0], right=loc[1], top=self.bounds.top, bottom=self.bounds.bottom)
-            items = self.items[idx[0]:idx[1]]
-            rect = self.place_in_single_column(items, b)
-            # LOGGER.debug("one column (%d ... %d), n=[%d:%d] -> %d", b.left, b.right, idx[0], idx[1], rect.bottom)
-            extents.append(rect)
+            ext = self.place_in_single_column(idx[0], idx[1], b)
+            extents.append(ext)
 
-        lowest = max(e.bottom for e in extents)
-        r = Rect(left=self.bounds.left, right=self.bounds.right, top=self.bounds.top, bottom=lowest)
-        score = score_extents(extents)
+        r = Rect(left=self.bounds.left, right=self.bounds.right, top=self.bounds.top, bottom=max(extents))
+        score = score_extents(extents, column_divisions)
 
-        LOGGER.debug("optimize for (wid=%d, n=%d, cols=%d): %s : %s -> %1.3f: %s", self.bounds.width, n, k,
-                     column_divisions, allocation_divisions, score, [e.bottom for e in extents])
+        details = LayoutDetails(column_divisions, allocation_divisions, r, score)
+        LOGGER.debug("Optimized Step: %s", details)
+        return details
 
-        return score, r
-
-
-    def allocate_items_to_fixed_columns(self, column_divisions) -> Tuple[float, Rect]:
+    def allocate_items_to_fixed_columns(self, column_divisions) -> LayoutDetails:
         """ Brute force search for best solution"""
 
         k = len(column_divisions)
-        n= len(self.items)
+        n = len(self.items)
 
-        results = [[i] for i in range(1,n+1)]
+        results = [[i] for i in range(1, n + 1)]
 
-        for c in range(2,k):
+        for c in range(2, k):
             step = []
             for r in results:
-                available = n - (k-c) - sum(r)
-                for i in range(1, available+1):
+                available = n - (k - c) - sum(r)
+                for i in range(1, available + 1):
                     step.append(r + [i])
             results = step
 
         # Last column is determined by others
-        results = [ r + [n-sum(r)] for r in results]
+        results = [r + [n - sum(r)] for r in results]
 
-        bscore, balloc = 9e99, None
+        best = None
         for a in results:
-            asc = [sum(a[:i]) for i in range(0, k+1)]
+            asc = [sum(a[:i]) for i in range(0, k + 1)]
             alloc = list(zip(asc, asc[1:]))
-            score, rect = self.place_in_columns(column_divisions, alloc)
-            if score < bscore:
-                bscore, balloc = score, alloc
+            trial = self.place_in_columns(column_divisions, alloc)
+            if not best or trial.score < best.score:
+                best = trial
 
-
-        return self.place_in_columns(column_divisions, balloc)
+        return best
 
     def stack_vertically(self, columns):
         k = int(columns)
+        n = len(self.items)
         if k == 1:
-            return self.place_in_single_column(self.items, self.bounds)
+            height = self.place_in_single_column(0, n, self.bounds)
+            b = self.bounds
+            return Rect(left=b.left, right=b.right, top=b.top, height=height)
 
-        LOGGER.info("Stacking %d items vertically into %d columns: %s", len(self.items), k, self.bounds)
+        LOGGER.info("Stacking %d items vertically into %d columns: %s", n, k, self.bounds)
 
-
-        def adapter_function(params):
-            badness = param_badness(params[:k - 1]) + param_badness(params[k - 1:])
-            if badness > 0:
-                return 1e12 * (1 + badness * badness)
-
-            cols, items = params_to_splits(params)
-            return self.place_in_columns(cols, items)[0]
+        optimal_allocation = dict()
 
         def adapter_function_cols(params):
             badness = param_badness(params)
@@ -147,29 +159,27 @@ class SectionLayout:
                 return 1e12 * (1 + badness * badness)
 
             cols = divisions(params, self.bounds.left, self.bounds.right, self.padding)
-            return self.allocate_items_to_fixed_columns(cols)[0]
+            details = self.allocate_items_to_fixed_columns(cols)
+            optimal_allocation[details.column_divisions] = details.allocation_divisions
+            return details.score
 
-
-        def params_to_splits(params):
-            cols = divisions(params[:k - 1], self.bounds.left, self.bounds.right, self.padding)
-            items = divisions(params[k - 1:], 0, len(self.items) + 1, 0)
-            return cols, items
-
-        # params = [1.0 / k] * (2 * (k - 1))
-        # initial = np.asarray(params)
-
-        params = [1.0 / k] * (k - 1)
-        initial = np.asarray(params)
-
-        opt = optimize.minimize(adapter_function_cols, x0=initial, bounds=Bounds([0]*(k-1),[1]*(k-1)),method="powell")
+        self.optimizing = True
+        opt = optimize.minimize(
+                adapter_function_cols,
+                x0=(np.asarray([1 / k] * (k - 1))),
+                method="Nelder-Mead",
+                bounds=Bounds([0] * (k - 1), [1] * (k - 1)),
+                options={}
+        )
+        self.optimizing = False
 
         params = opt.x
-        cols, items = params_to_splits(params)
-
-        # Clear the cache so the operation does actually perform the placement
+        LOGGER.debug("Final layout = %s", opt.x)
+        LOGGER.debug("Layout %s", estimate_single_size.cache_info())
 
         cols = divisions(params, self.bounds.left, self.bounds.right, self.padding)
-        return self.allocate_items_to_fixed_columns(cols)[1]
+        alloc = optimal_allocation[cols]
+        return self.place_in_columns(cols, alloc).bounds
 
 
 def stack_vertically(bounds: Rect, children: List, padding: int, columns: int = 1):

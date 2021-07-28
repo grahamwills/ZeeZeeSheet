@@ -126,6 +126,9 @@ class Block:
         """ If dividers in any run"""
         return any(e.which in {ElementType.SPACER, ElementType.DIVIDER} for run in self.content for e in run.items)
 
+    def __hash__(self):
+        return id(self)
+
 @dataclass
 class Section:
     content: List[Block] = field(default_factory=list)
