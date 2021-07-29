@@ -52,8 +52,9 @@ def place_single(layout: SectionLayout, index: int, r: Rect) -> PlacedContent:
 def score_placement(columns: [PlacedContent]) -> float:
     column_bounds = [c.bounds for c in columns]
     height = max(c.height for c in column_bounds)
+    issues = sum(c.issues for c in columns)
     wasted_space = sum((height - r.height) * r.width for r in column_bounds)
-    return wasted_space
+    return 1000* issues + wasted_space  ** 0.5
 
 
 class LayoutDetails(NamedTuple):
@@ -105,7 +106,7 @@ class SectionLayout:
         score = score_placement(placed_columns)
 
         details = LayoutDetails(column_divisions, allocation_divisions, PlacedGroupContent(placed_columns), score)
-        LOGGER.warning("Optimized Step: %s", details)
+        LOGGER.debug("Optimized Step: %s", details)
         return details
 
     def allocate_items_to_fixed_columns(self, column_divisions) -> LayoutDetails:

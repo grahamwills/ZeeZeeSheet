@@ -59,11 +59,14 @@ class PDF(canvas.Canvas):
     def make_paragraph(self, run: Run, align='left'):
         style = self.style(run.base_style())
 
-        pStyle = ParagraphStyle(name='a', fontName=style.font, fontSize=style.size, leading=style.size*1.2)
+
+        alignment = {'left':0, 'center':1, 'right':2, 'fill':4, 'justify':4}[align]
+
+        pStyle = ParagraphStyle(name='a', fontName=style.font, fontSize=style.size, leading=style.size*1.2,
+                                allowWidows=0, embeddedHyphenation =1, alignment=alignment)
 
 
         html = " ".join(_element_to_html(e, self) for e in run.items)
-        html = "<para autoleading='off' align='%s'>%s</para>" % (align, html)
         return Paragraph(html, pStyle)
 
     def descender(self, style: Style) -> float:
