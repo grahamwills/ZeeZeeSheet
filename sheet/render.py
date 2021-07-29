@@ -1,53 +1,60 @@
 """Items to be placed on a page"""
 from __future__ import annotations
 
-from typing import Callable, Iterable, Optional
+from dataclasses import dataclass
+from typing import Iterable
 
 from reportlab.platypus import Flowable
 
-from common import Margins, Rect
+from common import Rect
 from model import Style
 from pdf import PDF
 
 
+@dataclass
 class PlacedContent:
     bounds: Rect
-    margins: Optional[Margins]
-    draw: Callable[[PDF], None]
 
-    def __init__(self, bounds: Rect, draw: Callable[[PDF], None]):
+    def __init__(self, bounds: Rect):
         self.bounds = bounds.round()
-        self.draw = draw
+
+    def draw(self, pdf: PDF):
+        pass
 
 
-def empty_content(bounds: Rect) -> PlacedContent:
-    return PlacedContent(bounds, lambda x: None)
+class PlacedFlowableContent(PlacedContent):
+    flowable: Flowable
 
+    def __init__(self, flowable: Flowable, bounds: Rect):
+        self.flowable = flowable
+        super().__init__(bounds)
 
-def _draw_multiple(group: Iterable[PlacedContent], pdf: PDF):
-    for p in group:
-        p.draw(pdf)
+    def draw(self, pdf: PDF):
+        pdf.draw_flowable(self.flowable, self.bounds)
 
+class PlacedRectContent(PlacedContent):
+    flowable: Flowable
 
-def grouped_content(group: Iterable[PlacedContent]) -> PlacedContent:
-    bounds = Rect.union(p.bounds for p in group)
+    def __init__(self, bounds: Rect, style: Style, fill:bool, stroke:bool):
+        super().__init__(bounds)
+        self.stroke = stroke
+        self.fill = fill
+        self.style = style
 
-    def _draw(pdf):
-        for p in group:
+    def draw(self, pdf: PDF):
+        if self.fill:
+            pdf.fill_rect(self.bounds, self.style)
+
+        if self.stroke:
+            pdf.stroke_rect(self.bounds, self.style)
+
+class PlacedGroupContent(PlacedContent):
+    group: Iterable[PlacedContent]
+
+    def __init__(self, group: Iterable[PlacedContent]):
+        super().__init__(Rect.union(p.bounds for p in group))
+        self.group = group
+
+    def draw(self, pdf: PDF):
+        for p in self.group:
             p.draw(pdf)
-
-    return PlacedContent(bounds, _draw)
-
-
-def flowable_content(flowable: Flowable, bounds: Rect):
-    return PlacedContent(bounds, lambda pdf: pdf.draw_flowable(flowable, bounds))
-
-
-def rect_content(bounds: Rect, style: Style, fill, stroke):
-    def _draw(pdf: PDF):
-        if fill:
-            pdf.fill_rect(bounds, style)
-        if stroke:
-            pdf.stroke_rect(bounds, style)
-
-    return PlacedContent(bounds, _draw)

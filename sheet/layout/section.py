@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import copy
 from functools import lru_cache
 from typing import List, NamedTuple, Tuple
 
@@ -7,7 +8,7 @@ import numpy as np
 from scipy import optimize
 
 from common import Rect, configured_logger
-from render import PlacedContent, grouped_content
+from render import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 
@@ -52,8 +53,7 @@ def score_placement(columns: [PlacedContent]) -> float:
     column_bounds = [c.bounds for c in columns]
     height = max(c.height for c in column_bounds)
     wasted_space = sum((height - r.height) * r.width for r in column_bounds)
-    lowest = max(c.bottom for c in column_bounds)
-    return lowest + wasted_space / 1000
+    return wasted_space
 
 
 class LayoutDetails(NamedTuple):
@@ -89,11 +89,11 @@ class SectionLayout:
             if exact_placement:
                 p = place_single(self, i, available)
             else:
-                p = estimate_single_size(self, i, bd.width)
-                p = PlacedContent(p.bounds.move(dy=current), p.draw)
+                p = copy(estimate_single_size(self, i, bd.width))
+                p.bounds = p.bounds.move(dy=current)
             all.append(p)
-            current=p.bounds.bottom + self.padding
-        return grouped_content(all)
+            current = p.bounds.bottom + self.padding
+        return PlacedGroupContent(all)
 
     def place_in_columns(self, column_divisions, allocation_divisions, exact_placement: bool) -> LayoutDetails:
         placed_columns = []
@@ -104,7 +104,7 @@ class SectionLayout:
 
         score = score_placement(placed_columns)
 
-        details = LayoutDetails(column_divisions, allocation_divisions, grouped_content(placed_columns), score)
+        details = LayoutDetails(column_divisions, allocation_divisions, PlacedGroupContent(placed_columns), score)
         LOGGER.warning("Optimized Step: %s", details)
         return details
 
@@ -166,7 +166,7 @@ class SectionLayout:
 
         return best
 
-    def stack_in_columns(self, columns)  -> PlacedContent:
+    def stack_in_columns(self, columns) -> PlacedContent:
         k = int(columns)
         n = len(self.items)
         if k == 1:

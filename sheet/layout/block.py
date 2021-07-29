@@ -12,7 +12,7 @@ from common import Margins, Rect
 from model import Block, Run
 from pdf import PDF
 from layout.table import as_one_line, table_layout
-from render import PlacedContent, empty_content, flowable_content, grouped_content, rect_content
+from render import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 
 
 class BorderDetails(NamedTuple):
@@ -74,12 +74,12 @@ class BlockLayout:
 
         style = self.pdf.style(self.block.base_style())
         if style and style.background:
-            back = rect_content(inner, style, fill=1, stroke=0)
+            back = PlacedRectContent(inner, style, fill=True, stroke=False)
         else:
             back = None
         post = self.post_layout(self.block, inner, self.title_style, self.pdf)
         items = [p for p in [back, pre.placed, content, post] if p]
-        return grouped_content(items)
+        return PlacedGroupContent(items)
 
 
 def image_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
@@ -98,7 +98,7 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
             im = Image(file, height=height, width=w * height / h)
 
     w, h = im.wrapOn(pdf, bounds.width, bounds.height)
-    return flowable_content(im, bounds.resize(width=w, height=h))
+    return PlacedFlowableContent(im, bounds.resize(width=w, height=h))
 
 
 def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
@@ -110,16 +110,16 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     for item in block.content:
         p = pdf.make_paragraph(item)
         w, h = p.wrapOn(pdf, b.width, b.height)
-        placed = flowable_content(p, b.resize(width=w, height=h))
+        placed = PlacedFlowableContent(p, b.resize(width=w, height=h))
         results.append(placed)
         b = Rect(top=placed.bounds.bottom + block.padding,
                  left=b.left, right=b.right, bottom=b.bottom)
     if not results:
-        return empty_content(bounds.resize(height=0))
+        return PlacedContent(bounds.resize(height=0))
     elif len(results) == 1:
         return results[0]
     else:
-        return grouped_content(results)
+        return PlacedGroupContent(results)
 
 
 def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, show_title=True) -> BorderDetails:
@@ -145,14 +145,14 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
 
         if style.background:
             plaque = (bounds - Margins.all_equal(line_width)).resize(height=plaque_height)
-            placed.append(rect_content(plaque, style, fill=1, stroke=0))
+            placed.append(PlacedRectContent(plaque, style, fill=True, stroke=False))
 
         descent = pdf.descender(style)
-        placed.append(flowable_content(paragraph, title_bounds.move(dy=-descent)))
+        placed.append(PlacedFlowableContent(paragraph, title_bounds.move(dy=-descent)))
 
         margins = Margins(left=inset, right=inset, top=inset + plaque_height, bottom=inset)
 
-        group = grouped_content(placed)
+        group = PlacedGroupContent(placed)
         group.margins = margins
         return BorderDetails(group, margins)
     else:
@@ -162,7 +162,7 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
 def outline_post_layout(block: Block, bounds: Rect, style_name: str, context: PDF) -> Optional[PlacedContent]:
     style = context.style(style_name)
     if style.has_border():
-        return rect_content(bounds, style, fill=0, stroke=1)
+        return PlacedRectContent(bounds, style, fill=False, stroke=True)
     else:
         return None
 
