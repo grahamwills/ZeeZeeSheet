@@ -88,11 +88,6 @@ class Run:
             elif p:
                 self.items.append(Element(ElementType.TEXT, value=p, style=style, modifiers=modifiers))
 
-    def divide_by_spacers(self) -> List[Run]:
-        divs = [-1] + [i for i, e in enumerate(self.items) if e.which in {ElementType.SPACER, ElementType.DIVIDER}] + [
-            len(self.items)]
-        return [Run(self.items[divs[i - 1] + 1:divs[i]]) for i in range(1, len(divs))]
-
     def valid(self):
         return len(self.items) > 0
 

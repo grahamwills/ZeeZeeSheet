@@ -5,12 +5,13 @@ import functools
 from pathlib import Path
 from typing import Callable, NamedTuple, Optional
 
-from reportlab.platypus import Image, Table, TableStyle
+from reportlab.platypus import Image
 
 import common
 from common import Margins, Rect
 from model import Block, Run
-from pdf import PDF, as_one_line
+from pdf import PDF
+from layout.table import as_one_line, table_layout
 from render import PlacedContent, empty_content, flowable_content, grouped_content, rect_content
 
 
@@ -119,32 +120,6 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
         return results[0]
     else:
         return grouped_content(results)
-
-
-def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
-    cells = []
-    for run in block.content:
-        row = []
-        for r in run.divide_by_spacers():
-            if r.valid():
-                row.append(pdf.make_paragraph(r))
-            else:
-                row.append(' ')
-        cells.append(row)
-
-    commands = [
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]
-
-    # Spacers divide up the run
-    table = Table(cells)
-
-    table.setStyle(TableStyle(commands))
-    w, h = table.wrapOn(pdf, bounds.width, 1000)
-    return flowable_content(table, bounds.resize(width=w, height=h))
 
 
 def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, show_title=True) -> BorderDetails:

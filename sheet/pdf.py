@@ -5,7 +5,7 @@ from reportlab.lib import pagesizes
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Paragraph, Table, TableStyle
+from reportlab.platypus import Paragraph
 
 from common import Rect
 from model import Element, ElementType, Run, Style
@@ -89,41 +89,3 @@ def _element_to_html(e: Element, pdf: PDF):
     return "<font %s%s%s>%s</font>" % (face, size, color, txt)
 
 
-def as_one_line(run: Run, context: PDF, width: int):
-    if not any(e.which == ElementType.SPACER for e in run.items):
-        # No spacers -- nice and simple
-        p = context.make_paragraph(run)
-        w, h = p.wrapOn(context, width, 1000)
-        return p, w, h
-
-    # Make a one-row table
-    paragraphs = []
-
-    commands = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]
-
-    # Spacers divide up the run
-    parts = run.divide_by_spacers()
-    for i, sub in enumerate(parts):
-        if sub.valid():
-            if i == 0:
-                align = "left"
-            elif i == len(parts) - 1:
-                align = "right"
-            else:
-                align = 'center'
-            para = context.make_paragraph(sub, align=align)
-            paragraphs.append(para)
-
-    table = Table([paragraphs])
-
-    table.setStyle(TableStyle(commands))
-
-    w, h = table.wrapOn(context, width, 1000)
-
-    return table, w, h
