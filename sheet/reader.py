@@ -13,12 +13,14 @@ from model import BLACK, Block, Section, Sheet, Style
 
 LOGGER = common.configured_logger(__name__)
 
+LOG_UNHANDLED = False
+
 
 class State(enum.Enum):
     READY = 0
-    IN_TITLE = 2
-    IN_CONTENT = 3
-    IN_CONTENT_ITEM = 4
+    IN_TITLE = 1
+    IN_CONTENT = 2
+    IN_RUN = 3
 
 
 @dataclass
@@ -90,7 +92,6 @@ class StyleVisitor(docutils.nodes.NodeVisitor):
     sheet: Sheet
     style_name: Optional[str]
 
-
     def __init__(self, document, sheet: Sheet):
         super().__init__(document)
         self.sheet = sheet
@@ -119,7 +120,6 @@ class StyleVisitor(docutils.nodes.NodeVisitor):
         raise docutils.nodes.SkipChildren
 
 
-
 class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def __init__(self, document, sheet: Sheet):
@@ -130,13 +130,8 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         self.current_style_def_name = None
 
         self.state = State.READY
-        self.state = State.READY
         self.status = Status()
         self.sheet = sheet
-
-    def change_state(self, status: State):
-        LOGGER.info("   [changing state from '%s' -> '%s]", self.state.name, status.name)
-        self.state = status
 
     def visit_comment(self, node: docutils.nodes.comment) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
@@ -189,45 +184,22 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def visit_section(self, node: docutils.nodes.Node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
+        # If we are handling blocks, this is a new section so finish the old
         if self.status.block:
-            # If we are handling blocks, this is a new section so finish the old
             self.status.finish_section()
-
         self.ensure_section()
-
-    def visit_paragraph(self, node) -> None:
-        LOGGER.debug("Entering '%s'", self.status.enter(node))
-        if self.state == State.IN_CONTENT_ITEM:
-            LOGGER.debug("Finished content item")
-            self.state = State.IN_CONTENT
-        else:
-            LOGGER.debug("Ignoring paragraph marker")
-
-    def visit_definition_list(self, node) -> None:
-        LOGGER.debug("Entering '%s'", self.status.enter(node))
-        self.status.block = None
-        self.state = State.READY
 
     def visit_definition_list_item(self, node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         self.status.block = None
         self.state = State.READY
 
-
     def visit_definition(self, node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         self.state = State.IN_CONTENT
 
-    def visit_bullet_list(self, node: docutils.nodes.bullet_list) -> None:
-        LOGGER.debug("Entering '%s'", self.status.enter(node))
-        if not self.status.block:
-            raise FormatError("List without preceeding text to define a block title, line=%d", line_of(node))
-        self.state = State.IN_CONTENT
-
     def visit_list_item(self, node: docutils.nodes.list_item) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
-        if not self.state in {State.IN_CONTENT, State.IN_CONTENT_ITEM}:
-            raise FormatError("Unexpected list item outside of list, line=%d" % line_of(node))
         self.state = State.IN_CONTENT
 
     def visit_Text(self, node: docutils.nodes.Text) -> None:
@@ -235,17 +207,17 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         txt = node.astext().replace('\n', ' ')
         modifiers = self.status.style_modifers()
         if self.state == State.READY:
-            raise RuntimeError("encountered text in unknown context")
+            raise RuntimeError("Encountered text in unknown context")
         elif self.state == State.IN_TITLE:
-            LOGGER.info("Adding to title '%s', style=%s, mods=%s", txt, self.style, modifiers)
+            LOGGER.info(".. adding to title '%s', style=%s, mods=%s", txt, self.style, modifiers)
             self.status.block.add_txt_to_title(txt, self.style, modifiers)
         elif self.state == State.IN_CONTENT:
-            LOGGER.info("Creating new run : '%s', style=%s, mods=%s", txt, self.style, modifiers)
+            LOGGER.info(".. creating new run : '%s', style=%s, mods=%s", txt, self.style, modifiers)
             self.status.block.add_content()
             self.status.block.add_txt_to_run(txt, self.style, modifiers)
-            self.state = State.IN_CONTENT_ITEM
-        elif self.state == State.IN_CONTENT_ITEM:
-            LOGGER.info("Adding to run: '%s', style=%s, mods=%s", txt, self.style, modifiers)
+            self.state = State.IN_RUN
+        elif self.state == State.IN_RUN:
+            LOGGER.info(".. adding text to run: '%s', style=%s, mods=%s", txt, self.style, modifiers)
             self.status.block.add_txt_to_run(txt, self.style, modifiers)
         else:
             print('UNPROCESSED TEXT:', txt)
@@ -259,10 +231,14 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         self.status.block.image = node.attributes
 
     def unknown_visit(self, node: docutils.nodes.Node) -> None:
-        LOGGER.debug("Entering '%s' (no special handling)", self.status.enter(node))
+        txt = self.status.enter(node)
+        if LOG_UNHANDLED:
+            LOGGER.debug("Entering '%s' (no special handling)", txt)
 
     def unknown_departure(self, node: docutils.nodes.Node) -> None:
-        LOGGER.debug("Departing '%s'", self.status.depart(node))
+        txt = self.status.depart(node)
+        if LOG_UNHANDLED:
+            LOGGER.debug("Departing '%s'", txt)
 
     def ensure_block(self):
         if not self.status.block:
