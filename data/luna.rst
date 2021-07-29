@@ -1,26 +1,18 @@
-.. section: stack
-.. title: hidden
-.. style: title
+.. section: stack columns=3
+.. title: banner style=title
 
 Lunathien Calenmaethor
-
----------------------------------------------------------------
-
-.. section: stack columns=4
-.. style: default
-
-Logo
+======================
 
 .. image:: data/13thAgelogo.png
    :height: 50
+   :align: left
+..
 
-
-
-Basic Info
- - Race      | Wood Elf
- - Class     | Druid
- - Gender    | Female
- - Age       | 62
+-  Race      | Wood Elf
+- Class     | Druid
+- Gender    | Female
+- Age       | 62
 
 Attributes
  - Strength     | 8  | -1

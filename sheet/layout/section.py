@@ -115,7 +115,7 @@ class SectionLayout:
         k = len(column_divisions)
         n = len(self.items)
 
-        results = [[i] for i in range(1, n + 1)]
+        results = [[i] for i in range(1, n)]
 
         for c in range(2, k):
             step = []

@@ -104,7 +104,7 @@ class Block:
     title: Optional[Run] = None
     content: List[Run] = field(default_factory=list)
     image: Dict[str, str] = field(default_factory=dict)
-    title_method: str = 'banner'
+    title_method: common.Command = common.parse_directive('banner')
     padding: int = 4
 
     def add_title(self):
@@ -179,6 +179,8 @@ class Section:
     def fixup(self, parent: Sheet):
         for c in self.content:
             c.fixup(self)
+        if not self.content:
+            parent.content.remove(self)
 
 
 @dataclass
