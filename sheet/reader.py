@@ -259,7 +259,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         if not self.status.section:
             layout = self.section_layout_method
             LOGGER.info("... Adding section with layout = %s", layout)
-            self.status.section = Section(layout_method=layout)
+            self.status.section = Section(layout_method=layout, padding=self.sheet.padding)
             self.sheet.content.append(self.status.section)
             self.state = State.READY
 

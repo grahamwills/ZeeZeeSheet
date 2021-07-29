@@ -92,8 +92,35 @@ Talents & Features
    or exposure. You can go longer than most people without eating or drinking,
    but only a couple days longer.
 
+.. title: banner style=heading_orange
+.. style: orange
+
+Elemental Pivot -- Encounter []
+ - **Flexible Attack**      --      **Trigger**: Natural 18+
+ - **Effect**: During your next turn, you can cast an Elemental Mastery
+   at-will feat spell of your choice once as a quick action, even if
+   you don’t normally know that spell.
+
+Nature's Fury -- Encounter []
+ - **Flexible Attack**      --      **Trigger**: Natural 2-5
+ - **Effect**: Deal half damage
+
 .. title: banner style=heading_red
 .. style: red
+
+Frost Touch (1) -- Encounter []
+ - **Close Quarters Terrain Feat Spell**    --      **Nearby**
+ - **Target**: One Creature                 --      **Attack**: +6 vs PD
+ - **Hit**: 2d6+4 (3d6+4 to engaged enemy)
+ - **Natural Even Miss**: Half damage
+ - **Natural Odd Miss**: Level damage
+
+Ruination (3) -- Encounter []
+ - **Ranged Terrain Feat Spell**            --      **Nearby**
+ - **Target**: All nearby enemies           --      **Attack**: +6 vs MD
+ - **Hit**: 4d6 to all nearby enemies (once to each mook group)
+ - **Note**: Targets the highest MD of all nearby enemies
+   (don't have to be able to see them)
 
 Elven Grace -- Wood Elf
  - At the beginning of each of your turns, roll a d6 to see if you get an extra
@@ -138,6 +165,16 @@ Aspect of the Bear -- Daily []
  - **Effect**: Until the end of the battle, while in beast form,
    gain +2 to attack and damage against mooks and enemies of lower level
 
+Scout Form Reconnaissance -- Daily []
+ - **Retrospective Action**    -- DC 15/20/25
+ - Scout Form Background: **d4+1**
+ - *Normal success*: You gain a +4 bonus to initiative this battle.
+ - *Hard success*: As a free action at some point during the battle,
+   you can grant one of your allies a re-roll on an attack roll or save.
+ - *Ridiculously hard success*: The GM chooses between giving you a re-roll
+   at some point during the battle, or giving you a floating story-guide icon
+   relationship result of 6 with a random icon.
+
 
 ---------------------------------------------------------------
 
@@ -160,6 +197,8 @@ heading_green
   inherit=heading background=green borderColor=green
 heading_red
   inherit=heading background=red  borderColor=red
+heading_orange
+  inherit=heading background=orange  borderColor=orange
 
 blue
   background=#eef
@@ -169,3 +208,5 @@ green
   background=#efe
 red
   background=#fee
+orange
+  background=#fec

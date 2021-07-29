@@ -189,7 +189,7 @@ class Sheet:
     styles: Dict[str, Style] = field(default_factory=OrderedDict)
     layout_method: str = common.parse_directive('stack')
     margin: int = 36
-    padding: int = 4
+    padding: int = 8
 
     def print(self):
         print("Sheet margin=%d, padding=%d)" % (self.margin, self.padding))

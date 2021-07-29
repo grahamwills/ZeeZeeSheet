@@ -18,7 +18,7 @@ def score_placement(columns: [PlacedContent]) -> float:
     max_height = max(c.height for c in column_bounds)
     issues = sum(c.issues for c in columns)
     wasted_space = sum((max_height - r.height) * r.width for r in column_bounds)
-    return 1000 * issues + max_height + wasted_space ** 0.5
+    return 1000 * issues + max_height + wasted_space / 1000
 
 
 def divisions(fractions: [float], low: int, high: int, spacing: int) -> Tuple[Tuple[int]]:

@@ -26,7 +26,7 @@ def make_row_from_run(run: [Element], pdf: PDF, width: int) -> [Flowable]:
     if spacer_count < 2:
         alignments = ['left', 'right']
     else:
-        alignments = ['left'] * (spacer_count - 2) + ['center', 'right']
+        alignments = ['left'] * (spacer_count - 1) + ['center', 'right']
 
     row = []
     start = 0
