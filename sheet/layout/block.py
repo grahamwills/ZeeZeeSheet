@@ -99,6 +99,9 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
             im = Image(file, width=width, height=h * width / w)
         elif height:
             im = Image(file, height=height, width=w * height / h)
+        elif w > bounds.width:
+            # Fit to the column's width
+            im = Image(file, width=bounds.width, height=h * bounds.width / w)
 
     w, h = im.wrapOn(pdf, bounds.width, bounds.height)
     image = PlacedFlowableContent(im, bounds.resize(width=w, height=h))
@@ -114,6 +117,9 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
 
 
 def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
+    if not block.content:
+        return PlacedContent(bounds.resize(height=0))
+
     results = []
     style = pdf.style(block.base_style())
 
@@ -141,10 +147,13 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
     else:
         line_width = 0
 
-    inset = line_width + block.padding
-    margins = Margins.all_equal(inset)
+    if style.has_border():
+        padding = block.padding
+    else:
+        padding = 0
 
-    placed = []
+    inset = line_width + padding
+    margins = Margins.all_equal(inset)
 
     if show_title and block.title:
         title_mod = Run([e.replace_style(style_name) for e in block.title.items])
@@ -152,9 +161,10 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
         paragraph, w, height = as_one_line(title_mod, pdf, title_bounds.width)
 
         # We remove the extra leading the paragraph gave us at the bottom (0.2 * font-size)
-        plaque_height = height + 2 * block.padding - style.size * 0.2
+        plaque_height = height + 2 * padding - style.size * 0.2
         title_bounds = title_bounds.resize(height=height)
 
+        placed = []
         if style.background:
             plaque = (bounds - Margins.all_equal(line_width)).resize(height=plaque_height)
             placed.append(PlacedRectContent(plaque, style, fill=True, stroke=False))

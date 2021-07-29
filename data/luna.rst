@@ -33,6 +33,13 @@ Defenses
 ---------------------------------------------------------------
 
 .. section: stack columns=3
+.. title: hidden
+
+Picture
+
+.. image:: data/images/luna.jpg
+..
+
 .. title: banner style=heading_blue
 .. style: blue
 
@@ -46,10 +53,10 @@ Icon Relationships
 
 
 Backgrounds
- - Princess of the Elven Courts     | 3
- - Inventive Explorer               | 4
- - Madly In Love with a Stupid Guy  | 4
- - *Further backgrounding (2 extra)*
+ - Princess of the Elven Courts     --  3
+ - Inventive Explorer               --  4
+ - Madly In Love with a Stupid Guy  --  4
+ - -- *Further backgrounding (2 extra)*
 
 Talents & Features
  - **Warrior Druid Initiate**: You are trained to survive the wilds and fight in combat.

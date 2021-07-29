@@ -168,6 +168,13 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             self.status.block.add_title()
             self.state = State.IN_TITLE
 
+    def visit_paragraph(self, node) -> None:
+        LOGGER.debug("Entering '%s'", self.status.enter(node))
+        if not self.status.block:
+            self.ensure_block()
+            self.status.block.add_title()
+            self.state = State.IN_TITLE
+
     def visit_term(self, node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         self.ensure_block()

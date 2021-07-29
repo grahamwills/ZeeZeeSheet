@@ -17,7 +17,7 @@ class PlacedContent:
     bounds: Rect
     issues: int
 
-    def __init__(self, bounds: Rect, issues: int):
+    def __init__(self, bounds: Rect, issues: int=0):
         self.issues = issues
         self.bounds = bounds.round()
 
