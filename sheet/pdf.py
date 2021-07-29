@@ -69,15 +69,11 @@ class PDF(canvas.Canvas):
 
         # Add spaces between check boxes and other items
         items = []
-        last_which = ElementType.TEXT
         for e in run.items:
-            if e.which == ElementType.CHECKBOX and last_which != e.which:
-                items.append(Element(ElementType.TEXT,' ', e.style))
-            if last_which == ElementType.CHECKBOX and e.which != e.which:
-                items.append(Element(ElementType.TEXT,' ', e.style))
-            items.append(e)
-        html = "".join(_element_to_html(e, self) for e in items)
-        return Paragraph(html, pStyle)
+            if e is not run.items[0] and not e.value[0] in ":;-=":
+                items.append(' ')
+            items.append(_element_to_html(e, self))
+        return Paragraph("".join(items), pStyle)
 
     def descender(self, style: Style) -> float:
         return -pdfmetrics.getDescent(style.font, style.size)

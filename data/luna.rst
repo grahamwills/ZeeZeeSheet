@@ -33,8 +33,22 @@ Defenses
 
 ---------------------------------------------------------------
 
+.. title: banner style=heading_blue
+.. section: stack columns=2
+
+Level **2**
+ - [X] Class: *Aspect - Bear*
+ - [X] Feat:  *Ruination Spell*
+ - [ ]
+
+Hits: **28**        --  Staggered: **14**
+ - Recoveries: [ ][ ][ ][ ][ ][ ][ ][ ] -- **2d6+1**
+
+---------------------------------------------------------------
+
 .. section: stack columns=3
 .. title: hidden
+
 
 Picture
 
@@ -137,7 +151,7 @@ title
   size=20 color=darkGreen family=Times-Roman
 
 heading
-  color=white background=black align=center family=Helvetica
+  color=white background=black family=Helvetica
 heading_blue
   inherit=heading background=navy borderColor=navy
 heading_black
