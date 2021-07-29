@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, OrderedDict, Tuple
+from typing import Dict, List, Optional, OrderedDict
 
 from colour import Color
 
@@ -28,9 +28,10 @@ class Style:
 
 class ElementType(Enum):
     TEXT = 0
-    CHECKBOX = 1
-    DIVIDER = 2
-    SPACER = 3
+    SYMBOL = 1
+    CHECKBOX = 2
+    DIVIDER = 3
+    SPACER = 4
 
 
 @dataclass
@@ -64,6 +65,7 @@ class Element:
         return Element(which=self.which, value=self.value, style=style, modifiers=self.modifiers)
 
 
+
 @dataclass
 class Run:
     items: List[Element] = field(default_factory=list)
@@ -94,16 +96,20 @@ class Run:
     def valid(self):
         return len(self.items) > 0
 
-    def base_style(self) ->  str:
+    def base_style(self) -> str:
         #  Lazy, just use the first
         return self.items[0].style
+
+    def fixup(self, parent):
+        self.items = ensure_representable(self.items)
 
 
 @dataclass
 class Block:
     title: Optional[Run] = None
     content: List[Run] = field(default_factory=list)
-    title_method = 'banner'
+    image: Dict[str, str] = field(default_factory=dict)
+    title_method: str = 'banner'
     padding: int = 4
 
     def add_title(self):
@@ -122,9 +128,14 @@ class Block:
         print("  • Block title='%s',padding=%d" % (self.title, self.padding))
         for c in self.content:
             print("     -", c)
+        if self.image:
+            print("     - Image('%s')" % self.image['uri'])
 
     def __str__(self):
-        return "Block('%s' with %d runs)'" % (self.title, len(self.content))
+        if self.image:
+            return "Block('%s' with image '%s')" % (self.title, self.image['uri'])
+        else:
+            return "Block('%s' with %d runs)" % (self.title, len(self.content))
 
     def needs_table(self) -> bool:
         """ If dividers in any run"""
@@ -133,8 +144,13 @@ class Block:
     def __hash__(self):
         return id(self)
 
-    def fixup(self, parent:Section):
-        if not self.content:
+    def fixup(self, parent: Section):
+        if self.title:
+            self.title.fixup(self)
+        if self.content:
+            for r in self.content:
+                r.fixup(self)
+        elif not self.image:
             if self.title:
                 # Move the title to the content
                 self.content = [self.title]
@@ -143,9 +159,9 @@ class Block:
                 # Nothing is defined so kill this
                 parent.content.remove(self)
 
-    def base_style(self) ->  str:
+    def base_style(self) -> str:
         #  Lazy, just use the first
-        return self.content[0].base_style()
+        return self.content[0].base_style() if self.content else None
 
 
 @dataclass
@@ -163,9 +179,9 @@ class Section:
             b.print()
 
     def __str__(self):
-        return "Section(%d blocks, layout='%s'" % (len(self.content), self.layout_method)
+        return "Section(%d blocks, layout='%s')" % (len(self.content), self.layout_method)
 
-    def fixup(self, parent:Sheet):
+    def fixup(self, parent: Sheet):
         for c in self.content:
             c.fixup(self)
 
@@ -178,9 +194,8 @@ class Sheet:
     margin: int = 36
     padding: int = 4
 
-
     def print(self):
-        print("Sheet margin=%d, padding=%d" % (self.margin, self.padding))
+        print("Sheet margin=%d, padding=%d)" % (self.margin, self.padding))
         print("  Styles:")
         for p in self.styles.items():
             print("%16s = %s" % p)
@@ -188,8 +203,30 @@ class Sheet:
             p.print()
 
     def __str__(self):
-        return "Sheet(%d sections, %d styles" % (len(self.content), len(self.styles))
+        return "Sheet(%d sections, %d styles)" % (len(self.content), len(self.styles))
 
     def fixup(self):
         for c in self.content:
             c.fixup(self)
+
+
+
+def ensure_representable(items: List[Element]) -> List[Element]:
+    result = []
+    for item in items:
+        if item.which == ElementType.TEXT:
+            run_start = 0
+            for i,c in enumerate(item.value):
+                if ord(c) > 255:
+                    if i > run_start:
+                        result.append(Element(ElementType.TEXT, item.value[run_start:i], item.style, item.modifiers))
+                    result.append(Element(ElementType.SYMBOL, c, item.style, item.modifiers))
+                    run_start = i+1
+            if len(item.value) > run_start:
+                result.append(Element(ElementType.TEXT, item.value[run_start:], item.style, item.modifiers))
+        else:
+            result.append(item)
+
+
+    return result
+

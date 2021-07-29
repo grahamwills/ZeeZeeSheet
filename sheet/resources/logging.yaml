@@ -1,7 +1,7 @@
 version: 1
 formatters:
   screen:
-    format: "\u001b[37m%(asctime)s  %(funcName)-24s \u001b[32m%(levelname)-8s \u001b[30m\u001b[1m%(message)s\u001b[0m"
+    format: "\u001b[37m%(asctime)s %(name)-12s %(funcName)-24s \u001b[32m%(levelname)-8s \u001b[30m\u001b[1m%(message)s\u001b[0m"
     datefmt: "%Y-%m-%d %H:%M:%S"
 
   logfile:
@@ -26,9 +26,19 @@ handlers:
 
 
 loggers:
+  reader:
+    level: INFO
+    handlers: [ file ]
+    propagate: no
+
   layout.section:
     level: WARNING
     handlers: [ console ]
+    propagate: no
+
+  PIL.PngImagePlugin:
+    level: ERROR
+    handlers: [ file ]
     propagate: no
 
 

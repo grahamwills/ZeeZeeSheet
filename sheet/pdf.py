@@ -31,7 +31,7 @@ class PDF(canvas.Canvas):
         self.save()
 
     def style(self, style):
-        return self._styles[style]
+        return self._styles[style] if style else None
 
     def fillColor(self, color: Color, alpha=None):
         self.setFillColorRGB(*color.rgb, alpha=alpha)
@@ -52,49 +52,41 @@ class PDF(canvas.Canvas):
             self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=0, stroke=1)
 
     def draw_flowable(self, paragraph, bounds):
+        if self.debug:
+            self.stroke_rect(bounds, Style(borderColor=Color('red')))
         paragraph.drawOn(self, bounds.left, self.page_height - bounds.bottom)
 
     def make_paragraph(self, run: Run, align='left'):
         style = self.style(run.base_style())
 
-        """
-    font: str = None
-    align: str = None
-    size: float = None
-    color: Color = None
-    background: Color = None
-    borderColor: Color = None
-    borderWidth: float = 0.5
-        
-        """
-
         pStyle = ParagraphStyle(name='a', fontName=style.font, fontSize=style.size, leading=style.size*1.2)
 
 
-        html = "".join(_element_to_html(e, self) for e in run.items)
+        html = " ".join(_element_to_html(e, self) for e in run.items)
         html = "<para autoleading='off' align='%s'>%s</para>" % (align, html)
         return Paragraph(html, pStyle)
 
-    def descender(self, style:Style) -> float:
+    def descender(self, style: Style) -> float:
         return -pdfmetrics.getDescent(style.font, style.size)
 
 
 def _element_to_html(e: Element, pdf: PDF):
-    if e.which == ElementType.TEXT:
+    if e.which == ElementType.TEXT or e.which == ElementType.SYMBOL:
         txt = e.value
-        if e.modifiers:
-            if 'I' in e.modifiers:
-                txt = '<i>' + txt + '</i>'
-            if 'B' in e.modifiers:
-                txt = '<b>' + txt + '</b>'
-        if e.style:
-            style = pdf.style(e.style)
-            size = " size='%d'" % style.size if style.size else ''
-            face = " face='%s'" % style.font if style.font else ''
-            color = " color='%s'" % style.color.get_hex_l() if style.color else ''
-            return "<font %s%s%s>%s</font>" % (face, size, color, txt)
     else:
-        return str(e)
+        txt = str(e)
+    if e.modifiers:
+        if 'I' in e.modifiers:
+            txt = '<i>' + txt + '</i>'
+        if 'B' in e.modifiers:
+            txt = '<b>' + txt + '</b>'
+    style = pdf.style(e.style)
+    size = " size='%d'" % style.size if style.size else ''
+    face = " face='%s'" % style.font if style.font else ''
+    color = " color='%s'" % style.color.get_hex_l() if style.color else ''
+    if e.which != ElementType.TEXT:
+        face = " face='Symbola'"
+    return "<font %s%s%s>%s</font>" % (face, size, color, txt)
 
 
 def as_one_line(run: Run, context: PDF, width: int):
@@ -108,8 +100,7 @@ def as_one_line(run: Run, context: PDF, width: int):
     paragraphs = []
 
     commands = [
-        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-        ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0),
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ('TOPPADDING', (0, 0), (-1, -1), 0),

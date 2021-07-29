@@ -10,7 +10,6 @@ from model import Style
 from pdf import PDF
 
 
-
 class PlacedContent:
     bounds: Rect
     margins: Optional[Margins]
@@ -21,7 +20,7 @@ class PlacedContent:
         self.draw = draw
 
 
-def empty_content(bounds:Rect) -> PlacedContent:
+def empty_content(bounds: Rect) -> PlacedContent:
     return PlacedContent(bounds, lambda x: None)
 
 
@@ -52,4 +51,3 @@ def rect_content(bounds: Rect, style: Style, fill, stroke):
             pdf.stroke_rect(bounds, style)
 
     return PlacedContent(bounds, _draw)
-

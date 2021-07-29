@@ -48,20 +48,10 @@ def place_single(layout: SectionLayout, index: int, r: Rect) -> float:
 
 
 def score_extents(extents: [float], column_divs: [(int, int)]) -> float:
-    dev = statistics.stdev(extents)
-
-    pairs = list(zip(extents, column_divs))
-    pairs.sort(key=lambda x: x[0])
-
-    # We want to allocate more room to the lowest, so we create a score to help that even if
-    # it does not change the lowests right for this configuration
-    factor = 0
-    wt = 0
-    for i, r in enumerate(pairs):
-        wt += i
-        factor += i * (r[1][1] - r[1][0])
-    width_factor = factor / wt
-    return dev - width_factor * 1e-4
+    widths = [a[1]-a[0] for a in column_divs]
+    height = max(extents)
+    wasted_space = sum( (height-h)*w for w,h in zip(widths, extents))
+    return wasted_space
 
 
 class LayoutDetails(NamedTuple):
@@ -175,9 +165,9 @@ class SectionLayout:
         k = int(columns)
         n = len(self.items)
         if k == 1:
-            height = self.place_in_single_column(0, n, self.bounds, exact_placement=True)
+            lowest = self.place_in_single_column(0, n, self.bounds, exact_placement=True)
             b = self.bounds
-            return Rect(left=b.left, right=b.right, top=b.top, height=height)
+            return Rect(left=b.left, right=b.right, top=b.top, bottom=lowest)
 
         LOGGER.info("Stacking %d items vertically into %d columns: %s", n, k, self.bounds)
 

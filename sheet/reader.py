@@ -168,8 +168,11 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         self.next_is_italic = True
 
     def visit_image(self, node: docutils.nodes.image) -> None:
-        LOGGER.info("Ignoring image '%s'", node.attributes.get('uri'))
-        pass
+
+        if not self.current_block or self.current_block.content:
+            # New block for the image
+            self.current_block = Block()
+        self.current_block.image = node.attributes
 
     def unknown_visit(self, node: docutils.nodes.Node) -> None:
         """Called for all other node types."""

@@ -1,16 +1,19 @@
-.. section: stack columns=3
+.. section: stack
 .. title: hidden
 .. style: title
 
 Lunathien Calenmaethor
 
+---------------------------------------------------------------
+
+.. section: stack columns=4
+.. style: default
 
 Logo
 
 .. image:: data/13thAgelogo.png
-   :height: 100
+   :height: 50
 
-.. style: default
 
 
 Basic Info
@@ -43,8 +46,8 @@ One Unique Thing
  - My firstborn will be the next Elf Queen
 
 Icon Relationships
- - Elf Queen  | + +
- - High Druid | +
+ - Elf Queen  | ♡ ♡
+ - High Druid | ♡
 
 
 Backgrounds
