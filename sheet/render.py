@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Tuple
 
-from reportlab.platypus import Flowable, ParaFrag, ParaLines, Paragraph, Table, Image
-from reportlab.platypus.paragraph import FragLine, _SplitWordEnd
+from reportlab.platypus import Flowable, Image, Paragraph, Table
+from reportlab.platypus.paragraph import _SplitWordEnd
 
 from common import Rect
 from model import Style
@@ -25,45 +25,42 @@ class PlacedContent:
         pass
 
 
-def _count_wraps(f):
+def _count_split_words(item):
+    if isinstance(item, Tuple):
+        return sum(isinstance(i, _SplitWordEnd) for i in item[1])
+    else:
+        return 0
+
+
+def _count_wraps(f, any_wrap_bad=False):
     if isinstance(f, Table):
-        flat_list = [item for row in f._cellvalues for item in row]
-        return sum(_count_wraps(f) for f in flat_list)
-    elif isinstance(f, (Image,str)):
+        rows = f._cellvalues
+        flat_list = [item for row in rows for item in row]
+
+        # For a single row table, any wrapping is bad
+        single_line_table = len(rows) == 1
+        return sum(_count_wraps(f, single_line_table) for f in flat_list)
+    elif isinstance(f, (Image, str)):
         return 0
     elif isinstance(f, Paragraph):
         lines = f.blPara.lines
         if len(lines) < 2:
             return 0
-        last = lines[-1]
-        if isinstance(last, ParaLines):
-            w = last.words[-1].text
-        else:
-            w = last[-1][-1]
 
-        prev = lines[-2]
-        if isinstance(prev, FragLine):
-            v = prev.words[-1].text
-        elif isinstance(prev, ParaLines):
-                v = prev.words[-1].text
-        else:
-            v = prev[-1][-1]
-        if isinstance(w, _SplitWordEnd):
-            # print(v, w)
-            return 1
-        return 0
+        split_words = sum(_count_split_words(line) for line in lines)
+        return split_words * 10 + int(any_wrap_bad)
     else:
-        try:
-            return _count_wraps(f[0])
-        except:
-            return 0
+        return _count_wraps(f[0], any_wrap_bad)
 
 
 class PlacedFlowableContent(PlacedContent):
     flowable: Flowable
 
     def __init__(self, flowable: Flowable, bounds: Rect):
-        issues = _count_wraps(flowable)
+        try:
+            issues = _count_wraps(flowable)
+        except:
+            issues = 100
         super().__init__(bounds, issues)
         self.flowable = flowable
 

@@ -13,6 +13,14 @@ from render import PlacedContent, PlacedGroupContent
 LOGGER = configured_logger(__name__)
 
 
+def score_placement(columns: [PlacedContent]) -> float:
+    column_bounds = [c.bounds for c in columns]
+    max_height = max(c.height for c in column_bounds)
+    issues = sum(c.issues for c in columns)
+    wasted_space = sum((max_height - r.height) * r.width for r in column_bounds)
+    return 1000 * issues + max_height + wasted_space ** 0.5
+
+
 def divisions(fractions: [float], low: int, high: int, spacing: int) -> Tuple[Tuple[int]]:
     """ Divide up a space according to the fractions given """
 
@@ -23,7 +31,7 @@ def divisions(fractions: [float], low: int, high: int, spacing: int) -> Tuple[Tu
     running = 0
     for i, v in enumerate(fractions):
         running += v
-        right = round(running * W) + i * spacing
+        right = low + round(running * W) + i * spacing
         result.append((left, right))
         left = right + spacing
 
@@ -32,10 +40,7 @@ def divisions(fractions: [float], low: int, high: int, spacing: int) -> Tuple[Tu
     return tuple(result)
 
 
-def param_badness(params: np.ndarray) -> float:
-    last = 1.0 - sum(params)
-    return sum(max(0.0, v - 1) + max(0.0, -v) for v in list(params)) + sum(v == 0 for v in list(params)) * 1e-2 \
-           + max(0.0, -last) + (last == 0) * 1e-2
+_MIN_WIDTH = 20
 
 
 @lru_cache(maxsize=2048)
@@ -47,14 +52,6 @@ def estimate_single_size(layout: SectionLayout, index: int, width: int) -> Place
 
 def place_single(layout: SectionLayout, index: int, r: Rect) -> PlacedContent:
     return layout.items[index].place(r)
-
-
-def score_placement(columns: [PlacedContent]) -> float:
-    column_bounds = [c.bounds for c in columns]
-    height = max(c.height for c in column_bounds)
-    issues = sum(c.issues for c in columns)
-    wasted_space = sum((height - r.height) * r.width for r in column_bounds)
-    return 1000* issues + wasted_space  ** 0.5
 
 
 class LayoutDetails(NamedTuple):
@@ -178,11 +175,13 @@ class SectionLayout:
         optimal = dict()
 
         def adapter_function_cols(params):
-            badness = param_badness(params)
-            if badness > 0:
-                return 1e12 * (1 + badness * badness)
 
             cols = divisions(params, self.bounds.left, self.bounds.right, self.padding)
+
+            badness = sum(max(0, (_MIN_WIDTH - (pair[1] - pair[0]))) ** 2 for pair in cols)
+            if badness > 0:
+                return 1e12 * (1 + badness)
+
             details = self.allocate_items_to_fixed_columns(cols)
             optimal[details.column_divisions] = details.allocation_divisions
             return details.score

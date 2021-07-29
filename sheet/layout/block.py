@@ -9,9 +9,9 @@ from reportlab.platypus import Image
 
 import common
 from common import Margins, Rect
+from layout.table import as_one_line, table_layout
 from model import Block, Run
 from pdf import PDF
-from layout.table import as_one_line, table_layout
 from render import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 
 
@@ -57,12 +57,13 @@ class BlockLayout:
         else:
             raise ValueError("unknown title method '%s'" % title.command)
 
-        if self.block.image:
-            self.content_layout = image_layout
-        elif self.block.needs_table():
+        if self.block.needs_table():
             self.content_layout = table_layout
         else:
             self.content_layout = paragraph_layout
+
+        if self.block.image:
+            self.content_layout = functools.partial(image_layout, other_layout=self.content_layout)
 
     def layout(self):
         bounds = self.bounds
@@ -82,10 +83,12 @@ class BlockLayout:
         return PlacedGroupContent(items)
 
 
-def image_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
+def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -> PlacedContent:
     file = Path(__file__).parent.parent.parent.joinpath(block.image['uri'])
     width = int(block.image['width']) if 'width' in block.image else None
     height = int(block.image['height']) if 'height' in block.image else None
+
+    on_right = block.image.get('align', 'left').lower() == 'right'
 
     if width and height:
         im = Image(file, width=width, height=height)
@@ -98,7 +101,16 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
             im = Image(file, height=height, width=w * height / h)
 
     w, h = im.wrapOn(pdf, bounds.width, bounds.height)
-    return PlacedFlowableContent(im, bounds.resize(width=w, height=h))
+    image = PlacedFlowableContent(im, bounds.resize(width=w, height=h))
+
+    if on_right:
+        ob = Rect(left=bounds.left, right=bounds.right - w - block.padding, top=bounds.top, bottom=bounds.bottom)
+        image.bounds = image.bounds.move(dx=bounds.width - w)
+    else:
+        ob = Rect(left=bounds.left + w + block.padding, right=bounds.right, top=bounds.top, bottom=bounds.bottom)
+    other = other_layout(block, ob, pdf)
+
+    return PlacedGroupContent([image, other])
 
 
 def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:

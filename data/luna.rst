@@ -4,10 +4,12 @@
 Lunathien Calenmaethor
 ======================
 
-.. image:: data/13thAgelogo.png
+.. image:: data/images/13thAgelogo.png
    :height: 50
    :align: left
 ..
+
+.. title: hidden
 
 -  Race      | Wood Elf
 - Class     | Druid
@@ -32,6 +34,7 @@ Defenses
 
 .. section: stack columns=3
 .. title: banner style=heading_blue
+.. style: blue
 
 
 One Unique Thing
@@ -68,6 +71,7 @@ Talents & Features
    but only a couple days longer.
 
 .. title: banner style=heading_red
+.. style: red
 
 Elven Grace -- Wood Elf
  - At the beginning of each of your turns, roll a d6 to see if you get an extra
@@ -76,6 +80,7 @@ Elven Grace -- Wood Elf
    increase the die size
 
 .. title: banner style=heading_green
+.. style: green
 
 Melee Basic Attack -- At-Will
  - **Standard Action**      --      **Nearby**
@@ -88,6 +93,7 @@ Ranged Basic Attack -- At-Will
  - **Hit**: d6+4 (bow, axe) --      **Miss**: level damage
 
 .. title: banner style=heading_black
+.. style: black
 
 Terrain Spell -- Daily per terrain
  - Various spells; each one is a separate daily, so a druid can cast
@@ -118,7 +124,7 @@ Styles
 ------
 
 default
-  family=Times-Roman size=9 borderColor=black background=#eeeeee
+  family=Times-Roman size=8
 title
   size=20 color=red family=Helvetica
 
@@ -132,3 +138,12 @@ heading_green
   inherit=heading background=green borderColor=green
 heading_red
   inherit=heading background=red  borderColor=red
+
+blue
+  background=#eef
+black
+  background=#eee
+green
+  background=#efe
+red
+  background=#fee
