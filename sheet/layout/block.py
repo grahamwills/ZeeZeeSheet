@@ -5,6 +5,7 @@ import functools
 from pathlib import Path
 from typing import Callable, NamedTuple, Optional
 
+import PIL
 from reportlab.platypus import Image
 
 import common

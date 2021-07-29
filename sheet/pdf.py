@@ -56,9 +56,10 @@ class PDF(canvas.Canvas):
             self.stroke_rect(bounds, Style(borderColor=Color('red')))
         paragraph.drawOn(self, bounds.left, self.page_height - bounds.bottom)
 
-    def make_paragraph(self, run: Run, align='left'):
+    def make_paragraph(self, run: Run, align=None):
         style = self.style(run.base_style())
 
+        align = align or style.align
 
         alignment = {'left':0, 'center':1, 'right':2, 'fill':4, 'justify':4}[align]
 
@@ -66,7 +67,16 @@ class PDF(canvas.Canvas):
                                 allowWidows=0, embeddedHyphenation =1, alignment=alignment)
 
 
-        html = " ".join(_element_to_html(e, self) for e in run.items)
+        # Add spaces between check boxes and other items
+        items = []
+        last_which = ElementType.TEXT
+        for e in run.items:
+            if e.which == ElementType.CHECKBOX and last_which != e.which:
+                items.append(Element(ElementType.TEXT,' ', e.style))
+            if last_which == ElementType.CHECKBOX and e.which != e.which:
+                items.append(Element(ElementType.TEXT,' ', e.style))
+            items.append(e)
+        html = "".join(_element_to_html(e, self) for e in items)
         return Paragraph(html, pStyle)
 
     def descender(self, style: Style) -> float:

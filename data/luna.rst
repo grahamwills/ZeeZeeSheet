@@ -1,15 +1,16 @@
 .. section: stack columns=3
 .. title: banner style=title
 
-Lunathien Calenmaethor
-======================
+**Lunathien Calenmaethor**
+==========================
+
+.. title: hidden
 
 .. image:: data/images/13thAgelogo.png
    :height: 50
    :align: left
 ..
 
-.. title: hidden
 
 -  Race      | Wood Elf
 - Class     | Druid
@@ -91,12 +92,12 @@ Elven Grace -- Wood Elf
 
 Melee Basic Attack -- At-Will
  - **Standard Action**      --      **Nearby**
- - **Target**: One Creature --      **Attack**:+6 vs AC
+ - **Target**: One Creature --      **Attack**: +6 vs AC
  - **Hit**: d6+4 (axe)      --      **Miss**: level damage
 
 Ranged Basic Attack -- At-Will
  - **Standard Action**      --      **Nearby**
- - **Target**: One Creature --      **Attack**:+6 vs AC
+ - **Target**: One Creature --      **Attack**: +6 vs AC
  - **Hit**: d6+4 (bow, axe) --      **Miss**: level damage
 
 .. title: banner style=heading_black
@@ -112,7 +113,7 @@ Beast Form -- Daily []
    predator such as a wolf, panther, tiger, bear, wolverine or lion.
 
 Beast Form Attack
- - **Melee Attack** +6 vs AC
+ - **Melee Attack**: +6 vs AC
  - *Natural Even Hit*: 2d10+4
  - *Natural Odd Hit*: 2d6+4
  - *Miss*: Repeat the attack against the same or a different target.
@@ -131,9 +132,9 @@ Styles
 ------
 
 default
-  family=Times-Roman size=8
+  family=Times-Roman size=8 align=fill
 title
-  size=20 color=red family=Helvetica
+  size=20 color=darkGreen family=Times-Roman
 
 heading
   color=white background=black align=center family=Helvetica
