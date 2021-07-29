@@ -50,10 +50,10 @@ def place_single(layout: SectionLayout, index: int, r: Rect) -> PlacedContent:
 
 def score_placement(columns: [PlacedContent]) -> float:
     column_bounds = [c.bounds for c in columns]
-    # height = max(c.height for c in column_bounds)
-    # wasted_space = sum((height - r.height) * r.width for r in column_bounds)
-    # return wasted_space
-    return max(c.bottom for c in column_bounds)
+    height = max(c.height for c in column_bounds)
+    wasted_space = sum((height - r.height) * r.width for r in column_bounds)
+    lowest = max(c.bottom for c in column_bounds)
+    return lowest + wasted_space / 1000
 
 
 class LayoutDetails(NamedTuple):
