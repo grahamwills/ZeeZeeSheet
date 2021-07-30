@@ -20,11 +20,17 @@ from pdf import PDF
 @dataclass
 class PlacedContent:
     bounds: Rect
-    issues: int
+    fit_error: float
 
-    def __init__(self, bounds: Rect, issues: int = 0):
-        self.issues = issues
+    def __init__(self, bounds: Rect, fit_error: float = 0):
+        self.fit_error = fit_error
         self.bounds = bounds.round()
+
+    def add_fit_err(self, required: Rect):
+        """ Add error based on how badly we fit"""
+        dx = max(0, self.bounds.width - required.width)
+        dy = max(0, self.bounds.height- required.height)
+        self.fit_error += dx + dy
 
     def draw(self, pdf: PDF):
         pass
@@ -62,11 +68,8 @@ class PlacedFlowableContent(PlacedContent):
     flowable: Flowable
 
     def __init__(self, flowable: Flowable, bounds: Rect):
-        try:
-            issues = _count_wraps(flowable)
-        except:
-            issues = 100
-        super().__init__(bounds, issues)
+        error = 20 * _count_wraps(flowable)
+        super().__init__(bounds, error)
         self.flowable = flowable
 
     def draw(self, pdf: PDF):
@@ -95,7 +98,7 @@ class PlacedGroupContent(PlacedContent):
 
     def __init__(self, group: Iterable[PlacedContent]):
         unioned_bounds = Rect.union(p.bounds for p in group)
-        unioned_issues = sum(p.issues for p in group)
+        unioned_issues = sum(p.fit_error for p in group)
         super().__init__(unioned_bounds, unioned_issues)
         self.group = group
 
@@ -104,7 +107,7 @@ class PlacedGroupContent(PlacedContent):
             p.draw(pdf)
 
 
-def build_font_choices() ->[str]:
+def build_font_choices() -> [str]:
     user_fonts = []
     install_font('Baskerville', 'Baskerville', user_fonts)
     install_font('Droid', 'DroidSerif', user_fonts)

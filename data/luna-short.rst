@@ -17,7 +17,7 @@
 - Gender    | Female
 - Age       | 62
 
-.. block: key-values style=heading_blue rows=3
+.. block: key-values style=heading_green rows=3
 .. style: stat_style
 
 Attributes

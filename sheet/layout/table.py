@@ -47,7 +47,7 @@ def make_row_from_run(run: [Element], pdf: PDF, width: int) -> [Flowable]:
 
     if divider_count == 0:
         # Make a sub-table just for this line
-        return [as_table([row], width)]
+        return [as_table([row], width, pdf)]
     else:
         return row
 
@@ -71,22 +71,11 @@ def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
 
 
 def make_table(pdf, paragraphs, width):
-    table = as_table(paragraphs, width)
+    table = as_table(paragraphs, width, pdf)
     w, h = table.wrapOn(pdf, width, 1000)
     return table, w, h
 
-
-def _estimate_col_width(cells: [[Flowable]], col: int) -> float:
-    mx = 3
-    for row in cells:
-        if col < len(row) and isinstance(row[col], Paragraph):
-            p: Paragraph = row[col]
-            t = sum(len(f.text) * f.fontSize for f in p.frags)
-            mx = max(mx, t)
-    return mx // 2
-
-
-def as_table(cells, width: int):
+def as_table(cells, width: int, pdf:PDF):
     commands = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0),
@@ -95,7 +84,7 @@ def as_table(cells, width: int):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]
 
-    estimated_widths = [_estimate_col_width(cells, i) for i in range(0, len(cells[0]))]
+    estimated_widths = [_col_width(cells, i, pdf) for i in range(0, len(cells[0]))]
 
     factor = width / sum(estimated_widths)
     colWidths = [w * factor for w in estimated_widths]
@@ -103,10 +92,10 @@ def as_table(cells, width: int):
     return Table(cells, colWidths=colWidths, style=(TableStyle(commands)))
 
 
-def center_text(p: Flowable, bounds: Rect, pdf: PDF, style:Style) -> Rect:
-    w, h = p.wrapOn(pdf, bounds.width, bounds.height)
-    top = bounds.top + (bounds.height - h -pdf.descender(style)) / 2
-    return Rect(left=bounds.left, top=top, width=bounds.width, height=h)
+def center_text(p: Flowable, bounds: Rect, pdf: PDF, style: Style) -> Rect:
+    p.wrapOn(pdf, bounds.width, bounds.height)
+    top = bounds.top + (bounds.height - style.size) / 2
+    return Rect(left=bounds.left, top=top, width=bounds.width, height=style.size)
 
 
 def stats_runs(run: [Element], pdf: PDF) -> [Paragraph]:
@@ -117,7 +106,7 @@ def stats_runs(run: [Element], pdf: PDF) -> [Paragraph]:
     for i, e in enumerate(items):
         if e.which in {ElementType.SPACER, ElementType.DIVIDER}:
             if len(row) == 1:
-                multiplier = 1.33333333
+                multiplier = 1.5
             else:
                 multiplier = 1.0
             if items[start:i]:
@@ -127,13 +116,23 @@ def stats_runs(run: [Element], pdf: PDF) -> [Paragraph]:
             start = i + 1
 
     if len(row) == 1:
-        multiplier = 1.33333333
+        multiplier = 1.5
     else:
         multiplier = 1.0
     if items[start:]:
         para = pdf.make_paragraph(Run(items[start:]), align='center', size_factor=multiplier)
         row.append(para)
     return row
+
+
+def _col_width(cells: [[Paragraph]], col: int, pdf: PDF) -> float:
+    mx = 1
+    for row in cells:
+        if col < len(row) and isinstance(row[col], Paragraph):
+            p: Paragraph = row[col]
+            t = sum(pdf.stringWidth(f.text, f.fontName, f.fontSize) for f in p.frags)
+            mx = max(mx, t)
+    return mx
 
 
 def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
@@ -147,10 +146,10 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     text_style_1 = copy(text_style)
     text_style_1.size = text_style_1.size * 3 // 2
     H1 = text_style.size + 2 * padding
-    W1 = 2 * padding + round(_estimate_col_width(items, 0))
+    W1 = 2 * padding + round(_col_width(items, 0, pdf))
 
     H2 = text_style_1.size + 2 * padding
-    W2 = (H2 * 3) // 2
+    W2 = 2 * padding + round(_col_width(items, 1, pdf))
 
     LOGGER.debug("Key Values Layout for %d items, H1=%d, W1=%d", len(items), H1, W1)
 
@@ -173,4 +172,6 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
         contents.append(PlacedFlowableContent(cell[1], center_text(cell[1], r2, pdf, text_style_1)))
         top = r2.bottom + padding
 
-    return PlacedGroupContent(contents)
+    content = PlacedGroupContent(contents)
+    content.add_fit_err(bounds)
+    return content
