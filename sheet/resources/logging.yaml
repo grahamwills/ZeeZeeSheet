@@ -26,6 +26,11 @@ handlers:
 
 
 loggers:
+  pdf:
+    level: WARNING
+    handlers: [ console, file ]
+    propagate: no
+
   reader:
     level: WARNING
     handlers: [ console, file ]
@@ -37,7 +42,7 @@ loggers:
     propagate: no
 
   layout.section:
-    level: DEBUG
+    level: WARNING
     handlers: [ console, file ]
     propagate: no
 

@@ -98,6 +98,20 @@ Druid Features
    or exposure. You can go longer than most people without eating or drinking,
    but only a couple days longer.
 
+.. title: banner style=heading_green
+.. style: green
+
+Melee Basic Attack -- At-Will
+ - **Standard Action**      --      **Nearby**
+ - **Target**: One Creature --      **Attack**: +6 vs AC
+ - **Hit**: d6+4 (axe)      --      **Miss**: level damage
+
+Ranged Basic Attack -- At-Will
+ - **Standard Action**      --      **Nearby**
+ - **Target**: One Creature --      **Attack**: +6 vs AC
+ - **Hit**: d6+4 (bow, axe) --      **Miss**: level damage
+
+
 .. title: banner style=heading_orange
 .. style: orange
 
@@ -134,18 +148,6 @@ Elven Grace -- Wood Elf
    you get an extra standard action. Every time you gain a standard action,
    increase the die size
 
-.. title: banner style=heading_green
-.. style: green
-
-Melee Basic Attack -- At-Will
- - **Standard Action**      --      **Nearby**
- - **Target**: One Creature --      **Attack**: +6 vs AC
- - **Hit**: d6+4 (axe)      --      **Miss**: level damage
-
-Ranged Basic Attack -- At-Will
- - **Standard Action**      --      **Nearby**
- - **Target**: One Creature --      **Attack**: +6 vs AC
- - **Hit**: d6+4 (bow, axe) --      **Miss**: level damage
 
 .. title: banner style=heading_black
 .. style: black
@@ -169,7 +171,7 @@ Aspect of the Bear -- Daily []
  - **Quick action**: Until the end of the battle, while in beast form,
    gain +2 to attack and damage against mooks and enemies of lower level
 
-Scout Form Reconnaissance -- Daily []
+Scout Form  -- Daily []
  - **Retrospective Action**    -- DC 15/20/25
  - Scout Form Background: **d4+1**
  - *Normal success*: Gain +4 bonus to initiative this battle.
@@ -194,15 +196,15 @@ title
 heading
   color=white background=black family=Helvetica
 heading_blue
-  inherit=heading background=navy borderColor=navy
+  inherit=heading background=navy
 heading_black
-  inherit=heading background=black borderColor=black
+  inherit=heading background=black
 heading_green
-  inherit=heading background=green borderColor=green
+  inherit=heading background=green
 heading_red
-  inherit=heading background=red  borderColor=red
+  inherit=heading background=red
 heading_orange
-  inherit=heading background=orange  borderColor=orange
+  inherit=heading background=orange
 
 stat_style
   color=white family=Helvetica size=10

@@ -1,5 +1,6 @@
 """ Optimize a layout"""
 import abc
+from functools import lru_cache
 from typing import Callable, NamedTuple, Optional, Tuple
 
 import numpy as np
@@ -43,7 +44,10 @@ class OptimizeProblem(abc.ABC):
             best_combos[params1] = (f, params2)
             return f
 
-        _, opt1 = self._minimize('stage1', stage1func, x1init)
+        _, opt1 = self._minimize('stage-1', stage1func, x1init)
+
+        LOGGER.debug("Optimizer cache info = %s", str(_score.cache_info()).replace('CacheInfo',''))
+        _score.cache_clear()
 
         if opt1:
             f, opt2 = best_combos[opt1.value]
@@ -53,36 +57,31 @@ class OptimizeProblem(abc.ABC):
             return None, None, None
 
     def _stage2optimize(self, params1: Tuple[int]) -> (float, OptParams):
-
         params2init = self.stage2parameters(params1)
 
         err = self.validity_error(params2init)
         if err > 0:
-            LOGGER.info("Cannot start stage 2 -- out-of-bounds stage1 parameters %s: err = %1.3f", params1, err)
+            LOGGER.info("[stage-2] out-of-bounds initial stage1 parameters %s: err = %s", params1, err)
             return 1e6 * (1 + err * err), None
         else:
-            LOGGER.info("Stage 2 initial parameters = %s", params2init)
+            LOGGER.info("[stage-2] initial parameters = %s", params2init)
 
         def stage2func(x2: Tuple[int]) -> float:
-
             err = self.validity_error(OptParams(x2, params2init.low, params2init.high))
             if err > 0:
-                LOGGER.debug("Out-of-bounds stage2 parameters %s: err = %1.3f", x2, err)
+                LOGGER.debug("Out-of-bounds stage2 parameters %s: err = %s", x2, err)
                 return 1e6 * (1 + err * err)
-
             return _score(self, params1, x2)
 
-        return self._minimize('stage2', stage2func, params2init)
+        return self._minimize('stage-2', stage2func, params2init)
 
     def _minimize(self, name: str, func: Callable[[Tuple[int]], float], x_init: OptParams) -> (float, OptParams):
-
-        x0 = _params2array(x_init)
-
-        bounds = [(0.0, 1.0)] * len(x_init)
 
         def adapter(x: [float]) -> float:
             return func(_array2tuple(x, x_init))
 
+        x0 = _params2array(x_init)
+        bounds = [(0.0, 1.0)] * len(x_init)
         opt_results = optimize.minimize(adapter, x0=np.asarray(x0), method="powell", bounds=bounds)
 
         if opt_results.success:
@@ -96,7 +95,7 @@ class OptimizeProblem(abc.ABC):
     def __hash__(self):
         return id(self)
 
-
+@lru_cache(maxsize=1024)
 def _score(optimizer, params1, params2) -> float:
     return optimizer.score(params1, params2)
 

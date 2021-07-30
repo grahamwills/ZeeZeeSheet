@@ -149,7 +149,7 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
     else:
         line_width = 0
 
-    if style.has_border():
+    if style.has_border() or style.background:
         margin = block.margin
     else:
         margin = 0
