@@ -1,35 +1,14 @@
 from __future__ import annotations
 
-import statistics
 from copy import copy
 from functools import lru_cache
-from typing import List, NamedTuple, Tuple
-
-import numpy as np
-from scipy import optimize
+from typing import List, NamedTuple, Optional, Tuple
 
 from common import Rect, configured_logger
+from layout.optimizer import OptParams, OptimizeProblem
 from render import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
-
-
-def score_placement(columns: [PlacedContent]) -> float:
-    column_bounds = [c.bounds for c in columns]
-    max_height = max(c.height for c in column_bounds)
-    min_height = min(c.height for c in column_bounds)
-    issues = sum(c.fit_error for c in columns)
-    wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
-
-    diff = max_height-min_height
-
-    score = issues + diff + wasted_space
-    LOGGER.info("%s -> %1.3f (%1.1f, %1.1f, %1.1f)",
-                [c.width for c in column_bounds], score,
-                issues, diff, wasted_space
-        )
-
-    return score
 
 
 def divisions(fractions: [float], low: int, high: int, spacing: int) -> Tuple[Tuple[int]]:
@@ -79,23 +58,32 @@ class LayoutDetails(NamedTuple):
     def height(self):
         return self.placed.bounds.height
 
+class SectionLayout(OptimizeProblem):
+    """
+            Treat as an optimization problem where the first stage params are column sizes,
+            second stage params are the allocations to each column
 
-class SectionLayout:
+    """
     items: List
     bounds: Rect
     padding: int
+    exact_placement: bool
 
     def __init__(self, items: List, bounds: Rect, padding: int):
         self.padding = padding
         self.bounds = bounds
         self.items = items
+        self.exact_placement = True
 
-    def place_in_single_column(self, start: int, end: int, bd: Rect, exact_placement) -> PlacedContent:
+    def place_in_column(self, start: int, end: int, bd: Rect) -> PlacedContent:
+        assert 0 <= start < end <= len(self.items)
+
         current = bd.top
         all = []
+
         for i in range(start, end):
             available = Rect(top=current, left=bd.left, right=bd.right, bottom=bd.bottom)
-            if exact_placement:
+            if self.exact_placement:
                 p = place_single(self, i, available)
             else:
                 p = copy(estimate_single_size(self, i, bd.width))
@@ -104,84 +92,88 @@ class SectionLayout:
             current = p.bounds.bottom + self.padding
         return PlacedGroupContent(all)
 
-    def place_in_columns(self, column_divisions, allocation_divisions, exact_placement: bool) -> LayoutDetails:
+    def score_placement(self, columns: [PlacedContent]) -> float:
+        column_bounds = [c.bounds for c in columns]
+        max_height = max(c.height for c in column_bounds)
+        min_height = min(c.height for c in column_bounds)
+        issues = sum(c.fit_error for c in columns)
+        wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
+
+        diff = max_height - min_height
+
+        score = issues + diff + wasted_space
+        LOGGER.debug("%s -> %1.3f (%1.1f, %1.1f, %1.1f)",
+                     [c.width for c in column_bounds], score,
+                     issues, diff, wasted_space)
+
+        return score
+
+    def place_all_columns(self, column_sizes: Tuple[int], item_counts: Tuple[int]) -> [PlacedContent]:
         placed_columns = []
-        for loc, idx in zip(column_divisions, allocation_divisions):
-            b = Rect(left=loc[0], right=loc[1], top=self.bounds.top, bottom=self.bounds.bottom)
-            placed = self.place_in_single_column(idx[0], idx[1], b, exact_placement)
+        sum_widths = 0
+        sum_counts = 0
+        # add the value for the last item
+        all_cols = list(column_sizes) + [(self.bounds.width - sum(column_sizes))]
+        all_counts = list(item_counts) + [len(self.items) - sum(item_counts)]
+
+        for width, count in zip(all_cols, all_counts):
+            left = self.bounds.left + sum_widths
+            sum_widths += width
+            right = self.bounds.left + sum_widths
+            sum_widths += self.padding
+
+            first = sum_counts
+            sum_counts += count
+            last = sum_counts
+
+            b = Rect(left=left, right=right, top=self.bounds.top, bottom=self.bounds.bottom)
+            placed = self.place_in_column(first, last, b)
             placed_columns.append(placed)
+        return placed_columns
 
-        score = score_placement(placed_columns)
+    def score(self, column_sizes: Tuple[int], item_counts: Tuple[int]) -> Optional[float]:
+        placed_columns = self.place_all_columns(column_sizes, item_counts)
+        return self.score_placement(placed_columns)
 
-        return LayoutDetails(column_divisions, allocation_divisions, PlacedGroupContent(placed_columns), score)
-
-    def allocate_items_to_fixed_columns(self, column_divisions) -> LayoutDetails:
-        """ Brute force search for best solution"""
-
-        k = len(column_divisions)
+    def stage2parameters(self, stage1params: Tuple[int]) -> Optional[OptParams]:
         n = len(self.items)
+        k = len(stage1params) + 1
+        m = n // k
+        initial = [m] * (k-1)
 
-        results = [[i] for i in range(1, n)]
+        return OptParams(tuple(initial), 1, n - k+1)
 
-        for c in range(2, k):
-            step = []
-            for r in results:
-                available = n - (k - c) - sum(r)
-                for i in range(1, available + 1):
-                    step.append(r + [i])
-            results = step
+    def validity_error(self, params: OptParams):
+        """ >0 implies far away from desired """
+        low = params.low
+        high = params.high
+        last = params.high + len(params) * params.low - sum(params.value)
+        a = max(0, low - last)
+        b = sum(max(0, low - p) + max(0, p - high) for p in params.value)
+        return a + b
 
-        # Last column is determined by others
-        results = [r + [n - sum(r)] for r in results]
-
-        best = None
-        for a in results:
-            asc = [sum(a[:i]) for i in range(0, k + 1)]
-            alloc = list(zip(asc, asc[1:]))
-            trial = self.place_in_columns(column_divisions, alloc, exact_placement=False)
-            if not best or trial.score < best.score:
-                best = trial
-
-        return best
-
-    def stack_in_columns(self, columns) -> PlacedContent:
-        k = int(columns)
+    def optimize_column_layout(self, k) -> PlacedContent:
         n = len(self.items)
-        if k == 1:
-            return self.place_in_single_column(0, n, self.bounds, exact_placement=True)
 
         LOGGER.info("Stacking %d items vertically into %d columns: %s", n, k, self.bounds)
 
-        optimal = dict()
-
-        def adapter_function_cols(params):
-
-            cols = divisions(params, self.bounds.left, self.bounds.right, self.padding)
-
-            badness = sum(max(0, (_MIN_WIDTH - (pair[1] - pair[0]))) ** 2 for pair in cols)
-            if badness > 0:
-                return 1e12 * (1 + badness)
-
-            details = self.allocate_items_to_fixed_columns(cols)
-            optimal[details.column_divisions] = details.allocation_divisions
-
-
-            return details.score
-
-        opt = optimize.minimize(
-                adapter_function_cols,
-                x0=(np.asarray([1 / k] * (k - 1))),
-                method="powell",
-                bounds=[(0, 1)] * (k - 1),
-                options={}
+        available_width = self.bounds.width - (k - 1) * self.padding
+        column_bounds = OptParams(
+                tuple([self.bounds.width // k] * (k - 1)),
+                _MIN_WIDTH, available_width - (k - 1) * _MIN_WIDTH,
         )
 
-        params = opt.x
-        LOGGER.warning("Final layout = %s, cache = %s", opt.x, estimate_single_size.cache_info())
+        self.exact_placement = False
+        f, opt_col, opt_counts = self.run(column_bounds)
+        self.exact_placement = True
 
-        cols = divisions(params, self.bounds.left, self.bounds.right, self.padding)
-        return self.place_in_columns(cols, optimal[cols], exact_placement=True).placed
+        columns = self.place_all_columns(opt_col.value, opt_counts.value)
+        return PlacedGroupContent(columns)
 
 
 def stack_in_columns(bounds: Rect, children: List, padding: int, columns: int = 1) -> PlacedContent:
-    return SectionLayout(children, bounds, padding).stack_in_columns(columns)
+    layout = SectionLayout(children, bounds, padding)
+    if columns == 1:
+        return layout.place_in_column(0, len(children), bounds)
+    else:
+        return layout.optimize_column_layout(int(columns))

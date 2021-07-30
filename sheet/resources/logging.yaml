@@ -1,7 +1,7 @@
 version: 1
 formatters:
   screen:
-    format: "\u001b[37m%(asctime)s %(name)-12s %(funcName)-24s \u001b[32m%(levelname)-8s \u001b[30m\u001b[1m%(message)s\u001b[0m"
+    format: "\u001b[37m%(asctime)s %(name)-24s %(funcName)-24s \u001b[32m%(levelname)-8s \u001b[30m\u001b[1m%(message)s\u001b[0m"
     datefmt: "%Y-%m-%d %H:%M:%S"
 
   logfile:
@@ -37,6 +37,11 @@ loggers:
     propagate: no
 
   layout.section:
+    level: DEBUG
+    handlers: [ console, file ]
+    propagate: no
+
+  layout.optimizer:
     level: DEBUG
     handlers: [ console, file ]
     propagate: no

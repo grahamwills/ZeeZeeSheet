@@ -18,8 +18,8 @@ def install():
     symbola_font = TTFont('Symbola', font_file)
     pdfmetrics.registerFont(symbola_font)
 
-    for a in build_font_choices():
-        LOGGER.info("Installed font '%s'", a)
+    fonts = build_font_choices()
+    LOGGER.info("Installed fonts %s", fonts)
 
 
 if __name__ == '__main__':

@@ -318,5 +318,5 @@ def read_sheet(file) -> Sheet:
     doc.walkabout(SheetVisitor(doc, sheet))
     sheet.fixup()
 
-    sheet.print()
+    # sheet.print()
     return sheet
