@@ -7,40 +7,48 @@
 .. title: hidden
 
 .. image:: data/images/13thAgelogo.png
-   :height: 40
+   :height: 34
    :align: left
 ..
 
 
-- Race     | Wood Elf
-- Class     | Druid
-- Gender    | Female
-- Age       | 62
+- Race:**Wood Elf**     |   Class:**Druid** |   Gender:**Female**   |   Age:**62**
 
-.. block: stat-circles style=heading-blue
+.. style: big
+
+- My firstborn will be the next Elf Queen
+
+.. style: default
+
+.. block: key-values style=heading_green rows=3
+.. style: stat_style
 
 Attributes
- - Strength     | 8  | -1
- - Constitution | 12 | +1
- - Dexterity    | 18 | +4
- - Intelligence | 8  | -1
- - Wisdom       | 18 | +1
- - Charisma     | 12 | +1
+ - Strength     | **8**  | -1
+ - Constitution | **12** | +1
+ - Dexterity    | **18** | +4
+ - Intelligence | **8**  | -1
+ - Wisdom       | **18** | +1
+ - Charisma     | **12** | +1
+
+.. block: key-values style=heading_red rows=3
 
 Defenses
- - AC | 18
- - PD | 14
- - MD | 14
+ - AC | **18**
+ - PD | **14**
+ - MD | **14**
 
 ---------------------------------------------------------------
 
 .. title: banner style=heading_blue
 .. section: stack columns=2
+.. block: default
+.. style: default
 
 Level **2**
- - [X] Class: *Aspect - Bear*
- - [X] Feat:  *Ruination Spell*
- - [ ]
+ - [X] Class: *Aspect - Bear*  --
+   [X] Feat  *Ruination Spell* --
+   [ ] __________________________
 
 Hits: **28**        --  Staggered: **14**
  - Recoveries: [ ][ ][ ][ ][ ][ ][ ][ ] -- **2d6+1**
@@ -58,10 +66,6 @@ Picture
 
 .. title: banner style=heading_blue
 .. style: blue
-
-
-One Unique Thing
- - My firstborn will be the next Elf Queen
 
 Icon Relationships
  - Elf Queen  | ♡ ♡
@@ -185,7 +189,7 @@ Styles
 default
   family=Baskerville size=8 align=fill
 title
-  size=44 color=darkGreen family=LoveYou
+  size=42 color=darkGreen family=LoveYou
 
 heading
   color=white background=black family=Helvetica
@@ -200,6 +204,13 @@ heading_red
 heading_orange
   inherit=heading background=orange  borderColor=orange
 
+stat_style
+  color=white family=Helvetica size=10
+
+big
+  size=18 color=darkGreen family=LoveYou align=center
+
+
 blue
   background=#eef
 black
@@ -210,3 +221,4 @@ red
   background=#fee
 orange
   background=#fec
+

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import statistics
 from copy import copy
 from functools import lru_cache
 from typing import List, NamedTuple, Tuple
@@ -16,10 +17,22 @@ LOGGER = configured_logger(__name__)
 def score_placement(columns: [PlacedContent]) -> float:
     column_bounds = [c.bounds for c in columns]
     max_height = max(c.height for c in column_bounds)
-    tot_area = sum(c.height*c.width for c in column_bounds)
+    min_height = min(c.height for c in column_bounds)
     issues = sum(c.fit_error for c in columns)
-    wasted_space = sum((max_height - r.height) * r.width for r in column_bounds)
-    return 20 * issues + wasted_space ** 0.5
+    wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
+
+    diff = max_height-min_height
+
+    if diff > 1000:
+        print('not good')
+
+    score = issues + diff + wasted_space
+    LOGGER.info("%s -> %1.3f (%1.1f, %1.1f, %1.1f)",
+                [c.width for c in column_bounds], score,
+                issues, diff, wasted_space
+        )
+
+    return score
 
 
 def divisions(fractions: [float], low: int, high: int, spacing: int) -> Tuple[Tuple[int]]:
@@ -89,7 +102,7 @@ class SectionLayout:
                 p = place_single(self, i, available)
             else:
                 p = copy(estimate_single_size(self, i, bd.width))
-                p.bounds = p.bounds.move(dy=current)
+                p.move(dy=current)
             all.append(p)
             current = p.bounds.bottom + self.padding
         return PlacedGroupContent(all)
@@ -103,9 +116,7 @@ class SectionLayout:
 
         score = score_placement(placed_columns)
 
-        details = LayoutDetails(column_divisions, allocation_divisions, PlacedGroupContent(placed_columns), score)
-        LOGGER.debug("Optimized Step: %s", details)
-        return details
+        return LayoutDetails(column_divisions, allocation_divisions, PlacedGroupContent(placed_columns), score)
 
     def allocate_items_to_fixed_columns(self, column_divisions) -> LayoutDetails:
         """ Brute force search for best solution"""
@@ -114,35 +125,6 @@ class SectionLayout:
         n = len(self.items)
 
         results = [[i] for i in range(1, n)]
-
-        for c in range(2, k):
-            step = []
-            for r in results:
-                available = n - (k - c) - sum(r)
-                for i in range(1, available + 1):
-                    step.append(r + [i])
-            results = step
-
-        # Last column is determined by others
-        results = [r + [n - sum(r)] for r in results]
-
-        best = None
-        for a in results:
-            asc = [sum(a[:i]) for i in range(0, k + 1)]
-            alloc = list(zip(asc, asc[1:]))
-            trial = self.place_in_columns(column_divisions, alloc, exact_placement=False)
-            if not best or trial.score < best.score:
-                best = trial
-
-        return best
-
-    def brute_allocate_items_to_fixed_columns(self, column_divisions) -> LayoutDetails:
-        """ Brute force search for best solution"""
-
-        k = len(column_divisions)
-        n = len(self.items)
-
-        results = [[i] for i in range(1, n + 1)]
 
         for c in range(2, k):
             step = []
@@ -185,6 +167,8 @@ class SectionLayout:
 
             details = self.allocate_items_to_fixed_columns(cols)
             optimal[details.column_divisions] = details.allocation_divisions
+
+
             return details.score
 
         opt = optimize.minimize(

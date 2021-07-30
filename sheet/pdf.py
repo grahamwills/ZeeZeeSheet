@@ -69,17 +69,23 @@ class PDF(canvas.Canvas):
     def strokeColor(self, color: Color, alpha=None):
         self.setStrokeColorRGB(*color.rgb, alpha=alpha)
 
-    def fill_rect(self, r: Rect, style: Style):
+    def fill_rect(self, r: Rect, style: Style, rounded=0):
         if style.background:
             self.fillColor(style.background)
             self.setLineWidth(0)
-            self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=1, stroke=0)
+            if rounded > 0:
+                self.roundRect(r.left, self.page_height - r.bottom, r.width, r.height, rounded, fill=1, stroke=0)
+            else:
+                self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=1, stroke=0)
 
-    def stroke_rect(self, r: Rect, style: Style):
+    def stroke_rect(self, r: Rect, style: Style, rounded=0):
         if style.borderColor and style.borderWidth:
             self.strokeColor(style.borderColor)
             self.setLineWidth(style.borderWidth)
-            self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=0, stroke=1)
+            if rounded > 0:
+                self.roundRect(r.left, self.page_height - r.bottom, r.width, r.height, rounded, fill=0, stroke=1)
+            else:
+                self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=0, stroke=1)
 
     def draw_flowable(self, flowable, bounds):
         if self.debug:

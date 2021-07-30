@@ -27,13 +27,18 @@ handlers:
 
 loggers:
   reader:
-    level: DEBUG
-    handlers: [ console ]
+    level: WARNING
+    handlers: [ console, file ]
+    propagate: no
+
+  layout:
+    level: WARNING
+    handlers: [ console, file ]
     propagate: no
 
   layout.section:
-    level: WARNING
-    handlers: [ console ]
+    level: DEBUG
+    handlers: [ console, file ]
     propagate: no
 
   PIL.PngImagePlugin:

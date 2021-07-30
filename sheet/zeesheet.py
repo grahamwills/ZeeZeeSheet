@@ -25,7 +25,7 @@ def install():
 if __name__ == '__main__':
     # Read
     install()
-    luna = reader.read_sheet('../data/luna-short.rst')
+    luna = reader.read_sheet('../data/luna.rst')
 
     # Create
     context = pdf.PDF('../tmp/luna.pdf', luna.styles, debug=False)

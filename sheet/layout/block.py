@@ -5,7 +5,6 @@ import functools
 from pathlib import Path
 from typing import Callable, NamedTuple, Optional
 
-import PIL
 from reportlab.platypus import Image
 
 import common
@@ -151,20 +150,20 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
         line_width = 0
 
     if style.has_border():
-        padding = block.padding
+        margin = block.margin
     else:
-        padding = 0
+        margin = 0
 
-    inset = line_width + padding
+    inset = line_width + margin
     margins = Margins.all_equal(inset)
 
     if show_title and block.title:
         title_mod = Run([e.replace_style(style_name) for e in block.title.items])
         title_bounds = bounds - margins
-        paragraph, w, height = as_one_line(title_mod, pdf, title_bounds.width)
+        paragraph, w, height = as_one_line(title_mod, pdf, title_bounds.width, margin)
 
         # We remove the extra leading the paragraph gave us at the bottom (0.2 * font-size)
-        plaque_height = height + 2 * padding - style.size * 0.2
+        plaque_height = height + 2 * margin - style.size * 0.2
         title_bounds = title_bounds.resize(height=height)
 
         placed = []

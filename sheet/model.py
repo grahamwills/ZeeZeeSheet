@@ -111,7 +111,8 @@ class Block:
     image: Dict[str, str] = field(default_factory=dict)
     block_method: common.Command = common.parse_directive('default')
     title_method: common.Command = common.parse_directive('banner')
-    padding: int = 4
+    margin: int = 4
+    padding: int = 2
 
     def add_title(self):
         self.title = Run()

@@ -32,6 +32,15 @@ class PlacedContent:
         dy = max(0, self.bounds.height- required.height)
         self.fit_error += dx + dy
 
+        dx = max(0, required.width - self.bounds.width)
+        dy = max(0, - required.height - self.bounds.height)
+        self.fit_error += (dx + dy)/50
+
+
+    def move(self, dx=0, dy=0):
+        self.bounds = self.bounds.move(dx=dx, dy=dy)
+
+
     def draw(self, pdf: PDF):
         pass
 
@@ -54,6 +63,9 @@ def _count_wraps(f, any_wrap_bad=False):
     elif isinstance(f, (Image, str)):
         return 0
     elif isinstance(f, Paragraph):
+        if not hasattr(f, 'blPara'):
+            # Failed to place -- terrible
+            return 100
         lines = f.blPara.lines
         if len(lines) < 2:
             return 0
@@ -79,18 +91,19 @@ class PlacedFlowableContent(PlacedContent):
 class PlacedRectContent(PlacedContent):
     flowable: Flowable
 
-    def __init__(self, bounds: Rect, style: Style, fill: bool, stroke: bool):
+    def __init__(self, bounds: Rect, style: Style, fill: bool, stroke: bool, rounded=0):
         super().__init__(bounds, 0)
+        self.rounded = rounded
         self.stroke = stroke
         self.fill = fill
         self.style = style
 
     def draw(self, pdf: PDF):
         if self.fill:
-            pdf.fill_rect(self.bounds, self.style)
+            pdf.fill_rect(self.bounds, self.style, self.rounded)
 
         if self.stroke:
-            pdf.stroke_rect(self.bounds, self.style)
+            pdf.stroke_rect(self.bounds, self.style, self.rounded)
 
 
 class PlacedGroupContent(PlacedContent):
@@ -105,6 +118,11 @@ class PlacedGroupContent(PlacedContent):
     def draw(self, pdf: PDF):
         for p in self.group:
             p.draw(pdf)
+
+    def move(self, dx=0, dy=0):
+        super().move(dx=dx, dy=dy)
+        for p in self.group:
+            p.move(dx=dx, dy=dy)
 
 
 def build_font_choices() -> [str]:

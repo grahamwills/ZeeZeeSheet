@@ -17,7 +17,7 @@ def _add_run(elements: [Element], row: [], pdf: PDF, align: str):
         row.append(para)
 
 
-def make_row_from_run(run: [Element], pdf: PDF, width: int) -> [Flowable]:
+def make_row_from_run(run: [Element], pdf: PDF, width: int, padding:int) -> [Flowable]:
     items = run.items
 
     spacer_count = sum(e.which == ElementType.SPACER for e in items)
@@ -47,12 +47,12 @@ def make_row_from_run(run: [Element], pdf: PDF, width: int) -> [Flowable]:
 
     if divider_count == 0:
         # Make a sub-table just for this line
-        return [as_table([row], width, pdf)]
+        return [as_table([row], width, pdf, 0)]
     else:
         return row
 
 
-def as_one_line(run: Run, pdf: PDF, width: int):
+def as_one_line(run: Run, pdf: PDF, width: int, padding:int):
     if not any(e.which == ElementType.SPACER for e in run.items):
         # No spacers -- nice and simple
         p = pdf.make_paragraph(run)
@@ -60,31 +60,42 @@ def as_one_line(run: Run, pdf: PDF, width: int):
         return p, w, h
 
     # Make a one-row table
-    cells = [make_row_from_run(run, pdf, width)]
-    return make_table(pdf, cells, width)
+    cells = [make_row_from_run(run, pdf, width, padding)]
+    return make_table(pdf, cells, width, padding)
 
 
 def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
-    cells = [make_row_from_run(run, pdf, bounds.width) for run in block.content]
-    table, w, h = make_table(pdf, cells, bounds.width)
+    cells = [make_row_from_run(run, pdf, bounds.width, block.padding) for run in block.content]
+    table, w, h = make_table(pdf, cells, bounds.width, block.padding)
     return PlacedFlowableContent(table, bounds.resize(width=w, height=h))
 
 
-def make_table(pdf, paragraphs, width):
-    table = as_table(paragraphs, width, pdf)
+def make_table(pdf, paragraphs, width, padding):
+    table = as_table(paragraphs, width, pdf, padding)
     w, h = table.wrapOn(pdf, width, 1000)
     return table, w, h
 
-def as_table(cells, width: int, pdf:PDF):
+
+def as_table(cells, width: int, pdf: PDF, padding:int):
     commands = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('LEFTPADDING', (0, 0), (0, -1), 0),
+        ('TOPPADDING', (0, 0), (-1, 0), 0),
+        ('LEFTPADDING', (1, 0), (-1, -1), padding),
+        ('TOPPADDING', (0, 1), (-1, -1), padding),
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]
 
     estimated_widths = [_col_width(cells, i, pdf) for i in range(0, len(cells[0]))]
+
+    # Pad short rows and add spans for them
+    nCols = max(len(row) for row in cells)
+    for i, row in enumerate(cells):
+        n = len(row)
+        if n < nCols:
+            row.extend([' '] * (nCols - n))
+            commands.append((('SPAN'), (n - 1, i), (-1, i)))
 
     factor = width / sum(estimated_widths)
     colWidths = [w * factor for w in estimated_widths]
@@ -126,9 +137,12 @@ def stats_runs(run: [Element], pdf: PDF) -> [Paragraph]:
 
 
 def _col_width(cells: [[Paragraph]], col: int, pdf: PDF) -> float:
+
+    nCols = max(len(r) for r in cells)
     mx = 1
     for row in cells:
-        if col < len(row) and isinstance(row[col], Paragraph):
+        # Only check for paragraphs and for rows that don't span multiple columns
+        if len(row) == nCols and isinstance(row[col], Paragraph):
             p: Paragraph = row[col]
             t = sum(pdf.stringWidth(f.text, f.fontName, f.fontSize) for f in p.frags)
             mx = max(mx, t)
@@ -149,7 +163,9 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     W1 = 2 * padding + round(_col_width(items, 0, pdf))
 
     H2 = text_style_1.size + 2 * padding
-    W2 = 2 * padding + round(_col_width(items, 1, pdf))
+    W2 = 4 * padding + round(_col_width(items, 1, pdf))
+
+    rounded = (H2 - H1)
 
     LOGGER.debug("Key Values Layout for %d items, H1=%d, W1=%d", len(items), H1, W1)
 
@@ -160,18 +176,21 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     for i, cell in enumerate(items):
         if contents and i % nRows == 0:
             top = bounds.top
-            left += W1 + W2 + 2 * padding
+            left += W1 + W2 + padding
         r2 = Rect(left=left, top=top, height=H2, width=W2)
-        r1 = Rect(left=r2.right - 1, top=top + (H2 - H1) / 2, width=W1 + 1, height=H1)
-        contents.append(PlacedRectContent(r1, box_style, True, False))
-        contents.append(PlacedRectContent(r2, box_style, True, False))
+        r1 = Rect(left=r2.right - rounded, top=top + (H2 - H1) / 2, width=W1 + rounded, height=H1)
+        contents.append(PlacedRectContent(r1, box_style, True, False, rounded=rounded))
+        contents.append(PlacedRectContent(r2, box_style, True, False, rounded=rounded))
 
         cell[0].wrapOn(pdf, r1.width, r1.height)
         cell[1].wrapOn(pdf, r2.width, r2.height)
-        contents.append(PlacedFlowableContent(cell[0], center_text(cell[0], r1, pdf, text_style)))
-        contents.append(PlacedFlowableContent(cell[1], center_text(cell[1], r2, pdf, text_style_1)))
+        b1 = center_text(cell[0], r1, pdf, text_style)
+        b2 = center_text(cell[1], r2, pdf, text_style_1).move(dx=-1, dy=1)
+        contents.append(PlacedFlowableContent(cell[0], b1))
+        contents.append(PlacedFlowableContent(cell[1], b2))
         top = r2.bottom + padding
 
     content = PlacedGroupContent(contents)
+    content.move(dx=(bounds.width - content.bounds.width)/2)
     content.add_fit_err(bounds)
     return content

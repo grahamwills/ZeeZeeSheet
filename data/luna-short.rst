@@ -28,26 +28,12 @@ Attributes
  - Wisdom       | **18** | +1
  - Charisma     | **12** | +1
 
+.. block: key-values style=heading_red rows=3
+
 Defenses
  - AC | **18**
  - PD | **14**
  - MD | **14**
-
----------------------------------------------------------------
-
-.. title: banner style=heading_blue
-.. section: stack columns=2
-.. block: default
-.. style: default
-
-Level **2**
- - [X] Class: *Aspect - Bear*
- - [X] Feat:  *Ruination Spell*
- - [ ]
-
-Hits: **28**        --  Staggered: **14**
- - Recoveries: [ ][ ][ ][ ][ ][ ][ ][ ] -- **2d6+1**
-
 
 
 Styles
