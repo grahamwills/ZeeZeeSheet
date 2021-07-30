@@ -16,9 +16,10 @@ LOGGER = configured_logger(__name__)
 def score_placement(columns: [PlacedContent]) -> float:
     column_bounds = [c.bounds for c in columns]
     max_height = max(c.height for c in column_bounds)
+    tot_area = sum(c.height*c.width for c in column_bounds)
     issues = sum(c.issues for c in columns)
     wasted_space = sum((max_height - r.height) * r.width for r in column_bounds)
-    return 1000 * issues + max_height + wasted_space / 1000
+    return 20 * issues + wasted_space ** 0.5
 
 
 def divisions(fractions: [float], low: int, high: int, spacing: int) -> Tuple[Tuple[int]]:

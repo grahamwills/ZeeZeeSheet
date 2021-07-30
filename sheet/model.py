@@ -5,12 +5,17 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, OrderedDict
 
+import reportlab
 from colour import Color
+from reportlab.lib.rl_accel import unicode2T1
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.pdfmetrics import Font
 
 import common
 
 BLACK = Color('black')
 
+HELVETICA:Font = pdfmetrics.getFont('Helvetica')
 
 @dataclass
 class Style:
@@ -206,7 +211,9 @@ class Sheet:
         for c in self.content:
             c.fixup(self)
 
-
+def exists_in_helvetica(text):
+    """ If it is not substituted, it exists """
+    return unicode2T1(text, [HELVETICA])[0][0] == HELVETICA
 
 def ensure_representable(items: List[Element]) -> List[Element]:
     result = []
@@ -214,7 +221,8 @@ def ensure_representable(items: List[Element]) -> List[Element]:
         if item.which == ElementType.TEXT:
             run_start = 0
             for i,c in enumerate(item.value):
-                if ord(c) > 255:
+                # If helvetica doesn't support it, call it special
+                if not exists_in_helvetica(c):
                     if i > run_start:
                         result.append(Element(ElementType.TEXT, item.value[run_start:i], item.style, item.modifiers))
                     result.append(Element(ElementType.SYMBOL, c, item.style, item.modifiers))

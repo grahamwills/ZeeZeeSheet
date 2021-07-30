@@ -7,12 +7,12 @@
 .. title: hidden
 
 .. image:: data/images/13thAgelogo.png
-   :height: 50
+   :height: 40
    :align: left
 ..
 
 
--  Race      | Wood Elf
+-  Race     | Wood Elf
 - Class     | Druid
 - Gender    | Female
 - Age       | 62
@@ -73,7 +73,7 @@ Backgrounds
  - Madly In Love with a Stupid Guy  --  4
  - -- *Further backgrounding (2 extra)*
 
-Talents & Features
+Druid Talents
  - **Warrior Druid Initiate**: You are trained to survive the wilds and fight in combat.
    Your AC in light armor is 12 instead of 10 like most other druids.
 
@@ -84,6 +84,7 @@ Talents & Features
    transformations into quick-moving animals for out of combat reconnaissance,
    and beast form transformations into combat-ready predators.
 
+Druid Features
  - **Nature Talking**: Everybody knows that druids can talk with plants and animals.
    It may not always work, but druids won't admit it. The DC of speaking to nature
    depends on the information you are requesting and who you are speaking with.
@@ -149,30 +150,28 @@ Terrain Spell -- Daily per terrain
    each one once a day so long as they are in that sort of terrain
 
 Beast Form -- Daily []
- - **Quick action**
- - You leave your humanoid form behind and assume the form of a deadly
+ - **Quick action**: You leave your humanoid form behind and assume the form of a deadly
    predator such as a wolf, panther, tiger, bear, wolverine or lion.
 
 Beast Form Attack
- - **Melee Attack**: +6 vs AC
+ - **Melee Attack**:    -- +6 vs AC
  - *Natural Even Hit*: 2d10+4
  - *Natural Odd Hit*: 2d6+4
  - *Miss*: Repeat the attack against the same or a different target.
    This has no miss effect.
 
 Aspect of the Bear -- Daily []
- - **Quick action**
- - **Effect**: Until the end of the battle, while in beast form,
+ - **Quick action**: Until the end of the battle, while in beast form,
    gain +2 to attack and damage against mooks and enemies of lower level
 
 Scout Form Reconnaissance -- Daily []
  - **Retrospective Action**    -- DC 15/20/25
  - Scout Form Background: **d4+1**
- - *Normal success*: You gain a +4 bonus to initiative this battle.
+ - *Normal success*: Gain +4 bonus to initiative this battle.
  - *Hard success*: As a free action at some point during the battle,
    you can grant one of your allies a re-roll on an attack roll or save.
- - *Ridiculously hard success*: The GM chooses between giving you a re-roll
-   at some point during the battle, or giving you a floating story-guide icon
+ - *Ridiculously hard success*: GM chooses between giving a re-roll
+   at some point during the battle, or a floating icon
    relationship result of 6 with a random icon.
 
 
@@ -183,9 +182,9 @@ Styles
 ------
 
 default
-  family=Times-Roman size=8 align=fill
+  family=Baskerville size=8 align=fill
 title
-  size=20 color=darkGreen family=Times-Roman
+  size=44 color=darkGreen family=LoveYou
 
 heading
   color=white background=black family=Helvetica

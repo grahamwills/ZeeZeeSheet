@@ -1,9 +1,14 @@
 """Items to be placed on a page"""
 from __future__ import annotations
 
+import io
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable, Tuple
 
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from reportlab.platypus import Flowable, Image, Paragraph, Table
 from reportlab.platypus.paragraph import _SplitWordEnd
 
@@ -17,7 +22,7 @@ class PlacedContent:
     bounds: Rect
     issues: int
 
-    def __init__(self, bounds: Rect, issues: int=0):
+    def __init__(self, bounds: Rect, issues: int = 0):
         self.issues = issues
         self.bounds = bounds.round()
 
@@ -97,3 +102,51 @@ class PlacedGroupContent(PlacedContent):
     def draw(self, pdf: PDF):
         for p in self.group:
             p.draw(pdf)
+
+
+def build_font_choices() ->[str]:
+    user_fonts = []
+    install_font('Baskerville', 'Baskerville', user_fonts)
+    install_font('Droid', 'DroidSerif', user_fonts)
+    install_font('Parisienne', 'Parisienne', user_fonts)
+    install_font('PostNoBills', 'PostNoBills', user_fonts)
+    install_font('Roboto', 'Roboto', user_fonts)
+    install_font('Western', 'Carnevalee Freakshow', user_fonts)
+    install_font('LoveYou', 'I Love What You Do', user_fonts)
+    install_font('Typewriter', 'SpecialElite', user_fonts)
+    install_font('StarJedi', 'Starjedi', user_fonts)
+    install_font('28DaysLater', '28 Days Later', user_fonts)
+    install_font('CaviarDreams', 'CaviarDreams', user_fonts)
+    install_font('MotionPicture', 'MotionPicture', user_fonts)
+    install_font('Adventure', 'Adventure', user_fonts)
+    install_font('MrsMonster', 'mrsmonster', user_fonts)
+    return sorted(base_fonts() + user_fonts)
+
+
+def base_fonts():
+    cv = canvas.Canvas(io.BytesIO())
+    fonts = cv.getAvailableFonts()
+    fonts.remove('ZapfDingbats')
+    fonts.remove('Symbol')
+    return fonts
+
+
+def create_single_font(name, resource_name, default_font_name, user_fonts):
+    loc = Path(__file__).parent.parent.joinpath('data/fonts/', resource_name + ".ttf")
+    if loc.exists():
+        pdfmetrics.registerFont(TTFont(name, loc))
+        user_fonts.append(name)
+        return name
+    else:
+        return default_font_name
+
+
+def install_font(name, resource_name, user_fonts):
+    try:
+        pdfmetrics.getFont(name)
+    except:
+        regular = create_single_font(name, resource_name + "-Regular", None, user_fonts)
+        bold = create_single_font(name + "-Bold", resource_name + "-Bold", regular, user_fonts)
+        italic = create_single_font(name + "-Italic", resource_name + "-Italic", regular, user_fonts)
+        bold_italic = create_single_font(name + "-BoldItalic", resource_name + "-BoldItalic", bold, user_fonts)
+        pdfmetrics.registerFontFamily(name, normal=name, bold=bold, italic=italic, boldItalic=bold_italic)
