@@ -23,9 +23,6 @@ def score_placement(columns: [PlacedContent]) -> float:
 
     diff = max_height-min_height
 
-    if diff > 1000:
-        print('not good')
-
     score = issues + diff + wasted_space
     LOGGER.info("%s -> %1.3f (%1.1f, %1.1f, %1.1f)",
                 [c.width for c in column_bounds], score,
