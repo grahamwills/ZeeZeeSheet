@@ -6,7 +6,6 @@ from reportlab.lib import pagesizes
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
-from reportlab.pdfgen.textobject import PDFTextObject
 from reportlab.platypus import Paragraph
 
 from common import Rect, configured_logger
@@ -16,6 +15,7 @@ LOGGER = configured_logger(__name__)
 
 _CHECKED_BOX = '../data/images/system/checked.png'
 _UNCHECKED_BOX = '../data/images/system/unchecked.png'
+
 
 class PDF(canvas.Canvas):
     output_file: str
@@ -43,21 +43,21 @@ class PDF(canvas.Canvas):
                   anchorAtXY=False, showBoundary=False):
         fileName = image.fileName if hasattr(image, 'fileName') else str(image)
         if fileName == _UNCHECKED_BOX:
-            return self.add_checkbox(x,y,width,height,False)
+            return self.add_checkbox(x, y, width, height, False)
         elif fileName == _CHECKED_BOX:
-            return self.add_checkbox(x,y,width,height,True)
+            return self.add_checkbox(x, y, width, height, True)
         else:
             return super().drawImage(image, x, y, width, height, mask, preserveAspectRatio, anchor, anchorAtXY,
-                                 showBoundary)
+                                     showBoundary)
 
     def add_checkbox(self, rx, ry, width, height, state) -> (int, int):
-        x,y = self.absolutePosition(rx,ry)
+        x, y = self.absolutePosition(rx, ry)
         self._name_index += 1
         name = "f%d" % self._name_index
         LOGGER.debug("Adding checkbox name='%s' with state=%s ", name, state)
-        self.acroForm.checkbox(name=name, x=x-0.5, y=y-0.5, size=min(width, height)+1,
-                               fillColor=reportlab.lib.colors.Color(1,1,1),
-                               buttonStyle = 'cross', borderWidth=0.5, checked=state)
+        self.acroForm.checkbox(name=name, x=x - 0.5, y=y - 0.5, size=min(width, height) + 1,
+                               fillColor=reportlab.lib.colors.Color(1, 1, 1),
+                               buttonStyle='cross', borderWidth=0.5, checked=state)
         return (width, height)
 
     def style(self, style):
@@ -87,37 +87,35 @@ class PDF(canvas.Canvas):
 
         if hasattr(flowable, 'style'):
             self._drawing_style = flowable.style
-            LOGGER.debug("Encountered style '%s' with text color =%s", flowable.style.name, flowable.style.textColor)
 
         flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
 
-    def make_paragraph(self, run: Run, align=None):
+    def make_paragraph(self, run: Run, align=None, size_factor=1.0):
         style = self.style(run.base_style())
 
         align = align or style.align
 
-        alignment = {'left':0, 'center':1, 'right':2, 'fill':4, 'justify':4}[align]
+        alignment = {'left': 0, 'center': 1, 'right': 2, 'fill': 4, 'justify': 4}[align]
 
+        size = round(style.size * size_factor)
         pStyle = ParagraphStyle(name='tmp',
-                                fontName=style.font, fontSize=style.size, leading=style.size*1.2,
-                                allowWidows=0, embeddedHyphenation =1, alignment=alignment,
+                                fontName=style.font, fontSize=size, leading=size * 1.2,
+                                allowWidows=0, embeddedHyphenation=1, alignment=alignment,
                                 textColor=reportlab.lib.colors.Color(*style.color.rgb))
-
 
         # Add spaces between check boxes and other items
         items = []
         for e in run.items:
             if e is not run.items[0] and not e.value[0] in ":;-=":
                 items.append(' ')
-            items.append(_element_to_html(e, self))
+            items.append(_element_to_html(e, self, style))
         return Paragraph("".join(items), pStyle)
 
     def descender(self, style: Style) -> float:
         return -pdfmetrics.getDescent(style.font, style.size)
 
 
-
-def _element_to_html(e: Element, pdf: PDF):
+def _element_to_html(e: Element, pdf: PDF, base_style: Style):
     if e.which == ElementType.TEXT or e.which == ElementType.SYMBOL:
         txt = e.value
     else:
@@ -128,14 +126,28 @@ def _element_to_html(e: Element, pdf: PDF):
         if 'B' in e.modifiers:
             txt = '<b>' + txt + '</b>'
     style = pdf.style(e.style)
-    size = " size='%d'" % style.size if style.size else ''
-    face = " face='%s'" % style.font if style.font else ''
-    color = " color='%s'" % style.color.get_hex_l() if style.color else ''
+
+    if style.size and style.size != base_style.size:
+        size = " size='%d'" % style.size
+    else:
+        size = ''
+
+    if style.font and style.font != base_style.font:
+        face = " face='%s'" % style.font
+    else:
+        face = ''
+
+    if style.color and style.color != base_style.color:
+        color = " color='%s'" % style.color.get_hex_l()
+    else:
+        color = ''
+
     if e.which == ElementType.CHECKBOX:
         target = _UNCHECKED_BOX if e.value in {'O', 'o', ' ', '0'} else _CHECKED_BOX
-        return   "<img height=%d width=%d src='%s'/>" % (style.size, style.size, target)
+        return "<img height=%d width=%d src='%s'/>" % (style.size, style.size, target)
     if e.which != ElementType.TEXT:
         face = " face='Symbola'"
-    return "<font %s%s%s>%s</font>" % (face, size, color, txt)
-
-
+    if face or size or color:
+        return "<font %s%s%s>%s</font>" % (face, size, color, txt)
+    else:
+        return txt

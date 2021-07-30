@@ -124,6 +124,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def __init__(self, document, sheet: Sheet):
         super().__init__(document)
+        self.block_layout_method = common.parse_directive('default')
         self.section_layout_method = common.parse_directive('stack')
         self.title_display_method = common.parse_directive('banner')
         self.style = 'default'
@@ -144,6 +145,9 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         if command.tag == 'section':
             LOGGER.info(".. setting section layout method: %s", command)
             self.section_layout_method = command
+        elif command.tag == 'block':
+            LOGGER.info(".. setting block layout method: %s", command)
+            self.block_layout_method = command
         elif command.tag == 'title':
             LOGGER.info(".. setting title display method: %s", command)
             self.title_display_method = command
@@ -151,7 +155,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             LOGGER.info(".. setting style: %s", command)
             self.style = command.command
         else:
-            raise ValueError("Unknown comment directive: '%s', line=%d", command, line_of(node))
+            raise ValueError("Unknown comment directive: '%s', line=%d" % (command, line_of(node)))
         raise docutils.nodes.SkipChildren
 
     def visit_title(self, node: docutils.nodes.title) -> None:
@@ -234,7 +238,8 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
         if not self.status.block or self.status.block.content:
             # New block for the image
-            self.status.block = Block()
+            self.status.block = None
+            self.ensure_block()
         self.status.block.image = node.attributes
 
     def unknown_visit(self, node: docutils.nodes.Node) -> None:
@@ -250,9 +255,10 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
     def ensure_block(self):
         if not self.status.block:
             self.ensure_section()
-            display = self.title_display_method
-            self.status.block = Block(title_method=display)
-            LOGGER.info("... Adding block with display = %s", display)
+            title_display = self.title_display_method
+            block_display = self.block_layout_method
+            self.status.block = Block(title_method=title_display, block_method=block_display)
+            LOGGER.info("... Adding block with display = %s, title = %s", block_display, title_display)
             self.status.section.add_block(self.status.block)
 
     def ensure_section(self):

@@ -109,6 +109,7 @@ class Block:
     title: Optional[Run] = None
     content: List[Run] = field(default_factory=list)
     image: Dict[str, str] = field(default_factory=dict)
+    block_method: common.Command = common.parse_directive('default')
     title_method: common.Command = common.parse_directive('banner')
     padding: int = 4
 

@@ -12,10 +12,12 @@
 ..
 
 
--  Race     | Wood Elf
+- Race     | Wood Elf
 - Class     | Druid
 - Gender    | Female
 - Age       | 62
+
+.. block: stat-circles style=heading-blue
 
 Attributes
  - Strength     | 8  | -1
@@ -29,7 +31,6 @@ Defenses
  - AC | 18
  - PD | 14
  - MD | 14
-
 
 ---------------------------------------------------------------
 

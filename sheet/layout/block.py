@@ -10,7 +10,7 @@ from reportlab.platypus import Image
 
 import common
 from common import Margins, Rect
-from layout.table import as_one_line, table_layout
+from layout.table import as_one_line, key_values_layout, table_layout
 from model import Block, Run
 from pdf import PDF
 from render import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
@@ -58,7 +58,9 @@ class BlockLayout:
         else:
             raise ValueError("unknown title method '%s'" % title.command)
 
-        if self.block.needs_table():
+        if self.block.block_method.command == 'key-values':
+            self.content_layout = key_values_layout
+        elif self.block.needs_table():
             self.content_layout = table_layout
         else:
             self.content_layout = paragraph_layout
