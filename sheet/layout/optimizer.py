@@ -46,7 +46,7 @@ class OptimizeProblem(abc.ABC):
 
         _, opt1 = self._minimize('stage-1', stage1func, x1init)
 
-        LOGGER.debug("Optimizer cache info = %s", str(_score.cache_info()).replace('CacheInfo',''))
+        LOGGER.debug("Optimizer cache info = %s", str(_score.cache_info()).replace('CacheInfo', ''))
         _score.cache_clear()
 
         if opt1:
@@ -63,8 +63,6 @@ class OptimizeProblem(abc.ABC):
         if err > 0:
             LOGGER.info("[stage-2] out-of-bounds initial stage1 parameters %s: err = %s", params1, err)
             return 1e6 * (1 + err * err), None
-        else:
-            LOGGER.info("[stage-2] initial parameters = %s", params2init)
 
         def stage2func(x2: Tuple[int]) -> float:
             err = self.validity_error(OptParams(x2, params2init.low, params2init.high))
@@ -75,25 +73,31 @@ class OptimizeProblem(abc.ABC):
 
         return self._minimize('stage-2', stage2func, params2init)
 
-    def _minimize(self, name: str, func: Callable[[Tuple[int]], float], x_init: OptParams) -> (float, OptParams):
+    def _minimize(self, name: str, func: Callable[[Tuple[int]], float], initp: OptParams) -> (float, OptParams):
+
+        if initp.low == initp.high:
+            # Degenerate, so no need to do anything tricky
+            LOGGER.info("[%s]: Degenerate bounds: %s", name, initp)
+            return func(initp.value), initp
+
+        LOGGER.info("[%s] initial parameters = %s", name, initp)
 
         def adapter(x: [float]) -> float:
-            return func(_array2tuple(x, x_init))
+            return func(_array2tuple(x, initp))
 
-        x0 = _params2array(x_init)
-        bounds = [(0.0, 1.0)] * len(x_init)
-        opt_results = optimize.minimize(adapter, x0=np.asarray(x0), method="powell", bounds=bounds)
+        x0 = _params2array(initp)
+        opt_results = optimize.minimize(adapter, x0=np.asarray(x0), method='COBYLA', bounds=None)
 
         if opt_results.success:
-            LOGGER.info("[%s]: Success after %d iterations", name, opt_results.nit)
-            return float(opt_results.fun), _array2params(opt_results.x, x_init)
+            LOGGER.info("[%s]: Success using %d evaluation", name, opt_results.nfev)
+            return float(opt_results.fun), _array2params(opt_results.x, initp)
         else:
-            LOGGER.info("[%s]: Failed after %d iterations: %s", name, opt_results.nit, opt_results.message)
+            LOGGER.info("[%s]: Failed after using %d evaluation: %s", name, opt_results.nfev, opt_results.message)
             return None, None
-
 
     def __hash__(self):
         return id(self)
+
 
 @lru_cache(maxsize=1024)
 def _score(optimizer, params1, params2) -> float:

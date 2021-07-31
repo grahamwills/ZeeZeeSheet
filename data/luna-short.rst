@@ -1,64 +1,68 @@
-.. section: stack columns=3
-.. title: banner style=title
 
-**Lunathien Calenmaethor**
-==========================
-
+.. section: stack columns=2
 .. title: hidden
 
-.. image:: data/images/13thAgelogo.png
-   :height: 40
-   :align: left
+
+Redfield Valley
+===============
+
+.. image:: data/images/Redfield_Valley_Map.png
 ..
 
+.. title: banner style=heading_green
 
-- Race      | Wood Elf
-- Class     | Druid
-- Gender    | Female
-- Age       | 62
 
-.. block: key-values style=heading_green rows=3
-.. style: stat_style
+Redfield Valley History
+ - As the campaign started, you all got to know each other while adventuring in and around Redfield Valley, a bucolic area.  The valley featured two towns: on the west side of the valley was Appleton (where you spent more time), and on the east side was Crownhill.  At the north end of the valley was a fortress, the Vakefort, which guarded the entrance to the Vakevale, a wild area which was said to be full of monsters.
+ - You got to know many of the residents of Redfield Valley, and you undertook several missions into the Vakevale, dealing with monsters, and gaining some treasure.
+ - As you were returning to Redfield Valley, the floating city of Vantage (one of the Archmage's main cities) came crashing to earth, directly into the valley.
+ - After surviving the fall of the city itself, you scrambled to help the valley's residents.  You were able to rescue a number of people in Appleton (though many are badly injured); you went across the valley to Crownhill to help them, as well, but that town was more heavily damaged, and fewer survived there.
+ - The ruins of Vantage are now strewn across Redfield Valley, and many of its contents, including once-captive monsters, as well as treasures, lie in the ruins, ripe for exploration.
 
-Attributes
- - Strength     | **8**  | -1
- - Constitution | **12** | +1
- - Dexterity    | **18** | +4
- - Intelligence | **8**  | -1
- - Wisdom       | **18** | +1
- - Charisma     | **12** | +1
 
-.. block: key-values style=heading_red rows=3
+---------------------------------------------------------------
 
-Defenses
- - AC | **18**
- - PD | **14**
- - MD | **14**
+.. title: banner style=heading_red
+.. section: stack columns=1
+
+Characters
+ - Chris    | **Solea Orr**                     | Human Rogue       | I am the only human in this Age to be resurrected by the Great Gold Wyrm
+ - Graham   | **Lunathien "Luna" Calenmaethor** | Wood Elf Druid    | My firstborn will be the next Elf Queen"
+ - Josh     | **Friend (Watcher of the Pit)**   | Forgeborn Demonologist | I am the constructed container of a stolen Hellmouth. it fuels my core
+ - Suzanne  | **Lorcan Laoch**                  | Aasimar Barbarian | Every statue of an angel in the Dragon Empire looks exactly like me
+ - Vic      | **Degavor**                       | Tiefling Necromancer | I know everyone's name
+ - Wes      | **Ferran Broadwell**              | Human Ranger         | I lost a foolish wager to a powerful dwarf warlord
+
+---------------------------------------------------------------
 
 
 Styles
 ------
 
 default
-  family=Baskerville size=8 align=fill
+  family=Baskerville size=8
 title
-  size=44 color=darkGreen family=LoveYou
+  size=40 color=darkGreen family=LoveYou
 
 heading
   color=white background=black family=Helvetica
 heading_blue
-  inherit=heading background=navy borderColor=navy
+  inherit=heading background=navy
 heading_black
-  inherit=heading background=black borderColor=black
+  inherit=heading background=black
 heading_green
-  inherit=heading background=green borderColor=green
+  inherit=heading background=green
 heading_red
-  inherit=heading background=red  borderColor=red
+  inherit=heading background=red
 heading_orange
-  inherit=heading background=orange  borderColor=orange
+  inherit=heading background=orange
 
 stat_style
   color=white family=Helvetica size=10
+
+big
+  size=20 inherit=title align=center
+
 
 blue
   background=#eef
@@ -70,3 +74,4 @@ red
   background=#fee
 orange
   background=#fec
+

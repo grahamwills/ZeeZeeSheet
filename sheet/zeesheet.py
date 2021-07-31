@@ -27,10 +27,11 @@ if __name__ == '__main__':
     install()
     luna = reader.read_sheet('../data/luna.rst')
 
+    luna.print()
+
     # Create
     context = pdf.PDF('../tmp/luna.pdf', luna.styles, debug=False)
     layout_sheet(luna, context)
-    context.finish()
 
     # Display
     subprocess.run(['open', '../tmp/luna.pdf'], check=True)

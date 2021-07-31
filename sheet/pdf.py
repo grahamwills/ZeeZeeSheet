@@ -35,10 +35,6 @@ class PDF(canvas.Canvas):
         self.debug = debug
         self._name_index = 0
 
-    def finish(self):
-        self.showPage()
-        self.save()
-
     def drawImage(self, image, x, y, width=None, height=None, mask=None, preserveAspectRatio=False, anchor='c',
                   anchorAtXY=False, showBoundary=False):
         fileName = image.fileName if hasattr(image, 'fileName') else str(image)

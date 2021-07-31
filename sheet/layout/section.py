@@ -10,26 +10,6 @@ from render import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 
-
-def divisions(fractions: [float], low: int, high: int, spacing: int) -> Tuple[Tuple[int]]:
-    """ Divide up a space according to the fractions given """
-
-    W = (high - low) - len(fractions) * spacing
-
-    result = []
-    left = low
-    running = 0
-    for i, v in enumerate(fractions):
-        running += v
-        right = low + round(running * W) + i * spacing
-        result.append((left, right))
-        left = right + spacing
-
-    result.append((left, high))
-
-    return tuple(result)
-
-
 _MIN_WIDTH = 20
 
 
@@ -57,6 +37,7 @@ class LayoutDetails(NamedTuple):
 
     def height(self):
         return self.placed.bounds.height
+
 
 class SectionLayout(OptimizeProblem):
     """
@@ -113,7 +94,7 @@ class SectionLayout(OptimizeProblem):
         sum_widths = 0
         sum_counts = 0
         # add the value for the last item
-        all_cols = list(column_sizes) + [(self.bounds.width - sum(column_sizes))]
+        all_cols = list(column_sizes) + [(self.available_width - sum(column_sizes))]
         all_counts = list(item_counts) + [len(self.items) - sum(item_counts)]
 
         for width, count in zip(all_cols, all_counts):
@@ -139,9 +120,9 @@ class SectionLayout(OptimizeProblem):
         n = len(self.items)
         k = len(stage1params) + 1
         m = n // k
-        initial = [m] * (k-1)
+        initial = [m] * (k - 1)
 
-        return OptParams(tuple(initial), 1, n - k+1)
+        return OptParams(tuple(initial), 1, n - k + 1)
 
     def validity_error(self, params: OptParams):
         """ >0 implies far away from desired """
@@ -152,16 +133,18 @@ class SectionLayout(OptimizeProblem):
         b = sum(max(0, low - p) + max(0, p - high) for p in params.value)
         return a + b
 
-    def optimize_column_layout(self, k) -> PlacedContent:
+    def optimize_column_layout(self, k, equal: bool) -> PlacedContent:
         n = len(self.items)
 
         LOGGER.info("Stacking %d items vertically into %d columns: %s", n, k, self.bounds)
 
-        available_width = self.bounds.width - (k - 1) * self.padding
-        column_bounds = OptParams(
-                tuple([self.bounds.width // k] * (k - 1)),
-                _MIN_WIDTH, available_width - (k - 1) * _MIN_WIDTH,
-        )
+        self.available_width = self.bounds.width - (k - 1) * self.padding
+        W = self.available_width // k
+        initial = tuple([W] * (k - 1))
+        if equal:
+            column_bounds = OptParams(initial, W, W+1)
+        else:
+            column_bounds = OptParams(initial, _MIN_WIDTH, self.available_width - (k - 1) * _MIN_WIDTH,)
 
         self.exact_placement = False
         f, opt_col, opt_counts = self.run(column_bounds)
@@ -171,9 +154,13 @@ class SectionLayout(OptimizeProblem):
         return PlacedGroupContent(columns)
 
 
-def stack_in_columns(bounds: Rect, children: List, padding: int, columns: int = 1) -> PlacedContent:
+def stack_in_columns(bounds: Rect, children: List, padding: int, columns: int = 1, equal=None) -> PlacedContent:
     layout = SectionLayout(children, bounds, padding)
-    if columns == 1:
+
+    equal = equal in {True, 'True', 'true', 'yes', 'y', '1'}
+    # No more columns than children!
+    k = min(int(columns), len(children))
+    if k == 1:
         return layout.place_in_column(0, len(children), bounds)
     else:
-        return layout.optimize_column_layout(int(columns))
+        return layout.optimize_column_layout(k, equal)

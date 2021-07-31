@@ -113,9 +113,12 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
         image.bounds = image.bounds.move(dx=bounds.width - w)
     else:
         ob = Rect(left=bounds.left + w + block.padding, right=bounds.right, top=bounds.top, bottom=bounds.bottom)
-    other = other_layout(block, ob, pdf)
 
-    return PlacedGroupContent([image, other])
+    if block.content:
+        other = other_layout(block, ob, pdf)
+        return PlacedGroupContent([image, other])
+    else:
+        return image
 
 
 def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:

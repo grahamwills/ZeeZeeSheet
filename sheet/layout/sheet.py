@@ -42,6 +42,7 @@ class SectionPlacement:
     target: Union[Section, Sheet]
     children: List
     padding: int
+    placed: PlacedContent
 
     def __init__(self, target: Section, children: List):
         self.target = target
@@ -52,13 +53,30 @@ class SectionPlacement:
         return "%s(%d children)" % (type(self.target).__name__, len(self.children))
 
     def place(self, bounds: Rect) -> PlacedContent:
-        placed = self.method(bounds, self.children, self.target.padding)
-        LOGGER.info("Placed %s: %s", self, placed)
-        return placed
+        self.placed = self.method(bounds, self.children, self.target.padding)
+        LOGGER.info("Placed %s: %s", self, self.placed)
+        return self.placed
 
     def draw(self):
         for c in self.children:
             c.draw()
+
+    def draw_sheet(self, pdf):
+        page_index = 1
+        margin = self.target.margin
+        cumulative_offset = 0
+        for c in self.children:
+            child_bounds = c.placed.bounds
+            if child_bounds.bottom > cumulative_offset + pdf.page_height - margin:
+                pdf.showPage()
+                page_index += 1
+                dy = child_bounds.top - margin
+                pdf.translate(dx=0, dy=dy)
+                cumulative_offset += dy
+            c.draw()
+
+        pdf.showPage()
+        pdf.save()
 
 
 def choose_method(method: common.Command):
@@ -80,4 +98,4 @@ def layout_sheet(sheet: Sheet, pdf: PDF):
     outer = Rect(left=0, top=0, right=pdf.page_width, bottom=pdf.page_height) - Margins.all_equal(sheet.margin)
     placement = make_placement(sheet, pdf)
     placement.place(outer)
-    placement.draw()
+    placement.draw_sheet(pdf)

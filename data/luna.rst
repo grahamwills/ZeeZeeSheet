@@ -11,7 +11,6 @@
    :align: left
 ..
 
-
 - Race:**Wood Elf**     |   Class:**Druid** |   Gender:**Female**   |   Age:**62**
 
 .. style: big
@@ -28,15 +27,16 @@ Attributes
  - Constitution | **12** | +1
  - Dexterity    | **18** | +4
  - Intelligence | **8**  | -1
- - Wisdom       | **18** | +1
+ - Wisdom       | **18** | +4
  - Charisma     | **12** | +1
 
 .. block: key-values style=heading_red rows=3
 
 Defenses
- - AC | **18**
- - PD | **14**
- - MD | **14**
+ - AC | **20**
+ - PD | **15**
+ - MD | **16**
+
 
 ---------------------------------------------------------------
 
@@ -45,13 +45,13 @@ Defenses
 .. block: default
 .. style: default
 
-Level **2**
- - [X] Class: *Aspect - Bear*  --
-   [X] Feat  *Ruination Spell* --
-   [ ] __________________________
+Level **2**         -- Initiative **+7**
+ - [] ________________________
+   [] ________________________
+   [] ________________________
 
-Hits: **28**        --  Staggered: **14**
- - Recoveries: [ ][ ][ ][ ][ ][ ][ ][ ] -- **2d6+1**
+Hits: **35**                            --  Staggered: **17**
+ - Recoveries: [ ][ ][ ][ ][ ][ ][ ][ ] -- **3d6+1**
 
 ---------------------------------------------------------------
 
@@ -76,7 +76,6 @@ Backgrounds
  - Princess of the Elven Courts     --  3
  - Inventive Explorer               --  4
  - Madly In Love with a Stupid Guy  --  4
- - -- *Further backgrounding (2 extra)*
 
 Druid Talents
  - **Warrior Druid Initiate**: You are trained to survive the wilds and fight in combat.
@@ -103,13 +102,13 @@ Druid Features
 
 Melee Basic Attack -- At-Will
  - **Standard Action**      --      **Nearby**
- - **Target**: One Creature --      **Attack**: +6 vs AC
- - **Hit**: d6+4 (axe)      --      **Miss**: level damage
+ - **Target**: One Creature --      **Attack**: +7 vs AC
+ - **Hit**: 3d6+4 (axe)      --      **Miss**: level damage
 
 Ranged Basic Attack -- At-Will
  - **Standard Action**      --      **Nearby**
  - **Target**: One Creature --      **Attack**: +6 vs AC
- - **Hit**: d6+4 (bow, axe) --      **Miss**: level damage
+ - **Hit**: 3d6+4 (bow, axe) --      **Miss**: level damage
 
 
 .. title: banner style=heading_orange
@@ -121,24 +120,19 @@ Elemental Pivot -- Encounter []
    at-will feat spell of your choice once as a quick action, even if
    you don’t normally know that spell.
 
-Nature's Fury -- Encounter []
- - **Flexible Attack**      --      **Trigger**: Natural 2-5
- - **Effect**: Deal half damage
+Shillelagh -- Encounter []
+ - **Flexible Attack**      --      **Trigger**: Natural 3, 13
+ - **Effect**: If the target is not staggered after attack, attack becomes a
+   critial hit. Otherwise, heal with a recovery and the target is stuck until
+   end of next turn
 
 .. title: banner style=heading_red
 .. style: red
 
-Frost Touch (1) -- Encounter []
- - **Close Quarters Terrain Feat Spell**    --      **Nearby**
- - **Target**: One Creature                 --      **Attack**: +6 vs PD
- - **Hit**: 2d6+4 (3d6+4 to engaged enemy)
- - **Natural Even Miss**: Half damage
- - **Natural Odd Miss**: Level damage
-
 Ruination (3) -- Encounter []
  - **Ranged Terrain Feat Spell**            --      **Nearby**
- - **Target**: All nearby enemies           --      **Attack**: +6 vs MD
- - **Hit**: 4d6 to all nearby enemies (once to each mook group)
+ - **Target**: All nearby enemies           --      **Attack**: +7 vs MD
+ - **Hit**: 4d6 to all nearby enemies (once per mook group)
  - **Note**: Targets the highest MD of all nearby enemies
    (don't have to be able to see them)
 
@@ -152,9 +146,8 @@ Elven Grace -- Wood Elf
 .. title: banner style=heading_black
 .. style: black
 
-Terrain Spell -- Daily per terrain
- - Various spells; each one is a separate daily, so a druid can cast
-   each one once a day so long as they are in that sort of terrain
+Terrain Spell -- Daily [] []
+ - Various spells depending on the surrounding terrain; cannot use the same terrain twice.
 
 Beast Form -- Daily []
  - **Quick action**: You leave your humanoid form behind and assume the form of a deadly
@@ -184,6 +177,128 @@ Scout Form  -- Daily []
 
 ---------------------------------------------------------------
 
+.. section: stack columns=3 equal=true
+
+Cave, Dungeon, Underworld  -- Terrain Spells
+ - **Spider Climb** -- Quick • Self -- p54
+ - Climb, fight on ceilings and walls; get one attack re-roll
+ - **Fungal Ambuscade** -- Attack vs PD  Ranged -- p54
+ - Target takes ongoing poison
+
+Forest, Woods  -- Terrain Spells
+ - **Barkskin** -- Quick • Self/Ally -- p55
+ - Target in light armor gains +3 to AC (not fire damage)
+ - **Entangle** -- Attack d3 vs PD  Ranged -- p55
+ - Target takes damage and may be stuck
+
+Ice, Tundra, Snow  -- Terrain Spells
+ - **Ice Shield** -- Quick • Self -- p55
+ - Attacker who rolls 1-15 takes 4d6 cold
+ - **Icicle** -- Attack Nearby/Far  Ranged -- p56
+ - Target takes cold damage and may be hampered
+
+Mountains  -- Terrain Spells
+ - **Rumble** -- Quick • Self --   p58
+ - When you end adjacent to 2+, each takes 2d6+4 thunder
+ - **Stonekskin** -- Quick •  Self/Ally -- p58
+ - Resist damage 16+ until two 16+ attacks hit target
+
+Ruins  -- Terrain Spells
+ - **Inevitable Collapse** -- One nearby -- p59
+ - Damage and ongoing damage with special save
+
+Swamp, Lake, river  -- Terrain Spells
+ - **The Big Muddy** -- All nearby -- p60
+ - Enemies with low hit points  are stuck
+ - **Reclamation** -- 2 weakest • Ranged -- p58
+ - Damage and cannot heal
+
+
+
+
+---------------------------------------------------------------
+
+.. section: stack columns=4 equal=true
+.. title: banner style=heading_blue
+.. style: blue
+
+Leather Surcoat -- +1 Magic Armor
+ - Tight-fitting tooled leather armor
+ - Light armor improves AC, MD
+
+Pearl of Wisdom -- Magic Item
+ - +1 to saves when ≤ 10 hp
+ - Daily: Re-roll a wisdom skill, taking better result (recharge 11)
+ - Quirk: Bookworm
+
+Misc Items
+ - Potion of Healing +d8
+ - Silk rope, Climbing kit, lanter, chalk
+ - Sketch book, charcoal, pencils
+ - Small harp
+
+Feats
+ - [X] Further backgrounding
+ - [X] Terrain spell *Ruination*
+ - [X] *Shillelagh* adventurer feat
+
+.. style: default
+
+---------------------------------------------------------------
+
+
+.. section: stack columns=1
+.. title: hidden
+
+
+.. image:: data/images/divider-roses.gif
+   :align: left
+
+
+---------------------------------------------------------------
+
+
+
+.. section: stack columns=2
+.. title: hidden
+
+
+Redfield Valley
+===============
+
+.. image:: data/images/Redfield_Valley_Map.png
+..
+
+.. title: hidden
+
+
+Redfield Valley History
+ - As the campaign started, you all got to know each other while adventuring in and around Redfield Valley, a bucolic area.  The valley featured two towns: on the west side of the valley was Appleton (where you spent more time), and on the east side was Crownhill.  At the north end of the valley was a fortress, the Vakefort, which guarded the entrance to the Vakevale, a wild area which was said to be full of monsters.
+ - You got to know many of the residents of Redfield Valley, and you undertook several missions into the Vakevale, dealing with monsters, and gaining some treasure.
+ - As you were returning to Redfield Valley, the floating city of Vantage (one of the Archmage's main cities) came crashing to earth, directly into the valley.
+ - After surviving the fall of the city itself, you scrambled to help the valley's residents.  You were able to rescue a number of people in Appleton (though many are badly injured); you went across the valley to Crownhill to help them, as well, but that town was more heavily damaged, and fewer survived there.
+ - The ruins of Vantage are now strewn across Redfield Valley, and many of its contents, including once-captive monsters, as well as treasures, lie in the ruins, ripe for exploration.
+
+
+---------------------------------------------------------------
+
+
+.. section: stack columns=1
+.. title: banner style=heading_green
+
+
+
+Characters
+ - Chris    | **Solea Orr**                     | Human Rogue            | *I am the only human in this Age to be resurrected by the Great Gold Wyrm*
+ - Graham   | **Lunathien "Luna" Calenmaethor** | Wood Elf Druid         | *My firstborn will be the next Elf Queen*
+ - Josh     | **Friend (Watcher of the Pit)**   | Forgeborn Demonologist | *I am the constructed container of a stolen Hellmouth; it fuels my core*
+ - Suzanne  | **Lorcan Laoch**                  | Aasimar Barbarian      | *Every statue of an angel in the Dragon Empire looks exactly like me*
+ - Vic      | **Degavor**                       | Tiefling Necromancer   | *I know everyone's name*
+ - Wes      | **Ferran Broadwell**              | Human Ranger           | *I lost a foolish wager to a powerful dwarf warlord*
+
+
+---------------------------------------------------------------
+
 
 Styles
 ------
@@ -191,7 +306,7 @@ Styles
 default
   family=Baskerville size=8 align=fill
 title
-  size=42 color=darkGreen family=LoveYou
+  size=40 color=darkGreen family=LoveYou
 
 heading
   color=white background=black family=Helvetica
@@ -210,7 +325,7 @@ stat_style
   color=white family=Helvetica size=10
 
 big
-  size=18 color=darkGreen family=LoveYou align=center
+  size=20 inherit=title align=center
 
 
 blue

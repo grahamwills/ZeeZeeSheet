@@ -17,7 +17,7 @@ def _add_run(elements: [Element], row: [], pdf: PDF, align: str):
         row.append(para)
 
 
-def make_row_from_run(run: [Element], pdf: PDF, width: int, padding:int) -> [Flowable]:
+def make_row_from_run(run: [Element], pdf: PDF, width: int, padding: int) -> [Flowable]:
     items = run.items
 
     spacer_count = sum(e.which == ElementType.SPACER for e in items)
@@ -52,7 +52,7 @@ def make_row_from_run(run: [Element], pdf: PDF, width: int, padding:int) -> [Flo
         return row
 
 
-def as_one_line(run: Run, pdf: PDF, width: int, padding:int):
+def as_one_line(run: Run, pdf: PDF, width: int, padding: int):
     if not any(e.which == ElementType.SPACER for e in run.items):
         # No spacers -- nice and simple
         p = pdf.make_paragraph(run)
@@ -76,7 +76,7 @@ def make_table(pdf, paragraphs, width, padding):
     return table, w, h
 
 
-def as_table(cells, width: int, pdf: PDF, padding:int):
+def as_table(cells, width: int, pdf: PDF, padding: int):
     commands = [
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (0, -1), 0),
@@ -137,7 +137,6 @@ def stats_runs(run: [Element], pdf: PDF) -> [Paragraph]:
 
 
 def _col_width(cells: [[Paragraph]], col: int, pdf: PDF) -> float:
-
     nCols = max(len(r) for r in cells)
     mx = 1
     for row in cells:
@@ -165,9 +164,14 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     H2 = text_style_1.size + 2 * padding
     W2 = 4 * padding + round(_col_width(items, 1, pdf))
 
+    try:
+        W3 = 2 * padding + round(_col_width(items, 2, pdf))
+    except:
+        W3 = 0
+
     rounded = (H2 - H1)
 
-    LOGGER.debug("Key Values Layout for %d items, H1=%d, W1=%d", len(items), H1, W1)
+    LOGGER.debug("Key Values Layout for %d items, W1=%d, W2=%d, W3=%d", len(items), W1, W2, W3)
 
     contents = []
 
@@ -176,21 +180,31 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     for i, cell in enumerate(items):
         if contents and i % nRows == 0:
             top = bounds.top
-            left += W1 + W2 + padding
+            left += W1 + W2 + W3 + 2 * padding
         r2 = Rect(left=left, top=top, height=H2, width=W2)
-        r1 = Rect(left=r2.right - rounded, top=top + (H2 - H1) / 2, width=W1 + rounded, height=H1)
-        contents.append(PlacedRectContent(r1, box_style, True, False, rounded=rounded))
+        r1 = Rect(left=r2.right, top=top + (H2 - H1) / 2, width=W1 + W3, height=H1)
+
+        # Extend under the other rectangle to hide joins of 'round edges'
+        contents.append(
+            PlacedRectContent(r1.move(dx=-H1).resize(width=r1.width + H1), box_style, True, False, rounded=rounded))
         contents.append(PlacedRectContent(r2, box_style, True, False, rounded=rounded))
 
         cell[0].wrapOn(pdf, r1.width, r1.height)
         cell[1].wrapOn(pdf, r2.width, r2.height)
-        b1 = center_text(cell[0], r1, pdf, text_style)
-        b2 = center_text(cell[1], r2, pdf, text_style_1).move(dx=-1, dy=1)
+        b1 = center_text(cell[0], r1.resize(width=r1.width - W3), pdf, text_style)
+        b2 = center_text(cell[1], r2, pdf, text_style_1).move(dy=1)
         contents.append(PlacedFlowableContent(cell[0], b1))
         contents.append(PlacedFlowableContent(cell[1], b2))
-        top = r2.bottom + padding
+
+        if W3:
+            r3 = Rect(top=r1.top, bottom=r1.bottom, width=W3, right=r1.right)
+            cell[2].wrapOn(pdf, r3.width, r3.height)
+            b3 = center_text(cell[2], r3, pdf, text_style)
+            contents.append(PlacedFlowableContent(cell[2], b3))
+
+        top = r2.bottom + 2 * padding
 
     content = PlacedGroupContent(contents)
-    content.move(dx=(bounds.width - content.bounds.width)/2)
+    content.move(dx=(bounds.width - content.bounds.width) / 2)
     content.add_fit_err(bounds)
     return content
