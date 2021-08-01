@@ -25,15 +25,15 @@ def install():
 if __name__ == '__main__':
     # Read
     install()
-    luna = reader.read_sheet('../data/luna.rst')
+    luna = reader.read_sheet('../data/mouse.rst')
 
     luna.print()
 
     # Create
-    context = pdf.PDF('../tmp/luna.pdf', luna.styles, debug=False)
+    context = pdf.PDF('../tmp/mouse.pdf', luna.styles, debug=False)
     layout_sheet(luna, context)
 
     # Display
-    subprocess.run(['open', '../tmp/luna.pdf'], check=True)
+    subprocess.run(['open', '../tmp/mouse.pdf'], check=True)
 
 

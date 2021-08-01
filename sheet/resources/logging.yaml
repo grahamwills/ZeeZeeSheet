@@ -32,7 +32,7 @@ loggers:
     propagate: no
 
   reader:
-    level: WARNING
+    level: DEBUG
     handlers: [ console, file ]
     propagate: no
 
@@ -47,7 +47,7 @@ loggers:
     propagate: no
 
   layout.optimizer:
-    level: DEBUG
+    level: WARNING
     handlers: [ console, file ]
     propagate: no
 

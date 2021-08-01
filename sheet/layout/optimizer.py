@@ -19,6 +19,8 @@ class OptParams(NamedTuple):
     def __len__(self):
         return len(self.value)
 
+    def __str__(self):
+        return "{(%s) bounds=(%d:%d)}" % (",".join(str(x) for x in self.value), self.low, self.high)
 
 class OptimizeProblem(abc.ABC):
 

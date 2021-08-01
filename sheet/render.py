@@ -141,6 +141,7 @@ def build_font_choices() -> [str]:
     install_font('MotionPicture', 'MotionPicture', user_fonts)
     install_font('Adventure', 'Adventure', user_fonts)
     install_font('MrsMonster', 'mrsmonster', user_fonts)
+    install_font('BackIssues', 'back-issues-bb', user_fonts)
     return sorted(base_fonts() + user_fonts)
 
 

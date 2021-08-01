@@ -136,7 +136,7 @@ class SectionLayout(OptimizeProblem):
     def optimize_column_layout(self, k, equal: bool) -> PlacedContent:
         n = len(self.items)
 
-        LOGGER.info("Stacking %d items vertically into %d columns: %s", n, k, self.bounds)
+        LOGGER.info("Stacking %d items  into %d columns: %s", n, k, self.bounds)
 
         self.available_width = self.bounds.width - (k - 1) * self.padding
         W = self.available_width // k
@@ -144,12 +144,14 @@ class SectionLayout(OptimizeProblem):
         if equal:
             column_bounds = OptParams(initial, W, W+1)
         else:
-            column_bounds = OptParams(initial, _MIN_WIDTH, self.available_width - (k - 1) * _MIN_WIDTH,)
+            column_bounds = OptParams(initial, _MIN_WIDTH, self.available_width - (k - 1) * _MIN_WIDTH)
 
+        LOGGER.info("Initial parameters = %s", column_bounds)
         self.exact_placement = False
         f, opt_col, opt_counts = self.run(column_bounds)
         self.exact_placement = True
 
+        LOGGER.info("Finalizing placement cols=%s, alloc=%s, score=%f", opt_col, opt_counts, f)
         columns = self.place_all_columns(opt_col.value, opt_counts.value)
         return PlacedGroupContent(columns)
 

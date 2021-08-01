@@ -90,7 +90,7 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
                     )
 
     def __str__(self):
-        return "[l=%d, r=%d, t=%d, b=%d]" % (self.left, self.right, self.top, self.bottom)
+        return "[l=%d r=%d t=%d b=%d]" % (self.left, self.right, self.top, self.bottom)
 
     def valid(self) -> bool:
         return self.left <= self.right and self.top <= self.bottom

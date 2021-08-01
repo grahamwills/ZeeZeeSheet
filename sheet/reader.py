@@ -193,6 +193,11 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         LOGGER.debug("Departing '%s'", self.status.depart(node))
         self.status.finish_section()
 
+    def depart_bullet_list(self, node: docutils.nodes.Node) -> None:
+        LOGGER.debug("Departing '%s'", self.status.depart(node))
+        self.status.block = None
+        self.state = State.READY
+
     def visit_section(self, node: docutils.nodes.Node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         # If we are handling blocks, this is a new section so finish the old
@@ -241,6 +246,11 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             self.status.block = None
             self.ensure_block()
         self.status.block.image = node.attributes
+
+    def visit_system_message(self, node: docutils.nodes.system_message) -> None:
+        LOGGER.debug("Entering '%s'", self.status.enter(node))
+        LOGGER.debug("System warning: %s", node.astext())
+        raise docutils.nodes.SkipChildren
 
     def unknown_visit(self, node: docutils.nodes.Node) -> None:
         txt = self.status.enter(node)
