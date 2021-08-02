@@ -22,13 +22,14 @@ class OptParams(NamedTuple):
     def __str__(self):
         return "{(%s) bounds=(%d:%d)}" % (",".join(str(x) for x in self.value), self.low, self.high)
 
+
 class OptimizeProblem(abc.ABC):
 
-    def score(self, x1: Tuple[int], x2: Tuple[int]) -> float:
+    def score(self, x1: OptParams, x2: OptParams) -> float:
         """ score the problem"""
         raise NotImplementedError()
 
-    def stage2parameters(self, stage1params: Tuple[int]) -> Optional[OptParams]:
+    def stage2parameters(self, stage1params: OptParams) -> Optional[OptParams]:
         """ Create second set of parameters from the first"""
         raise NotImplementedError()
 
@@ -41,7 +42,7 @@ class OptimizeProblem(abc.ABC):
 
         best_combos = dict()
 
-        def stage1func(params1: Tuple[int]) -> float:
+        def stage1func(params1: OptParams) -> float:
             f, params2 = self._stage2optimize(params1)
             best_combos[params1] = (f, params2)
             return f
@@ -52,22 +53,22 @@ class OptimizeProblem(abc.ABC):
         _score.cache_clear()
 
         if opt1:
-            f, opt2 = best_combos[opt1.value]
+            f, opt2 = best_combos[opt1]
             return f, opt1, opt2
         else:
             LOGGER.error("Optimization completely failed")
             return None, None, None
 
-    def _stage2optimize(self, params1: Tuple[int]) -> (float, OptParams):
+    def _stage2optimize(self, params1: OptParams) -> (float, OptParams):
         params2init = self.stage2parameters(params1)
 
-        err = self.validity_error(params2init)
-        if err > 0:
-            LOGGER.info("[stage-2] out-of-bounds initial stage1 parameters %s: err = %s", params1, err)
-            return 1e6 * (1 + err * err), None
+        init_err = self.validity_error(params2init)
+        if init_err > 0:
+            LOGGER.info("[stage-2] out-of-bounds initial stage1 parameters %s: err = %s", params1, init_err)
+            return 1e6 * (1 + init_err * init_err), None
 
-        def stage2func(x2: Tuple[int]) -> float:
-            err = self.validity_error(OptParams(x2, params2init.low, params2init.high))
+        def stage2func(x2: OptParams) -> float:
+            err = self.validity_error(x2)
             if err > 0:
                 LOGGER.debug("Out-of-bounds stage2 parameters %s: err = %s", x2, err)
                 return 1e6 * (1 + err * err)
@@ -75,30 +76,28 @@ class OptimizeProblem(abc.ABC):
 
         return self._minimize('stage-2', stage2func, params2init)
 
-    def _minimize(self, name: str, func: Callable[[Tuple[int]], float], initp: OptParams) -> (float, OptParams):
+    def _minimize(self, name: str, func: Callable[[OptParams], float], initp: OptParams) -> (float, OptParams):
 
         if initp.low == initp.high:
             # Degenerate, so no need to do anything tricky
             LOGGER.info("[%s]: Degenerate bounds: %s", name, initp)
-            return func(initp.value), initp
+            return func(initp), initp
 
         LOGGER.info("[%s] initial parameters = %s", name, initp)
 
         def adapter(x: [float]) -> float:
-            values = _array2tuple(x, initp)
-            err = self.validity_error(OptParams(values, initp.low, initp.high))
+            err = self.validity_error(_array2params(x, initp))
             if err > 0:
                 LOGGER.debug("Out-of-bounds stage2 parameters %s: err = %s", x, err)
                 return 1e6 * (1 + err * err)
-            return func(_array2tuple(x, initp))
+            return func(_array2params(x, initp))
 
         def constraint(x: [float]) -> float:
-            values = _array2tuple(x, initp)
-            return self.validity_error(OptParams(values, initp.low, initp.high))
+            return self.validity_error(_array2params(x, initp))
 
         x0 = _params2array(initp)
         opt_results = optimize.minimize(adapter, x0=np.asarray(x0), method='COBYLA',
-                                        constraints=[{'type': 'ineq', 'fun': constraint}])
+                                        constraints={'type': 'ineq', 'fun': constraint})
 
         if opt_results.success:
             LOGGER.info("[%s]: Success using %d evaluation", name, opt_results.nfev)

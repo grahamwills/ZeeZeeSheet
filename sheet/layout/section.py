@@ -80,9 +80,6 @@ class SectionLayout(OptimizeProblem):
         issues = sum(c.fit_error for c in columns)
         wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
 
-        if isinstance(wasted_space, complex):
-            print("oh dear")
-
         diff = max_height - min_height
 
         score = issues + diff + wasted_space
@@ -115,11 +112,11 @@ class SectionLayout(OptimizeProblem):
             placed_columns.append(placed)
         return placed_columns
 
-    def score(self, column_sizes: Tuple[int], item_counts: Tuple[int]) -> Optional[float]:
-        placed_columns = self.place_all_columns(column_sizes, item_counts)
+    def score(self, column_sizes: OptParams, item_counts: OptParams) -> Optional[float]:
+        placed_columns = self.place_all_columns(column_sizes.value, item_counts.value)
         return self.score_placement(placed_columns)
 
-    def stage2parameters(self, stage1params: Tuple[int]) -> Optional[OptParams]:
+    def stage2parameters(self, stage1params:OptParams) -> Optional[OptParams]:
         n = len(self.items)
         k = len(stage1params) + 1
         m = n // k
@@ -131,7 +128,7 @@ class SectionLayout(OptimizeProblem):
         """ >0 implies far away from desired """
         low = params.low
         high = params.high
-        last = params.high + len(params) * params.low - sum(params.value)
+        last = high + len(params) * low - sum(params.value)
         a = max(0, low - last)
         b = sum(max(0, low - p) + max(0, p - high) for p in params.value)
         return a + b
