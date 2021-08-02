@@ -5,9 +5,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, OrderedDict
 
-import reportlab
 from colour import Color
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.rl_accel import unicode2T1
+from reportlab.lib.units import cm, inch, mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import Font
 
@@ -15,7 +16,8 @@ import common
 
 BLACK = Color('black')
 
-HELVETICA:Font = pdfmetrics.getFont('Helvetica')
+HELVETICA: Font = pdfmetrics.getFont('Helvetica')
+
 
 @dataclass
 class Style:
@@ -68,7 +70,6 @@ class Element:
 
     def replace_style(self, style: str):
         return Element(which=self.which, value=self.value, style=style, modifiers=self.modifiers)
-
 
 
 @dataclass
@@ -190,11 +191,24 @@ class Section:
             parent.content.remove(self)
 
 
+def _to_size(txt: str) -> int:
+    if txt.endswith('in'):
+        return round(float(txt[:-2]) * inch)
+    if txt.endswith('mm'):
+        return round(float(txt[:-2]) * mm)
+    if txt.endswith('cm'):
+        return round(float(txt[:-2]) * cm)
+    if txt.endswith('px') or txt.endswith('pt'):
+        return round(float(txt[:-2]))
+    return int(txt)
+
+
 @dataclass
 class Sheet:
     content: List[Section] = field(default_factory=list)
     styles: Dict[str, Style] = field(default_factory=OrderedDict)
     layout_method: str = common.parse_directive('stack')
+    pagesize: (int, int) = letter
     margin: int = 36
     padding: int = 8
 
@@ -213,27 +227,36 @@ class Sheet:
         for c in self.content:
             c.fixup(self)
 
+    def apply_styles(self, margin=None, padding=None, size=None):
+        if margin:
+            self.margin = _to_size(margin)
+        if padding:
+            self.padding = _to_size(padding)
+        if size:
+            pair = size.split('x')
+            self.pagesize = (_to_size(pair[0]), _to_size(pair[1]))
+
+
 def exists_in_helvetica(text):
     """ If it is not substituted, it exists """
     return unicode2T1(text, [HELVETICA])[0][0] == HELVETICA
+
 
 def ensure_representable(items: List[Element]) -> List[Element]:
     result = []
     for item in items:
         if item.which == ElementType.TEXT:
             run_start = 0
-            for i,c in enumerate(item.value):
+            for i, c in enumerate(item.value):
                 # If helvetica doesn't support it, call it special
                 if not exists_in_helvetica(c):
                     if i > run_start:
                         result.append(Element(ElementType.TEXT, item.value[run_start:i], item.style, item.modifiers))
                     result.append(Element(ElementType.SYMBOL, c, item.style, item.modifiers))
-                    run_start = i+1
+                    run_start = i + 1
             if len(item.value) > run_start:
                 result.append(Element(ElementType.TEXT, item.value[run_start:], item.style, item.modifiers))
         else:
             result.append(item)
 
-
     return result
-

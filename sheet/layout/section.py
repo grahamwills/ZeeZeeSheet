@@ -80,6 +80,9 @@ class SectionLayout(OptimizeProblem):
         issues = sum(c.fit_error for c in columns)
         wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
 
+        if isinstance(wasted_space, complex):
+            print("oh dear")
+
         diff = max_height - min_height
 
         score = issues + diff + wasted_space

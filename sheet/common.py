@@ -28,9 +28,14 @@ def parse_directive(txt: str) -> Command:
         tag = txt[:colon_index].strip()
         txt = txt[colon_index + 1:]
     items = txt.strip().split()
-    command = items[0]
+
+    if '=' in items[0]:
+        command = None
+    else:
+        command = items[0]
+        items = items[1:]
     options = dict()
-    for o in items[1:]:
+    for o in items:
         pair = o.split('=')
         if len(pair) == 1:
             options[pair[0]] = 'True'

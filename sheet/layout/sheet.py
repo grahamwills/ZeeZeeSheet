@@ -67,7 +67,7 @@ class SectionPlacement:
         cumulative_offset = 0
         for c in self.children:
             child_bounds = c.placed.bounds
-            if child_bounds.bottom > cumulative_offset + pdf.page_height - margin:
+            if child_bounds.bottom > cumulative_offset + self.target.pagesize[1] - margin:
                 pdf.showPage()
                 page_index += 1
                 dy = child_bounds.top - margin
@@ -95,7 +95,7 @@ def make_placement(target: Union[Block, Section, Sheet], pdf: PDF):
 
 
 def layout_sheet(sheet: Sheet, pdf: PDF):
-    outer = Rect(left=0, top=0, right=pdf.page_width, bottom=pdf.page_height) - Margins.all_equal(sheet.margin)
+    outer = Rect(left=0, top=0, right=sheet.pagesize[0], bottom=sheet.pagesize[1]) - Margins.all_equal(sheet.margin)
     placement = make_placement(sheet, pdf)
     placement.place(outer)
     placement.draw_sheet(pdf)

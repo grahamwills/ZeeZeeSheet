@@ -19,17 +19,14 @@ _UNCHECKED_BOX = '../data/images/system/unchecked.png'
 
 class PDF(canvas.Canvas):
     output_file: str
-    page_width: int
     page_height: int
     _styles: Dict[str, Style]
     debug: bool
 
     _name_index: int
 
-    def __init__(self, output_file, styles: Dict, debug: bool = False) -> None:
-        pagesize = pagesizes.letter
+    def __init__(self, output_file, styles: Dict, pagesize:(int, int), debug: bool = False) -> None:
         super().__init__(output_file, pagesize=pagesize)
-        self.page_width = int(pagesize[0])
         self.page_height = int(pagesize[1])
         self._styles = styles
         self.debug = debug

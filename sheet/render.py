@@ -29,21 +29,18 @@ class PlacedContent:
     def add_fit_err(self, required: Rect):
         """ Add error based on how badly we fit"""
         dx = max(0, self.bounds.width - required.width)
-        dy = max(0, self.bounds.height- required.height)
+        dy = max(0, self.bounds.height - required.height)
         self.fit_error += dx + dy
 
         dx = max(0, required.width - self.bounds.width)
-        dy = max(0, - required.height - self.bounds.height)
+        dy = max(0, required.height - self.bounds.height)
         self.fit_error += (dx + dy)/50
-
 
     def move(self, dx=0, dy=0):
         self.bounds = self.bounds.move(dx=dx, dy=dy)
 
-
     def draw(self, pdf: PDF):
         pass
-
 
 def _count_split_words(item):
     if isinstance(item, Tuple):
@@ -142,6 +139,7 @@ def build_font_choices() -> [str]:
     install_font('Adventure', 'Adventure', user_fonts)
     install_font('MrsMonster', 'mrsmonster', user_fonts)
     install_font('BackIssues', 'back-issues-bb', user_fonts)
+    install_font('Gotham', 'Gotham', user_fonts)
     return sorted(base_fonts() + user_fonts)
 
 

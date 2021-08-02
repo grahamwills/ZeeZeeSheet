@@ -1,6 +1,7 @@
 .. section: stack columns=2
 .. title: hidden
 .. style: title
+.. block: padding=0
 
 **Mouse**
 =========
@@ -15,8 +16,7 @@ Qualities
 Picture
 
 .. image:: data/images/mouse.png
-   :align: right
-   :height: 200
+   :height: 140
 ..
 
 
@@ -35,14 +35,36 @@ Picture
 
 
 Qualities
- - ★ If nobody notices me, no-one can hurt me
- - ★ I can make it through this
- - ★ TBD
+ - If nobody notices me, no-one can hurt me
+ - I know the city like the back of my hand
+ - I can make it through this
+
+.. title: banner style=heading1
+.. style: default
+
+Team
+ - Chris    | **Darien**
+ - Graham   | **Mouse**
+ - Josh     | **Warp**
+ - Mike     | **Dreadnaught**
+ - Suzanne  | **Ladybird**
+ - Wes      | **Boo**
+ - -- *"One day we will be a great team"*
+
 
 Specialities
  - Stealth          -- Expert
  - Investigation    -- Basic
  - Athletics        -- Basic
+
+.. title: hidden style=heading2
+
+Resources
+ - Stamina          | [ ][ ][ ][ ][ ][ ][ ]
+ - Determination    | [ ][ ][ ]
+
+.. title: banner style=heading2
+.. style: back1
 
 Attributes
  - **Prowess**      | poor | **2**
@@ -52,28 +74,21 @@ Attributes
  - **Awareness**      | good | **5**
  - **Willpower**      | good | **5**
 
-Resources
- - Stamina          | [ ][ ][ ][ ][ ][ ][ ]
- - Determination    | [ ][ ][ ]
+.. title: banner style=heading1
+.. style: default
+
+
 
 Powers
  - **Telepathy** [6]: Read thoughts, resisted by will
  - **Illusion** [telepathy]: Resisted by awareness
- - **Mind Control** [5]: With mind link, cannot casue target to directly harm self or others
+ - **Mind Control** [5]: With mind link, cannot cause target to directly harm self or others
 
 Notes
  - I live in the undercity and in the group apartment
- - Work at transient jobs, usually selling things (suits at the moment)
+ - I work at transient jobs, usually selling things (suits at the moment)
 
 
-Team
- - "One day we will be a great team"
- - Chris    | **Darien**
- - Graham   | **Mouse**
- - Josh     | **Warp**
- - Mike     | **Dreadnaught**
- - Suzanne  | **Ladybird**
- - Wes      | **Boo**
 
 ---------------------------------------------------------
 
@@ -82,38 +97,18 @@ Styles
 ------
 
 default
-  family=Roboto color=#004 size=12 align=left
+  family=Gotham color=#004 size=10 align=fill
 title
-  size=40 color=#008 family=BackIssues
+  size=32 color=#008 family=BackIssues align=left color=black
 big
-  size=16 family=BackIssues
+  size=16 family=BackIssues align=left
 
-heading
-  color=white background=black family=Helvetica
-heading_blue
-  inherit=heading background=navy
-heading_black
-  inherit=heading background=black
-heading_green
-  inherit=heading background=green
-heading_red
-  inherit=heading background=red
-heading_orange
-  inherit=heading background=orange
+heading1
+  background=#449 color=white align=left
 
-stat_style
-  color=white family=Helvetica size=10
+heading2
+  inherit=heading1 borderColor=#449 borderWidth=0.5
 
 
-
-blue
-  background=#eef
-black
-  background=#eee
-green
-  background=#efe
-red
-  background=#fee
-orange
-  background=#fec
-
+back1
+  background=#def

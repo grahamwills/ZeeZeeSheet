@@ -154,6 +154,11 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         elif command.tag == 'style':
             LOGGER.info(".. setting style: %s", command)
             self.style = command.command
+        elif command.tag == 'page':
+            LOGGER.info(".. setting page info: %s", command)
+            if command.command:
+                self.sheet.layout_method = command
+            self.sheet.apply_styles(**command.options)
         else:
             raise ValueError("Unknown comment directive: '%s', line=%d" % (command, line_of(node)))
         raise docutils.nodes.SkipChildren
@@ -192,11 +197,6 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
     def depart_section(self, node: docutils.nodes.Node) -> None:
         LOGGER.debug("Departing '%s'", self.status.depart(node))
         self.status.finish_section()
-
-    def depart_bullet_list(self, node: docutils.nodes.Node) -> None:
-        LOGGER.debug("Departing '%s'", self.status.depart(node))
-        self.status.block = None
-        self.state = State.READY
 
     def visit_section(self, node: docutils.nodes.Node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
@@ -268,6 +268,8 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             title_display = self.title_display_method
             block_display = self.block_layout_method
             self.status.block = Block(title_method=title_display, block_method=block_display)
+            if 'padding' in block_display.options:
+                self.status.block.padding = int(block_display.options['padding'])
             LOGGER.info("... Adding block with display = %s, title = %s", block_display, title_display)
             self.status.section.add_block(self.status.block)
 

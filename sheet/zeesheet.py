@@ -21,19 +21,19 @@ def install():
     fonts = build_font_choices()
     LOGGER.info("Installed fonts %s", fonts)
 
+def show(file:str):
+    sheet = reader.read_sheet(file)
+    sheet.print()
+    out = file.replace('.rst', '.pdf').replace("../data", "../tmp")
+    context = pdf.PDF(out, sheet.styles, sheet.pagesize, debug=True)
+    layout_sheet(sheet, context)
+    subprocess.run(['open', out], check=True)
 
 if __name__ == '__main__':
     # Read
     install()
-    luna = reader.read_sheet('../data/mouse.rst')
+    show('../data/mouse.rst')
+    show('../data/luna.rst')
 
-    luna.print()
-
-    # Create
-    context = pdf.PDF('../tmp/mouse.pdf', luna.styles, debug=False)
-    layout_sheet(luna, context)
-
-    # Display
-    subprocess.run(['open', '../tmp/mouse.pdf'], check=True)
 
 

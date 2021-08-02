@@ -33,7 +33,7 @@ class OptimizeProblem(abc.ABC):
         raise NotImplementedError()
 
     def validity_error(self, params: OptParams):
-        """ How far past valididyt these params are"""
+        """ How far past validity these params are"""
         raise NotImplementedError()
 
     def run(self, x1init: OptParams) -> (float, OptParams, OptParams):
@@ -85,10 +85,20 @@ class OptimizeProblem(abc.ABC):
         LOGGER.info("[%s] initial parameters = %s", name, initp)
 
         def adapter(x: [float]) -> float:
+            values = _array2tuple(x, initp)
+            err = self.validity_error(OptParams(values, initp.low, initp.high))
+            if err > 0:
+                LOGGER.debug("Out-of-bounds stage2 parameters %s: err = %s", x, err)
+                return 1e6 * (1 + err * err)
             return func(_array2tuple(x, initp))
 
+        def constraint(x: [float]) -> float:
+            values = _array2tuple(x, initp)
+            return self.validity_error(OptParams(values, initp.low, initp.high))
+
         x0 = _params2array(initp)
-        opt_results = optimize.minimize(adapter, x0=np.asarray(x0), method='COBYLA', bounds=None)
+        opt_results = optimize.minimize(adapter, x0=np.asarray(x0), method='COBYLA',
+                                        constraints=[{'type': 'ineq', 'fun': constraint}])
 
         if opt_results.success:
             LOGGER.info("[%s]: Success using %d evaluation", name, opt_results.nfev)

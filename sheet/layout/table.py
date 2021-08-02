@@ -87,10 +87,13 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]
 
-    estimated_widths = [_col_width(cells, i, pdf) for i in range(0, len(cells[0]))]
+
+    nCols = max(len(row) for row in cells)
+
+    estimated_widths = [_col_width(cells, i, pdf) for i in range(nCols)]
+
 
     # Pad short rows and add spans for them
-    nCols = max(len(row) for row in cells)
     for i, row in enumerate(cells):
         n = len(row)
         if n < nCols:
@@ -136,6 +139,13 @@ def stats_runs(run: [Element], pdf: PDF) -> [Paragraph]:
     return row
 
 
+def _frag_width(f, pdf) -> float:
+    if hasattr(f, 'width'):
+        return f.width
+    else:
+        return pdf.stringWidth(f.text, f.fontName, f.fontSize)
+
+
 def _col_width(cells: [[Paragraph]], col: int, pdf: PDF) -> float:
     nCols = max(len(r) for r in cells)
     mx = 1
@@ -143,7 +153,7 @@ def _col_width(cells: [[Paragraph]], col: int, pdf: PDF) -> float:
         # Only check for paragraphs and for rows that don't span multiple columns
         if len(row) == nCols and isinstance(row[col], Paragraph):
             p: Paragraph = row[col]
-            t = sum(pdf.stringWidth(f.text, f.fontName, f.fontSize) for f in p.frags)
+            t = sum(_frag_width(f, pdf) for f in p.frags)
             mx = max(mx, t)
     return mx
 
