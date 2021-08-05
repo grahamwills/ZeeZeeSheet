@@ -224,6 +224,8 @@ class Sheet:
         return "Sheet(%d sections, %d styles)" % (len(self.content), len(self.styles))
 
     def fixup(self):
+        if not 'default' in self.styles:
+            self.styles['default'] = Style(font='Gotham', align='fill', size=9, color=Color('black'))
         for c in self.content:
             c.fixup(self)
 

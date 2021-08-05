@@ -25,15 +25,16 @@ def show(file:str):
     sheet = reader.read_sheet(file)
     sheet.print()
     out = file.replace('.rst', '.pdf').replace("../data", "../tmp")
-    context = pdf.PDF(out, sheet.styles, sheet.pagesize, debug=True)
+    context = pdf.PDF(out, sheet.styles, sheet.pagesize, debug=False)
     layout_sheet(sheet, context)
     subprocess.run(['open', out], check=True)
 
 if __name__ == '__main__':
     # Read
     install()
-    show('../data/mouse.rst')
-    show('../data/luna.rst')
+    show('../data/grumph.rst')
+    # show('../data/mouse.rst')
+    # show('../data/luna.rst')
 
 
 
