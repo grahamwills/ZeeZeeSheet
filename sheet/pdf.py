@@ -29,6 +29,7 @@ class PDF(canvas.Canvas):
         super().__init__(output_file, pagesize=pagesize)
         self.page_height = int(pagesize[1])
         self._styles = styles
+
         self.debug = debug
         self._name_index = 0
 
@@ -87,7 +88,10 @@ class PDF(canvas.Canvas):
         if hasattr(flowable, 'style'):
             self._drawing_style = flowable.style
 
-        flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
+        try:
+            flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
+        except:
+            LOGGER.error("Error trying to draw %s into %s", flowable.__class__.__name__, bounds)
 
     def make_paragraph(self, run: Run, align=None, size_factor=1.0):
         style = self.style(run.base_style())

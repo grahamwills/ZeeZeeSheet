@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections import namedtuple
+from math import ceil
 from textwrap import dedent
 from typing import Dict, List, NamedTuple
 
@@ -36,7 +37,7 @@ def read_rules_elements() -> Dict:
     return result
 
 
-def _find(txt: str, rule: Dict):
+def _find(txt: str, rule: Dict) -> str:
     for item in rule['specific']:
         if item['@name'] == txt:
             return item.get('#text', None)
@@ -95,16 +96,25 @@ class Power(NamedTuple):
 
         box = '' if self.usage == 'At-Will' else ' []'
 
-        line_title = (ACTION_TYPE[self.action][1], self.name, self.usage, ACTION_TYPE[self.action][2], box)
+        act_type = ACTION_TYPE[self.action][2] if len(self.name) + len(self.action) > 36 else self.action
+        line_title = (ACTION_TYPE[self.action][1], self.name, act_type, box)
 
+        atk_target = _combine(target, attack_type)
+        if atk_target:
+            atk_target = atk_target.replace("One, two, or three", "Up to three")
+
+        conditions = None
         if self.weapons:
             wpn = self.weapons[0]
-            line_attack = (wpn.bonus, wpn.defense, _combine(target, attack_type))
+            line_attack = (wpn.bonus, wpn.defense, atk_target)
+            conditions = wpn.conditions
+        elif atk_target != 'Personal':
+            line_attack = (None, None, atk_target)
         else:
-            line_attack = (None, None, _combine(target, attack_type))
+            line_attack =  None
 
         lines_main = []
-        for key in "Trigger Hit Miss Effect".split():
+        for key in "Requirement Trigger Hit Miss Effect".split():
             txt = _find(key, rule)
             if txt:
                 txt = str(txt)
@@ -113,17 +123,19 @@ class Power(NamedTuple):
                 lines_main.append((key, txt.split('\n')[0].replace(' + ', '+')))
         lines_main += extras
 
-        line_flavor = rule['Flavor']
-        line_info = (keywords, display, source)
+        line_flavor = rule['Flavor'] if 'Flavor' in rule else None
+        line_info = (keywords, display or '', source)
         color = USAGE_TYPE[self.usage][1]
 
         lines = [
             ".. title: banner style=banner_%s\n.. style: back_%s\n" % (color, color),
-            "%s **%s** -- %s/%s%s" % line_title,
+            "%s **%s** -- %s%s" % line_title,
             # " - %s -- %s" % line_usage if line_usage[1] else " - %s" % line_usage[0],
         ]
 
-        if line_attack[0] and line_attack[2]:
+        if not line_attack:
+            pass
+        elif line_attack[0] and line_attack[2]:
             lines.append(" - **+%s** vs. **%s** -- %s" % line_attack)
         elif line_attack[0]:
             lines.append(" - **+%s** vs. **%s**" % (line_attack[0], line_attack[1]))
@@ -132,12 +144,16 @@ class Power(NamedTuple):
 
         for line in lines_main:
             lines.append(" - **%s**: %s" % line)
-        lines.append(" - *%s*" % line_flavor)
+        if conditions:
+            lines.append(" - %s" % conditions)
+
+        if line_flavor:
+            lines.append(" - *%s*" % line_flavor)
 
         if line_info[0]:
-            lines.append(" - **%s** %s • *%s*" % line_info)
+            lines.append(" - <font size=6 color='gray'>%s • %s</font> -- <font size=6 color='gray'>%s</font>" % line_info)
         else:
-            lines.append(" - -- %s • *%s*" % (line_info[1], line_info[2]))
+            lines.append(" - <font size=6 color='gray'>%s</font> -- <font size=6 color='gray'>%s</font>" % (line_info[1], line_info[2]))
 
         return '\n'.join(line for line in lines if line)
 
@@ -379,7 +395,11 @@ class DnD4E:
         items = [p.to_rst(power_mapping.get(p.name), self.make_replacements(p)) for p in powers] \
                 +[self.item_to_rst(item) for item in self.item_list()]
 
-        for p in range(0, len(items), 16):
+        for pages in range(2, 10):
+            EVERY = ceil(len(items) / pages)
+            if EVERY < 16:
+                break
+        for p in range(EVERY, len(items), EVERY):
             items.insert(p, self.divider())
 
         return items
@@ -429,7 +449,7 @@ class DnD4E:
         except:
             return None, None, None
 
-    def join_names(self, rule_type: str, join: str = ' •'):
+    def join_names(self, rule_type: str, join: str = ' • '):
         return join.join(p[0] for p in self.rules(rule_type))
 
     def power_mappings(self) -> Dict:
@@ -467,7 +487,7 @@ class DnD4E:
             banner
                 background=navy color=white borderColor=navy
             banner_green
-                inherit=banner background=green borderColor=#8f8
+                inherit=banner background=green borderColor=#7a7
             banner_red
                 inherit=banner background=red borderColor=#f88
             banner_black
@@ -514,6 +534,7 @@ class DnD4E:
             for i in range(1, 10):
                 reps.append(("%d[W] + %s modifier" % (i, plus), "%d%s%s" % (i * count, dice, bonus)))
                 reps.append(("%d[W]" % i, "%d%s%s" % (i * count, dice, bonus)))
+            reps.append(("your %s modifier" % plus, bonus[1:]))
             reps.append(("%s modifier" % plus, bonus[1:]))
             return reps
 
@@ -528,8 +549,7 @@ class DnD4E:
         for id in ids:
             rule.update(self.rule_elements[id])
 
-        name = rule['@name']
-        level = _find('Level', rule)
+        name = rule['@name'].replace(' (heroic tier)', '').strip()
         item_type = _find('Magic Item Type', rule)
         slot = _find('Item Slot', rule)
         line_flavor = rule['Flavor']
@@ -546,12 +566,12 @@ class DnD4E:
             txt = power[rparen+2:].strip()
             dot =  txt.index('.')
             action = txt[:dot].strip().replace(' Action','')
-            power = (action,txt[dot+1:].replace('Trigger', '**Trigger**').replace('Effect', '**Effect**'))
+            power = (action,txt[dot+1:].replace('Trigger', '*Trigger*').replace('Effect', '*Effect*'))
             box = '' if usage == 'At-Will' else ' []'
             info = ACTION_TYPE[action]
-            line_title = "%s **%s** -- %s %s/%s%s" % (info[1], name, slot or item_type, info[2], usage, box)
+            line_title = "%s **%s** -- %s/%s%s" % (info[1], name, info[2], usage, box)
         else:
-            line_title = "%s -- %s [%s]" % (name, slot or item_type, level)
+            line_title = "**%s** -- %s" % (name, slot or item_type)
 
 
         if '@source' in rule:
@@ -560,7 +580,7 @@ class DnD4E:
             source = ''
 
 
-        line_info = (rarity, price, source)
+        line_info = (rarity, price, slot or item_type)
 
         lines_main = []
         for key in "Enhancement Property Critical".split():
@@ -583,6 +603,10 @@ class DnD4E:
             lines.append(" - **%s**: %s" % line)
         lines.append(" - *%s*" % line_flavor)
 
+        if source:
+            lines.append(" - -- <font size=6 color='gray'>%s</font>" % source)
+
+
         return '\n'.join(line for line in lines if line)
 
 
@@ -602,7 +626,7 @@ if __name__ == '__main__':
 
     rules = read_rules_elements()
 
-    dnd = read_dnd4e('../../data/import/grumph.dnd4e', rules)
+    dnd = read_dnd4e('../../data/import/Grumph-5.dnd4e', rules)
 
     out = dnd.to_rst()
 

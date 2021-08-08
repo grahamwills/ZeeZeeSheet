@@ -78,14 +78,15 @@ class SectionLayout(OptimizeProblem):
         max_height = max(c.height for c in column_bounds)
         min_height = min(c.height for c in column_bounds)
         issues = sum(c.fit_error for c in columns)
+        total_area = sum(r.height * r.width for r in column_bounds) ** 0.5
         wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
 
         diff = max_height - min_height
 
-        score = issues + diff + wasted_space
+        score = issues + diff + total_area
         LOGGER.debug("%s -> %1.3f (%1.1f, %1.1f, %1.1f)",
                      [c.width for c in column_bounds], score,
-                     issues, diff, wasted_space)
+                     issues, diff, total_area)
 
         return score
 

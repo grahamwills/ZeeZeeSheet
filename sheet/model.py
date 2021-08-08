@@ -99,7 +99,10 @@ class Run:
 
     def base_style(self) -> str:
         #  Lazy, just use the first
-        return self.items[0].style
+        for item in self.items:
+            if item.style:
+                return item.style
+        return None
 
     def fixup(self, parent):
         self.items = ensure_representable(self.items)
@@ -164,13 +167,17 @@ class Block:
 
     def base_style(self) -> str:
         #  Lazy, just use the first
-        return self.content[0].base_style() if self.content else None
+        for item in self.content:
+            s = item.base_style()
+            if s:
+                return s
+        return None
 
 
 @dataclass
 class Section:
     content: List[Block] = field(default_factory=list)
-    layout_method: common.Command = None
+    layout_method: common.Command = common.parse_directive("banner style=_banner")
     padding: int = 4
 
     def add_block(self, block: Block):
@@ -226,6 +233,9 @@ class Sheet:
     def fixup(self):
         if not 'default' in self.styles:
             self.styles['default'] = Style(font='Gotham', align='fill', size=9, color=Color('black'))
+        if not '_banner' in self.styles:
+            self.styles['_banner'] = Style(font='Gotham', align='left', size=10, color=Color('white'),
+                                           background=Color('navy'), borderColor=Color('navy'))
         for c in self.content:
             c.fixup(self)
 
