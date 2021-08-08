@@ -9,11 +9,13 @@ from reportlab.platypus import Image
 
 import common
 from common import Margins, Rect
+from layout.optimizer import OptParams, OptimizeProblem
 from layout.table import as_one_line, key_values_layout, table_layout
 from model import Block, Run
 from pdf import PDF
 from render import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 
+LOGGER = common.configured_logger(__name__)
 
 class BorderDetails(NamedTuple):
     placed: Optional[PlacedContent]
@@ -28,6 +30,7 @@ BorderPostLayout = Callable[[Block, Rect, str, PDF], Optional[PlacedContent]]
 
 # Creates placed items to be drawn in the main section
 ContentLayout = Callable[[Block, Rect, PDF], Optional[PlacedContent]]
+
 
 
 class BlockLayout:
@@ -84,41 +87,111 @@ class BlockLayout:
         items = [p for p in [back, pre.placed, content, post] if p]
         return PlacedGroupContent(items)
 
+class ImageOptimizer(OptimizeProblem):
+
+    def __init__(self, block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -> None:
+        super().__init__()
+        self.bounds = bounds
+        self.block = block
+        self.other_layout = other_layout
+        self.pdf = pdf
+
+    def place_two(self, D: int):
+        outer = self.bounds
+
+        b_image = Rect(top=outer.top, bottom=outer.bottom, left=outer.left, right=outer.left + D)
+        b_other = Rect(top=outer.top, bottom=outer.bottom, left=outer.left + D, right=outer.right)
+
+        if self.block.image['align'] == 'right':
+            b_image, b_other = b_other, b_image
+
+        other = self.other_layout(self.block, b_other, self.pdf)
+        b_image = b_image.resize(height =min(b_image.height, other.requested.height))
+        image = self.place_image(b_image)
+        return PlacedGroupContent([image, other])
+
+    def place_image(self, b:Rect):
+        im_info = self.block.image
+        file = Path(__file__).parent.parent.parent.joinpath(im_info['uri'])
+        width = int(im_info['width']) if 'width' in im_info else None
+        height = int(im_info['height']) if 'height' in im_info else None
+
+
+        if width and height:
+            im = Image(file, width=width, height=height)
+        else:
+            im = Image(file)
+            w, h = im.imageWidth, im.imageHeight
+            if width:
+                im = Image(file, width=width, height=h * width / w)
+            elif height:
+                im = Image(file, height=height, width=w * height / h)
+            elif w > b.width:
+                # Fit to the column's width
+                im = Image(file, width=b.width, height=h * b.width / w)
+
+        w, h = im.wrapOn(self.pdf, b.width, b.height)
+        return PlacedFlowableContent(im, b.resize(width=w, height=h))
+
+    def score(self, x1: OptParams, x2: OptParams) -> float:
+        placed = self.place_two(x1.value[0])
+        return placed.bounds.height
+
+    def stage2parameters(self, stage1params: OptParams) -> Optional[OptParams]:
+        return OptParams((0,),0,1)
+
+    def validity_error(self, params: OptParams) -> float:
+        if params.value[0] < 10 or params.value[0] > self.bounds.width -10:
+            return 10
+        else:
+            return 0
+
 
 def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -> PlacedContent:
-    file = Path(__file__).parent.parent.parent.joinpath(block.image['uri'])
-    width = int(block.image['width']) if 'width' in block.image else None
-    height = int(block.image['height']) if 'height' in block.image else None
-
-    on_right = block.image.get('align', 'left').lower() == 'right'
-
-    if width and height:
-        im = Image(file, width=width, height=height)
+    optimizer = ImageOptimizer(block, bounds, pdf, other_layout)
+    if not other_layout:
+        return optimizer.place_image(bounds)
     else:
-        im = Image(file)
-        w, h = im.imageWidth, im.imageHeight
-        if width:
-            im = Image(file, width=width, height=h * width / w)
-        elif height:
-            im = Image(file, height=height, width=w * height / h)
-        elif w > bounds.width:
-            # Fit to the column's width
-            im = Image(file, width=bounds.width, height=h * bounds.width / w)
+        init_params = OptParams((bounds.width/3,), 10, bounds.width-10)
+        _1, p, _2 = optimizer.run(init_params)
+        return optimizer.place_two(p.value[0])
 
-    w, h = im.wrapOn(pdf, bounds.width, bounds.height)
-    image = PlacedFlowableContent(im, bounds.resize(width=w, height=h))
 
-    if on_right:
-        ob = Rect(left=bounds.left, right=bounds.right - w - block.padding, top=bounds.top, bottom=bounds.bottom)
-        image.bounds = image.bounds.move(dx=bounds.width - w)
-    else:
-        ob = Rect(left=bounds.left + w + block.padding, right=bounds.right, top=bounds.top, bottom=bounds.bottom)
-
-    if block.content:
-        other = other_layout(block, ob, pdf)
-        return PlacedGroupContent([image, other])
-    else:
-        return image
+    # file = Path(__file__).parent.parent.parent.joinpath(block.image['uri'])
+    # width = int(block.image['width']) if 'width' in block.image else None
+    # height = int(block.image['height']) if 'height' in block.image else None
+    #
+    # alignment = block.image.get('align', 'left').lower()
+    # on_right = alignment == 'right'
+    #
+    # if width and height:
+    #     im = Image(file, width=width, height=height)
+    # else:
+    #     im = Image(file)
+    #     w, h = im.imageWidth, im.imageHeight
+    #     if width:
+    #         im = Image(file, width=width, height=h * width / w)
+    #     elif height:
+    #         im = Image(file, height=height, width=w * height / h)
+    #     elif w > bounds.width:
+    #         # Fit to the column's width
+    #         im = Image(file, width=bounds.width, height=h * bounds.width / w)
+    #
+    # w, h = im.wrapOn(pdf, bounds.width, bounds.height)
+    # image = PlacedFlowableContent(im, bounds.resize(width=w, height=h))
+    #
+    # if on_right:
+    #     ob = Rect(left=bounds.left, right=bounds.right - w - block.padding, top=bounds.top, bottom=bounds.bottom)
+    #     image.bounds = image.bounds.move(dx=bounds.width - w)
+    # else:
+    #     ob = Rect(left=bounds.left + w + block.padding, right=bounds.right, top=bounds.top, bottom=bounds.bottom)
+    #
+    # if block.content:
+    #     other = other_layout(block, ob, pdf)
+    #     LOGGER.debug("Placed Image at %s aligned %s with %s (width=%d)", image.bounds, alignment, other.bounds, bounds.width)
+    #     return PlacedGroupContent([image, other])
+    # else:
+    #     return image
 
 
 def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:

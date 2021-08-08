@@ -97,6 +97,7 @@ class StyleVisitor(docutils.nodes.NodeVisitor):
         self.sheet = sheet
         self.style_name = None
 
+
     def unknown_visit(self, node: docutils.nodes.Node) -> None:
         pass
 
@@ -126,7 +127,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         super().__init__(document)
         self.block_layout_method = common.parse_directive('default')
         self.section_layout_method = common.parse_directive('stack')
-        self.title_display_method = common.parse_directive('banner')
+        self.title_display_method = common.parse_directive("banner style=_banner")
         self.style = 'default'
         self.current_style_def_name = None
 

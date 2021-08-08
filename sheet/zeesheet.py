@@ -32,7 +32,8 @@ def show(file:str):
 if __name__ == '__main__':
     # Read
     install()
-    show('../data/grumph.rst')
+    show('../data/ethik.rst')
+    # show('../data/grumph.rst')
     # show('../data/mouse.rst')
     # show('../data/luna.rst')
 

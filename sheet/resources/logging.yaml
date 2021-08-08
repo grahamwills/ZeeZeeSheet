@@ -9,9 +9,15 @@ formatters:
     datefmt: "%Y-%m-%d %H:%M:%S"
 
 handlers:
-  console:
+  all:
     class: logging.StreamHandler
     level: DEBUG
+    formatter: screen
+    stream: ext://sys.stdout
+
+  important:
+    class: logging.StreamHandler
+    level: WARNING
     formatter: screen
     stream: ext://sys.stdout
 
@@ -26,37 +32,58 @@ handlers:
 
 
 loggers:
+
+  placement:
+    level: DEBUG
+    handlers: [ all, file ]
+    propagate: no
+
   pdf:
-    level: WARNING
-    handlers: [ console, file ]
+    level: DEBUG
+    handlers: [ important, file ]
     propagate: no
 
   reader:
-    level: WARNING
-    handlers: [ console, file ]
+    level: DEBUG
+    handlers: [ important, file ]
     propagate: no
 
   layout:
-    level: WARNING
-    handlers: [ console, file ]
+    level: DEBUG
+    handlers: [ important, file ]
     propagate: no
 
   layout.section:
     level: DEBUG
-    handlers: [ console, file ]
+    handlers: [ important, file ]
+    propagate: no
+
+  layout.block:
+    level: DEBUG
+    handlers: [ important, file ]
+    propagate: no
+
+  layout.optimizer:
+    level: DEBUG
+    handlers: [ important, file ]
+    propagate: no
+
+  layout.table:
+    level: DEBUG
+    handlers: [ important, file ]
     propagate: no
 
   layout.DEBUG:
-    level: WARNING
-    handlers: [ console, file ]
+    level: DEBUG
+    handlers: [ important, file ]
     propagate: no
 
   PIL.PngImagePlugin:
     level: ERROR
-    handlers: [ file ]
+    handlers: [ important, file ]
     propagate: no
 
 
 root:
   level: DEBUG
-  handlers: [ console, file ]
+  handlers: [ important, file ]

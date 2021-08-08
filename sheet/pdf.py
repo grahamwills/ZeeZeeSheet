@@ -2,16 +2,15 @@ from typing import Dict
 
 import reportlab.lib.colors
 from colour import Color
-from reportlab.lib import pagesizes
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-from common import Rect, configured_logger
-from model import Element, ElementType, Run, Style
+from sheet.model import Element, ElementType, Run, Style
+import sheet.common
 
-LOGGER = configured_logger(__name__)
+LOGGER = sheet.common.configured_logger(__name__)
 
 _CHECKED_BOX = '../data/images/system/checked.png'
 _UNCHECKED_BOX = '../data/images/system/unchecked.png'
@@ -25,10 +24,11 @@ class PDF(canvas.Canvas):
 
     _name_index: int
 
-    def __init__(self, output_file, styles: Dict, pagesize:(int, int), debug: bool = False) -> None:
+    def __init__(self, output_file, styles: Dict, pagesize: (int, int), debug: bool = False) -> None:
         super().__init__(output_file, pagesize=pagesize)
         self.page_height = int(pagesize[1])
         self._styles = styles
+
         self.debug = debug
         self._name_index = 0
 
@@ -62,7 +62,7 @@ class PDF(canvas.Canvas):
     def strokeColor(self, color: Color, alpha=None):
         self.setStrokeColorRGB(*color.rgb, alpha=alpha)
 
-    def fill_rect(self, r: Rect, style: Style, rounded=0):
+    def fill_rect(self, r: sheet.common.Rect, style: Style, rounded=0):
         if style.background:
             self.fillColor(style.background)
             self.setLineWidth(0)
@@ -71,7 +71,7 @@ class PDF(canvas.Canvas):
             else:
                 self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=1, stroke=0)
 
-    def stroke_rect(self, r: Rect, style: Style, rounded=0):
+    def stroke_rect(self, r: sheet.common.Rect, style: Style, rounded=0):
         if style.borderColor and style.borderWidth:
             self.strokeColor(style.borderColor)
             self.setLineWidth(style.borderWidth)
@@ -87,7 +87,10 @@ class PDF(canvas.Canvas):
         if hasattr(flowable, 'style'):
             self._drawing_style = flowable.style
 
-        flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
+        try:
+            flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
+        except:
+            LOGGER.error("Error trying to draw %s into %s", flowable.__class__.__name__, bounds)
 
     def make_paragraph(self, run: Run, align=None, size_factor=1.0):
         style = self.style(run.base_style())

@@ -1,12 +1,14 @@
 from copy import copy
+from typing import Optional
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
 
 import common
 from common import Rect
+from layout.optimizer import OptParams, OptimizeProblem
 from model import Block, Element, ElementType, Run, Style
 from pdf import PDF
-from render import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
+from render import ErrorFlowable, PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 
 LOGGER = common.configured_logger(__name__)
 
@@ -72,8 +74,41 @@ def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
 
 def make_table(pdf, paragraphs, width, padding):
     table = as_table(paragraphs, width, pdf, padding)
-    w, h = table.wrapOn(pdf, width, 1000)
-    return table, w, h
+    if table:
+        w, h = table.wrapOn(pdf, width, 1000)
+        return table, w, h
+    else:
+        return ErrorFlowable(), width, 1e9
+
+
+class TableColumnsOptimizer(OptimizeProblem):
+    """ A simple optimization problem; ignores second stage"""
+
+    def __init__(self, cells: [[]], style: TableStyle, width: int, pdf: PDF) -> None:
+        super().__init__()
+        self.cells = cells
+        self.style = style
+        self.width = width
+        self.pdf = pdf
+
+    def score(self, x1: OptParams, x2: OptParams) -> float:
+        columWidths = list(x1.value) + [self.width - sum(x1.value)]
+        table = Table(self.cells, style=self.style, colWidths=columWidths)
+        w, h = table.wrapOn(self.pdf, self.width, 1000)
+        LOGGER.debug("table widths =%s -> height=%d", columWidths, h)
+        return h
+
+    def stage2parameters(self, stage1params: OptParams) -> Optional[OptParams]:
+        return OptParams((0,), 0, 1)
+
+    def validity_error(self, params: OptParams) -> float:
+        """ >0 implies far away from desired """
+        low = params.low
+        high = params.high
+        last = self.width - sum(params.value)
+        a = max(0, low - last)
+        b = sum(max(0, low - p) + max(0, p - high) for p in params.value)
+        return a + b
 
 
 def as_table(cells, width: int, pdf: PDF, padding: int):
@@ -87,21 +122,26 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]
 
-
     nCols = max(len(row) for row in cells)
+    if nCols * 10 >= width:
+        LOGGER.info("Cannot fit %d columns into a table of width %d", nCols, width)
+        return None
+    elif nCols > 1:
+        estimated_widths = [_col_width(cells, i, pdf) for i in range(nCols)]
 
-    estimated_widths = [_col_width(cells, i, pdf) for i in range(nCols)]
+        # Pad short rows and add spans for them
+        for i, row in enumerate(cells):
+            n = len(row)
+            if n < nCols:
+                row.extend([' '] * (nCols - n))
+                commands.append((('SPAN'), (n - 1, i), (-1, i)))
 
-
-    # Pad short rows and add spans for them
-    for i, row in enumerate(cells):
-        n = len(row)
-        if n < nCols:
-            row.extend([' '] * (nCols - n))
-            commands.append((('SPAN'), (n - 1, i), (-1, i)))
-
-    factor = width / sum(estimated_widths)
-    colWidths = [w * factor for w in estimated_widths]
+        optimizer = TableColumnsOptimizer(cells, TableStyle(commands), width, pdf)
+        init = OptParams(tuple([width // nCols] * (nCols - 1)), 10, width - (nCols - 1) * 10)
+        _1, cols, _2 = optimizer.run(init)
+        colWidths = list(cols.value) + [width - sum(cols.value)]
+    else:
+        colWidths = None
 
     return Table(cells, colWidths=colWidths, style=(TableStyle(commands)))
 
@@ -175,7 +215,7 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     W2 = 4 * padding + round(_col_width(items, 1, pdf))
 
     try:
-        W3 = 2 * padding + round(_col_width(items, 2, pdf))
+        W3 = 4 * padding + round(_col_width(items, 2, pdf))
     except:
         W3 = 0
 
@@ -196,7 +236,7 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
 
         # Extend under the other rectangle to hide joins of 'round edges'
         contents.append(
-            PlacedRectContent(r1.move(dx=-H1).resize(width=r1.width + H1), box_style, True, False, rounded=rounded))
+                PlacedRectContent(r1.move(dx=-H1).resize(width=r1.width + H1), box_style, True, False, rounded=rounded))
         contents.append(PlacedRectContent(r2, box_style, True, False, rounded=rounded))
 
         cell[0].wrapOn(pdf, r1.width, r1.height)

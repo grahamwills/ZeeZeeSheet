@@ -34,13 +34,14 @@ class PlacedContent:
 
         dx = max(0, required.width - self.bounds.width)
         dy = max(0, required.height - self.bounds.height)
-        self.fit_error += (dx + dy)/50
+        self.fit_error += (dx + dy) / 50
 
     def move(self, dx=0, dy=0):
         self.bounds = self.bounds.move(dx=dx, dy=dy)
 
     def draw(self, pdf: PDF):
         pass
+
 
 def _count_split_words(item):
     if isinstance(item, Tuple):
@@ -50,7 +51,9 @@ def _count_split_words(item):
 
 
 def _count_wraps(f, any_wrap_bad=False):
-    if isinstance(f, Table):
+    if isinstance(f, ErrorFlowable):
+        return 1e9
+    elif isinstance(f, Table):
         rows = f._cellvalues
         flat_list = [item for row in rows for item in row]
 
@@ -170,3 +173,7 @@ def install_font(name, resource_name, user_fonts):
         italic = create_single_font(name + "-Italic", resource_name + "-Italic", regular, user_fonts)
         bold_italic = create_single_font(name + "-BoldItalic", resource_name + "-BoldItalic", bold, user_fonts)
         pdfmetrics.registerFontFamily(name, normal=name, bold=bold, italic=italic, boldItalic=bold_italic)
+
+
+class ErrorFlowable(Flowable):
+    pass

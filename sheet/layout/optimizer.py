@@ -20,7 +20,7 @@ class OptParams(NamedTuple):
         return len(self.value)
 
     def __str__(self):
-        return "{(%s) bounds=(%d:%d)}" % (",".join(str(x) for x in self.value), self.low, self.high)
+        return "[%d <= %s <= %d]" % (self.low, ",".join(str(x) for x in self.value), self.high)
 
 
 class OptimizeProblem(abc.ABC):
@@ -33,11 +33,16 @@ class OptimizeProblem(abc.ABC):
         """ Create second set of parameters from the first"""
         raise NotImplementedError()
 
-    def validity_error(self, params: OptParams):
+    def validity_error(self, params: OptParams) -> float:
         """ How far past validity these params are"""
         raise NotImplementedError()
 
     def run(self, x1init: OptParams) -> (float, OptParams, OptParams):
+
+        if self.validity_error(x1init) > 0:
+            LOGGER.error("Initial parameters were invalid")
+            raise ValueError("Initial parameters were invalid")
+
         LOGGER.info("Starting optimization using %s", x1init)
 
         best_combos = dict()
@@ -65,13 +70,13 @@ class OptimizeProblem(abc.ABC):
         init_err = self.validity_error(params2init)
         if init_err > 0:
             LOGGER.info("[stage-2] out-of-bounds initial stage1 parameters %s: err = %s", params1, init_err)
-            return 1e6 * (1 + init_err * init_err), None
+            return 1e90 * (1 + init_err * init_err), None
 
         def stage2func(x2: OptParams) -> float:
             err = self.validity_error(x2)
             if err > 0:
                 LOGGER.debug("Out-of-bounds stage2 parameters %s: err = %s", x2, err)
-                return 1e6 * (1 + err * err)
+                return 1e90 * (1 + err * err)
             return _score(self, params1, x2)
 
         return self._minimize('stage-2', stage2func, params2init)
@@ -89,7 +94,7 @@ class OptimizeProblem(abc.ABC):
             err = self.validity_error(_array2params(x, initp))
             if err > 0:
                 LOGGER.debug("Out-of-bounds stage2 parameters %s: err = %s", x, err)
-                return 1e6 * (1 + err * err)
+                return 1e90 * (1 + err * err)
             return func(_array2params(x, initp))
 
         def constraint(x: [float]) -> float:

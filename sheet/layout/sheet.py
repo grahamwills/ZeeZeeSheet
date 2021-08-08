@@ -66,7 +66,7 @@ class SectionPlacement:
         margin = self.target.margin
         cumulative_offset = 0
         for c in self.children:
-            child_bounds = c.placed.bounds
+            child_bounds = c.placed.requested
             if child_bounds.bottom > cumulative_offset + self.target.pagesize[1] - margin:
                 pdf.showPage()
                 page_index += 1
