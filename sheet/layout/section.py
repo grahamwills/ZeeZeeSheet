@@ -4,9 +4,9 @@ from copy import copy
 from functools import lru_cache
 from typing import List, NamedTuple, Optional, Tuple
 
-from common import Rect, configured_logger
-from layout.optimizer import OptParams, OptimizeProblem
-from render import PlacedContent, PlacedGroupContent
+from sheet.common import Rect, configured_logger
+from sheet.layout.optimizer import OptParams, OptimizeProblem
+from sheet.placement.placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 
@@ -33,10 +33,10 @@ class LayoutDetails(NamedTuple):
     def __str__(self):
         a = " ".join("%d…%d" % s for s in self.column_divisions)
         b = " ".join("%d…%d" % s for s in self.allocation_divisions)
-        return "cols=(%s) alloc=(%s) -> extent = %d (%1.2f)" % (a, b, self.placed.bounds.height, self.score)
+        return "cols=(%s) alloc=(%s) -> extent = %d (%1.2f)" % (a, b, self.placed.actual.height, self.score)
 
     def height(self):
-        return self.placed.bounds.height
+        return self.placed.actual.height
 
 
 class SectionLayout(OptimizeProblem):
@@ -60,7 +60,7 @@ class SectionLayout(OptimizeProblem):
         assert 0 <= start < end <= len(self.items)
 
         current = bd.top
-        all = []
+        contents = []
 
         for i in range(start, end):
             available = Rect(top=current, left=bd.left, right=bd.right, bottom=bd.bottom)
@@ -69,17 +69,23 @@ class SectionLayout(OptimizeProblem):
             else:
                 p = copy(estimate_single_size(self, i, bd.width))
                 p.move(dy=current)
-            all.append(p)
-            current = p.bounds.bottom + self.padding
-        return PlacedGroupContent(all)
+            contents.append(p)
+            current = p.actual.bottom + self.padding
+        return PlacedGroupContent(contents, bd, contents[0].pdf)
 
     def score_placement(self, columns: [PlacedContent]) -> float:
+
+        gp = PlacedGroupContent(columns, self.bounds, columns[0].pdf)
+        error = gp.error()
         column_bounds = [c.requested for c in columns]
         max_height = max(c.height for c in column_bounds)
         min_height = min(c.height for c in column_bounds)
-        issues = sum(c.fit_error for c in columns)
+
+        issues = error.bad_breaks * 1000 + error.ok_breaks * 100 \
+                 + max(0, -error.surplus_height) * 10 + max(0, -error.surplus_width) * 20 \
+                 + max(0, error.surplus_width) *0.1 + max(0, error.surplus_height)*0.1
+
         total_area = sum(r.height * r.width for r in column_bounds) ** 0.5
-        wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
 
         diff = max_height - min_height
 
@@ -117,7 +123,7 @@ class SectionLayout(OptimizeProblem):
         placed_columns = self.place_all_columns(column_sizes.value, item_counts.value)
         return self.score_placement(placed_columns)
 
-    def stage2parameters(self, stage1params:OptParams) -> Optional[OptParams]:
+    def stage2parameters(self, stage1params: OptParams) -> Optional[OptParams]:
         n = len(self.items)
         k = len(stage1params) + 1
         m = n // k
@@ -143,7 +149,7 @@ class SectionLayout(OptimizeProblem):
         W = self.available_width // k
         initial = tuple([W] * (k - 1))
         if equal:
-            column_bounds = OptParams(initial, W, W+1)
+            column_bounds = OptParams(initial, W, W + 1)
         else:
             column_bounds = OptParams(initial, _MIN_WIDTH, self.available_width - (k - 1) * _MIN_WIDTH)
 
@@ -154,7 +160,7 @@ class SectionLayout(OptimizeProblem):
 
         LOGGER.info("Finalizing placement cols=%s, alloc=%s, score=%f", opt_col, opt_counts, f)
         columns = self.place_all_columns(opt_col.value, opt_counts.value)
-        return PlacedGroupContent(columns)
+        return PlacedGroupContent(columns, self.bounds, columns[0].pdf)
 
 
 def stack_in_columns(bounds: Rect, children: List, padding: int, columns: int = 1, equal=None) -> PlacedContent:

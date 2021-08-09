@@ -96,6 +96,6 @@ def test_group(simple, styled, pdf):
     simple_placed = PlacedFlowableContent(simple, Rect(left=0, top=40, width=80, height=40), pdf)
     styled_placed = PlacedFlowableContent(styled, Rect(left=0, top=5, width=24, height=40), pdf)
 
-    g = PlacedGroupContent(Rect(left=0, top=0, right=100, bottom=100), [simple_placed, styled_placed], pdf)
+    g = PlacedGroupContent([simple_placed, styled_placed], Rect(left=0, top=0, right=100, bottom=100), pdf)
     assert g.actual == Rect(left=0, top=5, right=48, bottom=145)
     assert g.error() == PlacementError(surplus_width=52, surplus_height=-40, ok_breaks=2, bad_breaks=3)

@@ -5,10 +5,10 @@ import abc
 import math
 from typing import Iterable, NamedTuple
 
-from reportlab.platypus import Flowable, Paragraph
+from reportlab.platypus import Flowable, Image, Paragraph, Table
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
-from model import Style
+from sheet.model import Style
 from sheet import common
 from sheet.common import Rect
 from sheet.pdf import PDF
@@ -82,6 +82,9 @@ class PlacedContent(abc.ABC):
                 bad_breaks=bad_breaks, ok_breaks=ok_breaks
         )
 
+    def move(self, dx=0, dy=0):
+        self.actual = self.actual.move(dx=dx, dy=dy)
+
 
 class PlacedFlowableContent(PlacedContent):
     """
@@ -102,6 +105,7 @@ class PlacedFlowableContent(PlacedContent):
     flowable: Flowable
 
     def __init__(self, flowable: Flowable, requested: Rect, pdf: PDF):
+        LOGGER.info("Creating Placed Content for %s in %s", type(flowable).__name__, requested)
         super().__init__(requested, requested, pdf)
         self.flowable = flowable
 
@@ -109,11 +113,23 @@ class PlacedFlowableContent(PlacedContent):
 
         if isinstance(flowable, Paragraph):
             self._init_paragraph(flowable)
+        elif isinstance(flowable, Image):
+            self._init_image(flowable)
+        elif isinstance(flowable, Table):
+            self._init_table(flowable)
         else:
             raise ValueError("Cannot handle flowable of type '%s'", type(flowable).__name__)
 
     def draw(self):
         self.pdf.draw_flowable(self.flowable, self.actual)
+
+    def _init_image(self, image: Image):
+        self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
+        self._set_error()
+
+    def _init_table(self, table: Table):
+        self.actual = self.requested.resize(width=table._width, height=table._height)
+        self._set_error()
 
     def _init_paragraph(self, p: Paragraph):
         frags = p.blPara
@@ -146,6 +162,7 @@ class PlacedRectContent(PlacedContent):
     rounded: int
 
     def __init__(self, bounds: Rect, style: Style, pdf: PDF, fill: bool = False, stroke: bool = True, rounded=0):
+        LOGGER.info("Creating Placed Rectangle %s", bounds)
         super().__init__(bounds, bounds, pdf)
         self.style = style
         self.stroke = stroke
@@ -164,7 +181,8 @@ class PlacedRectContent(PlacedContent):
 class PlacedGroupContent(PlacedContent):
     group: Iterable[PlacedContent]
 
-    def __init__(self, requested: Rect, group: Iterable[PlacedContent], pdf: PDF):
+    def __init__(self, group: Iterable[PlacedContent], requested: Rect, pdf: PDF):
+        LOGGER.info("Creating Placed Content for %d items in %s", len(group), requested)
         actual = Rect.union(p.actual for p in group)
         super().__init__(requested, actual, pdf)
         self.group = group
@@ -176,3 +194,19 @@ class PlacedGroupContent(PlacedContent):
     def draw(self):
         for p in self.group:
             p.draw()
+
+    def move(self, dx=0, dy=0):
+        for p in self.group:
+            p.move(dx, dy)
+
+class EmptyPlacedContent(PlacedContent):
+
+    def __init__(self, requested: Rect, pdf: PDF):
+        LOGGER.info("Creating Empty content in %s", requested)
+        super().__init__(requested, requested.resize(width=0, height=0), pdf)
+        self._set_error()
+
+    def draw(self):
+        pass
+
+

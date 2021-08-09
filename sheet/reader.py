@@ -8,8 +8,8 @@ import docutils.parsers.rst
 import docutils.utils
 from colour import Color
 
-import common
-from model import BLACK, Block, Section, Sheet, Style
+from sheet import common
+from sheet.model import BLACK, Block, Section, Sheet, Style
 
 LOGGER = common.configured_logger(__name__)
 

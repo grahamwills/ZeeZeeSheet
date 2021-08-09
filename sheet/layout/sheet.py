@@ -3,13 +3,13 @@ from __future__ import annotations
 import functools
 from typing import List, Union
 
-import common
-from common import Margins, Rect, configured_logger
-from layout.block import BlockLayout
-from layout.section import stack_in_columns
-from model import Block, Section, Sheet
-from pdf import PDF
-from render import PlacedContent
+from placement.placed import PlacedContent
+from sheet import common
+from sheet.common import Margins, Rect, configured_logger
+from sheet.layout.block import BlockLayout
+from sheet.layout.section import stack_in_columns
+from sheet.model import Block, Section, Sheet
+from sheet.pdf import PDF
 
 LOGGER = configured_logger(__name__)
 
@@ -35,7 +35,7 @@ class BlockPlacement:
         return self.placed
 
     def draw(self):
-        self.placed.draw(self.pdf)
+        self.placed.draw()
 
 
 class SectionPlacement:

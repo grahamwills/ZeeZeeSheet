@@ -54,14 +54,10 @@ loggers:
     propagate: no
 
   layout.section:
-    level: WARNING
-    handlers: [ console, file ]
+    level: DEBUG
+    handlers: [ all, file ]
     propagate: no
 
-  layout.block:
-    level: DEBUG
-    handlers: [ important, file ]
-    propagate: no
 
   layout.block:
     level: DEBUG
@@ -70,22 +66,12 @@ loggers:
 
   layout.optimizer:
     level: DEBUG
-    handlers: [ important, file ]
+    handlers: [ all, file ]
     propagate: no
 
   layout.table:
     level: DEBUG
     handlers: [ important, file ]
-    propagate: no
-
-  layout.optimizer:
-    level: WARNING
-    handlers: [ console, file ]
-    propagate: no
-
-  layout.table:
-    level: WARNING
-    handlers: [ console, file ]
     propagate: no
 
   layout.DEBUG:

@@ -1,16 +1,19 @@
+import io
+from pathlib import Path
 from typing import Dict
 
 import reportlab.lib.colors
 from colour import Color
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
 from sheet.model import Element, ElementType, Run, Style
-import sheet.common
+from sheet import common
 
-LOGGER = sheet.common.configured_logger(__name__)
+LOGGER = common.configured_logger(__name__)
 
 _CHECKED_BOX = '../data/images/system/checked.png'
 _UNCHECKED_BOX = '../data/images/system/unchecked.png'
@@ -62,7 +65,7 @@ class PDF(canvas.Canvas):
     def strokeColor(self, color: Color, alpha=None):
         self.setStrokeColorRGB(*color.rgb, alpha=alpha)
 
-    def fill_rect(self, r: sheet.common.Rect, style: Style, rounded=0):
+    def fill_rect(self, r: common.Rect, style: Style, rounded=0):
         if style.background:
             self.fillColor(style.background)
             self.setLineWidth(0)
@@ -71,7 +74,7 @@ class PDF(canvas.Canvas):
             else:
                 self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=1, stroke=0)
 
-    def stroke_rect(self, r: sheet.common.Rect, style: Style, rounded=0):
+    def stroke_rect(self, r: common.Rect, style: Style, rounded=0):
         if style.borderColor and style.borderWidth:
             self.strokeColor(style.borderColor)
             self.setLineWidth(style.borderWidth)
@@ -153,3 +156,53 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
         return "<font %s%s%s>%s</font>" % (face, size, color, txt)
     else:
         return txt
+
+
+def build_font_choices() -> [str]:
+    user_fonts = []
+    install_font('Baskerville', 'Baskerville', user_fonts)
+    install_font('Droid', 'DroidSerif', user_fonts)
+    install_font('Parisienne', 'Parisienne', user_fonts)
+    install_font('PostNoBills', 'PostNoBills', user_fonts)
+    install_font('Roboto', 'Roboto', user_fonts)
+    install_font('Western', 'Carnevalee Freakshow', user_fonts)
+    install_font('LoveYou', 'I Love What You Do', user_fonts)
+    install_font('Typewriter', 'SpecialElite', user_fonts)
+    install_font('StarJedi', 'Starjedi', user_fonts)
+    install_font('28DaysLater', '28 Days Later', user_fonts)
+    install_font('CaviarDreams', 'CaviarDreams', user_fonts)
+    install_font('MotionPicture', 'MotionPicture', user_fonts)
+    install_font('Adventure', 'Adventure', user_fonts)
+    install_font('MrsMonster', 'mrsmonster', user_fonts)
+    install_font('BackIssues', 'back-issues-bb', user_fonts)
+    install_font('Gotham', 'Gotham', user_fonts)
+    return sorted(base_fonts() + user_fonts)
+
+
+def base_fonts():
+    cv = canvas.Canvas(io.BytesIO())
+    fonts = cv.getAvailableFonts()
+    fonts.remove('ZapfDingbats')
+    fonts.remove('Symbol')
+    return fonts
+
+
+def create_single_font(name, resource_name, default_font_name, user_fonts):
+    loc = Path(__file__).parent.parent.joinpath('data/fonts/', resource_name + ".ttf")
+    if loc.exists():
+        pdfmetrics.registerFont(TTFont(name, loc))
+        user_fonts.append(name)
+        return name
+    else:
+        return default_font_name
+
+
+def install_font(name, resource_name, user_fonts):
+    try:
+        pdfmetrics.getFont(name)
+    except:
+        regular = create_single_font(name, resource_name + "-Regular", None, user_fonts)
+        bold = create_single_font(name + "-Bold", resource_name + "-Bold", regular, user_fonts)
+        italic = create_single_font(name + "-Italic", resource_name + "-Italic", regular, user_fonts)
+        bold_italic = create_single_font(name + "-BoldItalic", resource_name + "-BoldItalic", bold, user_fonts)
+        pdfmetrics.registerFontFamily(name, normal=name, bold=bold, italic=italic, boldItalic=bold_italic)

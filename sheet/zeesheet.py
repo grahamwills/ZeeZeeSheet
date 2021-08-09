@@ -5,11 +5,11 @@ from pathlib import Path
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-import common
-import pdf
-import reader
-from layout.sheet import layout_sheet
-from render import build_font_choices
+from sheet import common
+from sheet import pdf
+from sheet import reader
+from sheet.layout.sheet import layout_sheet
+from sheet.pdf import build_font_choices
 
 LOGGER = common.configured_logger(__name__)
 
@@ -33,9 +33,9 @@ if __name__ == '__main__':
     # Read
     install()
     show('../data/ethik.rst')
-    # show('../data/grumph.rst')
-    # show('../data/mouse.rst')
-    # show('../data/luna.rst')
+    show('../data/grumph.rst')
+    show('../data/mouse.rst')
+    show('../data/luna.rst')
 
 
 

@@ -6,7 +6,7 @@ from typing import Callable, NamedTuple, Optional, Tuple
 import numpy as np
 from scipy import optimize
 
-from common import configured_logger
+from sheet.common import configured_logger
 
 LOGGER = configured_logger(__name__)
 
