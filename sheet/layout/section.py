@@ -51,7 +51,7 @@ class ColumnOptimizer(Optimizer):
         return placement
 
     def place_all(self, widths: [int], counts: [int]) -> List[PlacedContent]:
-        LOGGER.fine("Placing with widths=%s, alloc=%s", widths, counts)
+        LOGGER.debug("Placing with widths=%s, alloc=%s", widths, counts)
         placed_columns = []
         sum_widths = 0
         sum_counts = 0
@@ -114,8 +114,13 @@ def score_placement(columns: List[PlacedGroupContent]):
     column_bounds = [c.actual for c in columns]
     max_height = max(c.height for c in column_bounds)
     min_height = min(c.height for c in column_bounds)
-    diff = max_height - min_height
+    diff = max_height
     err = sum(c.error() for c in columns)
+
+    LOGGER.debug("Scores")
+    for i, c in enumerate(columns):
+        LOGGER.debug("[%d] n=%d width=%d height=%d err=%1.3f", i,
+                     len(c.group), c.actual.width, c.actual.height, c.error())
     LOGGER.debug("Score: base=%1.3f, err=%1.3f", diff, err)
     return diff + err
 

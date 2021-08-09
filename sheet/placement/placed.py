@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 import math
 from copy import copy
-from typing import Iterable, List, NamedTuple
+from typing import List, NamedTuple
 
 from reportlab.platypus import Flowable, Image, Paragraph, Table
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
@@ -44,18 +44,6 @@ class PlacementError(NamedTuple):
 _NO_ERROR = PlacementError()
 
 
-def _size_fit_error(x: float, overflow_factor, underflow_factor) -> float:
-    if x < 0:
-        return overflow_factor * x**2
-    else:
-        return underflow_factor * x**2
-
-
-def score_error(e: PlacementError, overflow_factor=1, underflow_factor=0.01, ok_factor=10, bad_factor=100):
-    return _size_fit_error(e.surplus_width, overflow_factor, underflow_factor) \
-           + e.bad_breaks * bad_factor + e.ok_breaks * ok_factor
-
-
 class PlacedContent(abc.ABC):
     """
         Abstract class for something that has been laid out on the page
@@ -86,7 +74,7 @@ class PlacedContent(abc.ABC):
         raise NotImplementedError()
 
     def error(self) -> float:
-        return score_error(self._error)
+        return self._error_from_breaks() + self._error_from_size()
 
     def _set_error(self, bad_breaks=0, ok_breaks=0):
         self._error = PlacementError(
@@ -96,9 +84,19 @@ class PlacedContent(abc.ABC):
         )
 
     def move(self, dx=0, dy=0):
-        old =self.actual
+        old = self.actual
         self.actual = self.actual.move(dx=dx, dy=dy)
         self.requested = self.requested.move(dx=dx, dy=dy)
+
+    def _error_from_breaks(self):
+        return self._error.bad_breaks * 100 + self._error.ok_breaks * 10
+
+    def _error_from_size(self):
+        extra =  self.requested.width - self.actual.width
+        if extra < 0:
+            return 100 * extra ** 2
+        else:
+            return extra ** 2
 
 
 class PlacedFlowableContent(PlacedContent):
@@ -144,14 +142,13 @@ class PlacedFlowableContent(PlacedContent):
 
     def _init_table(self, table: Table):
         sum_bad, sum_ok, unused = _table_info(table)
-        self.actual = self.requested.resize(width=table._width-sum(unused), height=table._height)
+        self.actual = self.requested.resize(width=table._width - sum(unused), height=table._height)
         self._set_error(bad_breaks=sum_bad, ok_breaks=sum_ok)
 
     def _init_paragraph(self, p: Paragraph):
         bad_breaks, ok_breaks, unused = _line_info(p)
-        self.actual = self.requested.resize(width=math.ceil(self.requested.width-unused), height=math.ceil(p.height))
+        self.actual = self.requested.resize(width=math.ceil(self.requested.width - unused), height=math.ceil(p.height))
         self._set_error(bad_breaks=bad_breaks, ok_breaks=ok_breaks)
-
 
     def __str__(self) -> str:
         return "Flow(%s:%dx%d)" % (self.flowable.__class__.__name__, self.actual.width, self.actual.height)
@@ -184,7 +181,7 @@ class PlacedRectContent(PlacedContent):
 
 
 class PlacedGroupContent(PlacedContent):
-    group: Iterable[PlacedContent]
+    group: [PlacedContent]
 
     def __init__(self, group: List[PlacedContent], requested: Rect, actual=None):
         LOGGER.debug("Creating Placed Content for %d items in %s", len(group), requested)
@@ -217,8 +214,8 @@ class PlacedGroupContent(PlacedContent):
         group = [copy(child) for child in self.group]
         return PlacedGroupContent(group, self.requested, actual=self.actual)
 
-    def error(self) -> float:
-        return sum(child.error() for child in self.group)
+    def _error_from_breaks(self):
+        return sum(child._error_from_breaks() for child in self.group)
 
 
 class EmptyPlacedContent(PlacedContent):
@@ -277,7 +274,7 @@ def _line_info(p):
         bad_breaks = sum(isinstance(c, _SplitWord) for entry in frags.lines for c in entry[1])
         ok_breaks = len(frags.lines) - 1 - bad_breaks
         LOGGER.fine("Fragments = " + " | ".join(str(c) + ":" + type(c).__name__
-                                                 for entry in frags.lines for c in entry[1]))
+                                                for entry in frags.lines for c in entry[1]))
     elif frags.kind == 1:
         unused = min(entry.extraSpace for entry in frags.lines)
         bad_breaks = sum(type(frag) == _SplitFrag for frag in p.frags)

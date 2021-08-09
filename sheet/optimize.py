@@ -67,7 +67,7 @@ class Optimizer(Generic[T]):
         x0 = x0 or [0.5] * self.k
 
         if _params_invalid(x0) > 0:
-            LOGGER.score_error("[%s] Initial parameters were invalid: %s", self.name, _pretty(x0))
+            LOGGER.error("[%s] Initial parameters were invalid: %s", self.name, _pretty(x0))
             x0 = [0.5] * self.k
 
         cobyla_kwargs = {'method': 'COBYLA', 'constraints': {'type': 'ineq', 'fun': _params_invalid}}
@@ -111,8 +111,8 @@ def divide_space(x: [float], width: int) -> [int]:
 
 
 @lru_cache(maxsize=1024)
-def _score(x: [float], optimizer: Optimizer) -> (float, T):
-    return optimizer.score_params(x)
+def _score(x: [float], optimizer: Optimizer) -> float:
+    return optimizer.score_params(x)[0]
 
 
 def _pretty(x: [float]) -> str:

@@ -1,90 +1,114 @@
-.. section: stack columns=3
-.. style: title
-
-
-.. style: title
-
-
-.. block: default
-.. title: banner style=banner
-.. style: back
-
-
-Combat Information
- - Action Points -- [][][][][]
- - Max HP: **49** -- *bloodied*: 24
- - `_________________________________________________`
- - `_________________________________________________`
- - Surges: [ ][ ][ ][ ][ ] [ ][ ][ ][ ][ ] -- value: 12
- - Deaths Saving Throws: [][][] --  bonus: **+7**
-
-
+.. section: stack columns=2
 .. title: hidden
-.. block: key-values style=banner_green rows=100
-.. style: attributes
+.. style: title
+.. block: padding=0
+
+**Mouse**
+=========
+
+.. style: big
+
+Qualities
+ - If nobody notices me, no-one can hurt me
+ - I know the city like the back of my hand
+ - I can make it through this
+
+Picture
+
+.. image:: data/images/mouse.png
+   :height: 140
+..
 
 
-Ability Scores
- - Strength     | **18** | *+6*
- - Constitution | **16** | *+5*
- - Dexterity    | **12** | *+3*
- - Intelligence | **10** | *+2*
- - Wisdom       | **16** | *+5*
- - Charisma     |  **8** | *+1*
+
+---------------------------------------------------------
 
 
-.. block: key-values style=banner_red rows=100
+.. section: stack columns=2
+.. title: hidden
+.. style: title
+
+**Mouse**
+==========
+
+.. style: default
 
 
-Combat
- - AC           | **17**
- - Fortitude    | **17**
- - Reflex       | **14**
- - Will         | **19**
- - Initiative   |  **3**
- - Speed        |  **6**
+Qualities
+ - If nobody notices me, no-one can hurt me
+ - I know the city like the back of my hand
+ - I can make it through this
+
+.. title: banner style=heading1
+.. style: default
+
+Team
+ - Chris    | **Darien**
+ - Graham   | **Mouse**
+ - Josh     | **Warp**
+ - Mike     | **Dreadnaught**
+ - Suzanne  | **Ladybird**
+ - Wes      | **Boo**
+ - -- *"One day we will be a great team"*
 
 
-----------------------------------------
+Specialities
+ - Stealth          -- Expert
+ - Investigation    -- Basic
+ - Athletics        -- Basic
 
+.. title: hidden style=heading2
+
+Resources
+ - Stamina          | [ ][ ][ ][ ][ ][ ][ ]
+ - Determination    | [ ][ ][ ]
+
+.. title: banner style=heading2
+.. style: back1
+
+Attributes
+ - **Prowess**      | poor | **2**
+ - **Coordination** | good | **5**
+ - **Strength**     | poor | **2**
+ - **Intellect**    | average | **3**
+ - **Awareness**      | good | **5**
+ - **Willpower**      | good | **5**
+
+.. title: banner style=heading1
+.. style: default
+
+
+
+Powers
+ - **Telepathy** [6]: Read thoughts, resisted by will
+ - **Illusion** [telepathy]: Resisted by awareness
+ - **Mind Control** [5]: With mind link, cannot cause target to directly harm self or others
+
+Notes
+ - I live in the undercity and in the group apartment
+ - I work at transient jobs, usually selling things (suits at the moment)
+
+
+
+---------------------------------------------------------
 
 
 Styles
 ------
 
 default
-    family=Gotham size=8 align=left
+  family=Gotham color=#004 size=10 align=fill
 title
-    size=28
-back
-    background=#ffe borderColor=#ddc
+  size=32 color=#008 family=BackIssues align=left color=black
+big
+  size=16 family=BackIssues align=left
 
-banner
-    background=navy color=white borderColor=navy
-banner_green
-    inherit=banner background=green borderColor=#7a7
-banner_red
-    inherit=banner background=red borderColor=#f88
-banner_black
-    inherit=banner background=black borderColor=#888
-banner_blue
-    inherit=banner background=navy borderColor=#88f
-banner_orange
-    inherit=banner background=orange borderColor=#fe8
+heading1
+  background=#449 color=white align=left
 
-back
-    size=8 family=Helvetica
-back_blue
-    inherit=back background=#eef
-back_orange
-    inherit=back background=#fec
-back_green
-    inherit=back background=#efe
-back_red
-    inherit=back background=#fee
-back_black
-    inherit=back background=#eee
+heading2
+  inherit=heading1 borderColor=#449 borderWidth=0.5
 
 
-attributes
-    color=white family=Helvetica size=10
+back1
+  background=#def
