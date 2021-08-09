@@ -42,7 +42,11 @@ loggers:
     propagate: no
 
   sheet.layout:
-    level: WARNING
+    handlers: [ important, file ]
+    propagate: no
+
+  sheet.layout.section:
+    level: DEBUG
     handlers: [ all, file ]
     propagate: no
 

@@ -2,13 +2,12 @@ from copy import copy
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
 
-from optimize import Optimizer
+from optimize import Optimizer, divide_space
 from sheet import common
 from sheet.common import Rect
-from sheet.layout.optimizer import OptParams
 from sheet.model import Block, Element, ElementType, Run, Style
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, score_error
+from sheet.placement.placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 
 LOGGER = common.configured_logger(__name__)
 
@@ -92,21 +91,12 @@ class TableColumnsOptimizer(Optimizer):
         self.pdf = pdf
 
     def make(self, x: [float]) -> PlacedFlowableContent:
-        widths = self.divide_space(x, self.width)
+        widths = divide_space(x, self.width)
         table = Table(self.cells, style=self.style, colWidths=widths)
         return PlacedFlowableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
 
     def score(self, placed: PlacedFlowableContent) -> float:
-        return score_error(placed.error())
-
-    def validity_error(self, params: OptParams) -> float:
-        """ >0 implies far away from desired """
-        low = params.low
-        high = params.high
-        last = self.width - sum(params.value)
-        a = max(0, low - last)
-        b = sum(max(0, low - p) + max(0, p - high) for p in params.value)
-        return a + b
+        return placed.error()
 
 
 def as_table(cells, width: int, pdf: PDF, padding: int):
@@ -247,6 +237,6 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
 
         top = r2.bottom + 2 * padding
 
-    content = PlacedGroupContent(contents, bounds, pdf)
+    content = PlacedGroupContent(contents, bounds)
     content.move(dx=(bounds.width - content.actual.width) / 2)
     return content

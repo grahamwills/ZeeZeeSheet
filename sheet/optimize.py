@@ -42,7 +42,7 @@ class Optimizer(Generic[T]):
         """ Create an item for the given parameters """
         raise NotImplementedError()
 
-    def score(self, T) -> float:
+    def score(self, t: T) -> float:
         """ Score the item """
         raise NotImplementedError()
 
@@ -53,7 +53,7 @@ class Optimizer(Generic[T]):
         if t:
             return BAD_PARAMS_FACTOR * (1 + t), None
         item = self.make(x)
-        f = self.score(item)
+        f = self.score(item) if item else BAD_PARAMS_FACTOR
         LOGGER.fine("[%s] %s -> %s -> %1.3f", self.name, _pretty(x), item, f)
         return f, item
 
@@ -98,15 +98,16 @@ class Optimizer(Generic[T]):
 
         return results
 
-    def divide_space(self, x: [float], width: int) -> [int]:
-        """ Utility to divide up space according to the parameters """
-        t = width / sum(x)
-        result = [round(v * t) for v in x]
 
-        # Adjust for round-off error
-        err = width - sum(result)
-        result[0] += err
-        return result
+def divide_space(x: [float], width: int) -> [int]:
+    """ Utility to divide up space according to the parameters """
+    t = width / sum(x)
+    result = [round(v * t) for v in x]
+
+    # Adjust for round-off error
+    err = width - sum(result)
+    result[0] += err
+    return result
 
 
 @lru_cache(maxsize=1024)

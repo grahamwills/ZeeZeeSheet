@@ -61,6 +61,8 @@ class BlockLayout:
         else:
             raise ValueError("unknown title method '%s'" % title.command)
 
+        if not self.block.content:
+            self.content_layout = None
         if self.block.block_method.command == 'key-values':
             self.content_layout = key_values_layout
         elif self.block.needs_table():
@@ -115,7 +117,7 @@ class ImageOptimizer(Optimizer):
 
     def score(self, placed: PlacedGroupContent) -> float:
         # Want them about the same height if possible
-        return abs(placed[0].actual.height-placed[1].actual.height) + placed.error().bad_breaks * 40
+        return abs(placed[0].actual.height-placed[1].actual.height) + placed.error() * 40
 
     def place_image(self, b: Rect):
         im_info = self.block.image

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import abc
 import math
+from copy import copy
 from typing import Iterable, List, NamedTuple
 
 from reportlab.platypus import Flowable, Image, Paragraph, Table
@@ -45,14 +46,13 @@ _NO_ERROR = PlacementError()
 
 def _size_fit_error(x: float, overflow_factor, underflow_factor) -> float:
     if x < 0:
-        return overflow_factor * -x
+        return overflow_factor * x**2
     else:
-        return underflow_factor * x
+        return underflow_factor * x**2
 
 
 def score_error(e: PlacementError, overflow_factor=1, underflow_factor=0.01, ok_factor=10, bad_factor=100):
     return _size_fit_error(e.surplus_width, overflow_factor, underflow_factor) \
-           + _size_fit_error(e.surplus_height, overflow_factor, underflow_factor) \
            + e.bad_breaks * bad_factor + e.ok_breaks * ok_factor
 
 
@@ -85,8 +85,8 @@ class PlacedContent(abc.ABC):
         """ Item placed on screen"""
         raise NotImplementedError()
 
-    def error(self) -> PlacementError:
-        return self._error
+    def error(self) -> float:
+        return score_error(self._error)
 
     def _set_error(self, bad_breaks=0, ok_breaks=0):
         self._error = PlacementError(
@@ -96,7 +96,9 @@ class PlacedContent(abc.ABC):
         )
 
     def move(self, dx=0, dy=0):
+        old =self.actual
         self.actual = self.actual.move(dx=dx, dy=dy)
+        self.requested = self.requested.move(dx=dx, dy=dy)
 
 
 class PlacedFlowableContent(PlacedContent):
@@ -141,37 +143,8 @@ class PlacedFlowableContent(PlacedContent):
         self._set_error()
 
     def _init_table(self, table: Table):
-        cells = table._cellvalues
-
-        ncols = max(len(row) for row in cells)
-        min_unused = [table._width] * ncols
-        sum_bad = 0
-        sum_ok = 0
-
-        try:
-            span_map = table._spanRanges
-        except:
-            indices = [(i,j) for i in range(0, ncols) for j in range(0, len(cells))]
-            span_map = dict((i, (i[0], i[1], i[0], i[1])) for i in indices)
-
-
-        for idx, span in span_map.items():
-            if span:
-                cell = cells[idx[1]][idx[0]]
-                if isinstance(cell[0], Paragraph):
-                    bad_breaks, ok_breaks, unused = _line_info(cell[0])
-                    sum_bad += bad_breaks
-                    sum_ok += ok_breaks
-
-                    # Divide unused up evenly across columns
-                    unused /= (1 + span[2]-span[0])
-                    for i in range(span[0], span[2]+1):
-                        min_unused[i] = min(min_unused[i], unused)
-                if isinstance(cell[0], Table):
-                    # TODO: something
-                    pass
-
-        self.actual = self.requested.resize(width=table._width-sum(min_unused), height=table._height)
+        sum_bad, sum_ok, unused = _table_info(table)
+        self.actual = self.requested.resize(width=table._width-sum(unused), height=table._height)
         self._set_error(bad_breaks=sum_bad, ok_breaks=sum_ok)
 
     def _init_paragraph(self, p: Paragraph):
@@ -213,21 +186,18 @@ class PlacedRectContent(PlacedContent):
 class PlacedGroupContent(PlacedContent):
     group: Iterable[PlacedContent]
 
-    def __init__(self, group: List[PlacedContent], requested: Rect):
-        LOGGER.info("Creating Placed Content for %d items in %s", len(group), requested)
-        actual = Rect.union(p.actual for p in group)
+    def __init__(self, group: List[PlacedContent], requested: Rect, actual=None):
+        LOGGER.debug("Creating Placed Content for %d items in %s", len(group), requested)
+        actual = actual or Rect.union(p.actual for p in group)
         super().__init__(requested, actual, group[0].pdf)
         self.group = group
-
-        sum_bad = sum(p.error().bad_breaks for p in group)
-        sum_ok = sum(p.error().ok_breaks for p in group)
-        self._set_error(bad_breaks=sum_bad, ok_breaks=sum_ok)
 
     def draw(self):
         for p in self.group:
             p.draw()
 
     def move(self, dx=0, dy=0):
+        super().move(dx, dy)
         for p in self.group:
             p.move(dx, dy)
 
@@ -242,6 +212,14 @@ class PlacedGroupContent(PlacedContent):
         else:
             return "Group(%dx%d: ...)" % (self.actual.width, self.actual.height)
 
+    def __copy__(self):
+        # Shallow except for the children, whichj need copying
+        group = [copy(child) for child in self.group]
+        return PlacedGroupContent(group, self.requested, actual=self.actual)
+
+    def error(self) -> float:
+        return sum(child.error() for child in self.group)
+
 
 class EmptyPlacedContent(PlacedContent):
 
@@ -255,6 +233,40 @@ class EmptyPlacedContent(PlacedContent):
 
     def __str__(self) -> str:
         return "Empty"
+
+
+def _table_info(table):
+    cells = table._cellvalues
+    ncols = max(len(row) for row in cells)
+    min_unused = [table._width] * ncols
+    sum_bad = 0
+    sum_ok = 0
+    try:
+        span_map = table._spanRanges
+    except:
+        indices = [(i, j) for i in range(0, ncols) for j in range(0, len(cells))]
+        span_map = dict((i, (i[0], i[1], i[0], i[1])) for i in indices)
+    for idx, span in span_map.items():
+        if span:
+            cell = cells[idx[1]][idx[0]]
+            if isinstance(cell[0], Paragraph):
+                bad_breaks, ok_breaks, unused = _line_info(cell[0])
+                sum_bad += bad_breaks
+                sum_ok += ok_breaks
+            elif isinstance(cell[0], Table):
+                tbad, tok, tunused = _table_info(cell[0])
+                sum_bad += tbad
+                sum_ok += tok
+                unused = sum(tunused)
+            else:
+                raise ValueError("Unknown item")
+
+            # Divide unused up evenly across columns
+            unused /= (1 + span[2] - span[0])
+            for i in range(span[0], span[2] + 1):
+                min_unused[i] = min(min_unused[i], unused)
+
+    return sum_bad, sum_ok, min_unused
 
 
 def _line_info(p):

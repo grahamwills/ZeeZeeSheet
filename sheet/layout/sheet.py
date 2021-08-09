@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+from copy import copy, deepcopy
 from typing import List, Union
 
 from placement.placed import PlacedContent
@@ -12,6 +13,12 @@ from sheet.model import Block, Section, Sheet
 from sheet.pdf import PDF
 
 LOGGER = configured_logger(__name__)
+
+
+@functools.lru_cache
+def make_block_layout(target: Block, width: int, pdf: PDF):
+    layout = BlockLayout(target, Rect(left=0, top=0, width=width, height=1000), pdf)
+    return layout.layout()
 
 
 class BlockPlacement:
@@ -30,9 +37,11 @@ class BlockPlacement:
         return "§ content=%s" % self.target
 
     def place(self, bounds: Rect) -> PlacedContent:
-        layout = BlockLayout(self.target, bounds, self.pdf)
-        self.placed = layout.layout()
-        return self.placed
+        base = copy(make_block_layout(self.target, bounds.width, self.pdf))
+        base.move(dx=bounds.left - base.actual.left, dy=bounds.top - base.actual.top)
+        # base.requested = bounds
+        self.placed = base
+        return base
 
     def draw(self):
         self.placed.draw()
@@ -55,6 +64,7 @@ class SectionPlacement:
     def place(self, bounds: Rect) -> PlacedContent:
         self.placed = self.method(bounds, self.children, self.target.padding)
         LOGGER.info("Placed %s: %s", self, self.placed)
+        LOGGER.error("Cache info = %s", make_block_layout.cache_info())
         return self.placed
 
     def draw(self):
@@ -66,7 +76,7 @@ class SectionPlacement:
         margin = self.target.margin
         cumulative_offset = 0
         for c in self.children:
-            child_bounds = c.placed.requested
+            child_bounds = c.placed.actual
             if child_bounds.bottom > cumulative_offset + self.target.pagesize[1] - margin:
                 pdf.showPage()
                 page_index += 1
