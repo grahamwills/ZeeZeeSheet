@@ -1,27 +1,14 @@
 from __future__ import annotations
 
-from copy import copy
-from functools import lru_cache
 from typing import List, NamedTuple, Optional, Tuple
 
 from sheet.common import Rect, configured_logger
 from sheet.layout.optimizer import OptParams, OptimizeProblem
-from sheet.placement.placed import PlacedContent, PlacedGroupContent
+from sheet.placement.placed import PlacedContent, PlacedGroupContent, score_error
 
 LOGGER = configured_logger(__name__)
 
 _MIN_WIDTH = 20
-
-
-@lru_cache(maxsize=2048)
-def estimate_single_size(layout: SectionLayout, index: int, width: int) -> PlacedContent:
-    r = Rect(left=0, top=0, width=width, height=100000)
-    place = layout.items[index].place(r)
-    return place
-
-
-def place_single(layout: SectionLayout, index: int, r: Rect) -> PlacedContent:
-    return layout.items[index].place(r)
 
 
 class LayoutDetails(NamedTuple):
@@ -56,45 +43,20 @@ class SectionLayout(OptimizeProblem):
         self.items = items
         self.exact_placement = True
 
-    def place_in_column(self, start: int, end: int, bd: Rect) -> PlacedContent:
-        assert 0 <= start < end <= len(self.items)
-
-        current = bd.top
-        contents = []
-
-        for i in range(start, end):
-            available = Rect(top=current, left=bd.left, right=bd.right, bottom=bd.bottom)
-            if self.exact_placement:
-                p = place_single(self, i, available)
-            else:
-                p = copy(estimate_single_size(self, i, bd.width))
-                p.move(dy=current)
-            contents.append(p)
-            current = p.actual.bottom + self.padding
-        return PlacedGroupContent(contents, bd, contents[0].pdf)
-
     def score_placement(self, columns: [PlacedContent]) -> float:
 
-        gp = PlacedGroupContent(columns, self.bounds, columns[0].pdf)
-        error = gp.error()
-        column_bounds = [c.requested for c in columns]
+        gp = PlacedGroupContent(columns, self.bounds)
+
+        column_bounds = [c.actual for c in columns]
         max_height = max(c.height for c in column_bounds)
         min_height = min(c.height for c in column_bounds)
 
-        issues = error.bad_breaks * 1000 + error.ok_breaks * 100 \
-                 + max(0, -error.surplus_height) * 10 + max(0, -error.surplus_width) * 20 \
-                 + max(0, error.surplus_width) *0.1 + max(0, error.surplus_height)*0.1
-
-        total_area = sum(r.height * r.width for r in column_bounds) ** 0.5
-
         diff = max_height - min_height
 
-        score = issues + diff + total_area
-        LOGGER.debug("%s -> %1.3f (%1.1f, %1.1f, %1.1f)",
-                     [c.width for c in column_bounds], score,
-                     issues, diff, total_area)
-
-        return score
+        error = gp.error()
+        err = score_error(error)
+        LOGGER.warn("Diff=%1.3f, err=%1.3f (%s)", diff, err, error)
+        return diff + err
 
     def place_all_columns(self, column_sizes: Tuple[int], item_counts: Tuple[int]) -> [PlacedContent]:
         placed_columns = []
@@ -115,7 +77,7 @@ class SectionLayout(OptimizeProblem):
             last = sum_counts
 
             b = Rect(left=left, right=right, top=self.bounds.top, bottom=self.bounds.bottom)
-            placed = self.place_in_column(first, last, b)
+            placed = place_in_column(self.items[first:last], b, self.padding)
             placed_columns.append(placed)
         return placed_columns
 
@@ -160,16 +122,28 @@ class SectionLayout(OptimizeProblem):
 
         LOGGER.info("Finalizing placement cols=%s, alloc=%s, score=%f", opt_col, opt_counts, f)
         columns = self.place_all_columns(opt_col.value, opt_counts.value)
-        return PlacedGroupContent(columns, self.bounds, columns[0].pdf)
+        return PlacedGroupContent(columns, self.bounds)
 
 
-def stack_in_columns(bounds: Rect, children: List, padding: int, columns: int = 1, equal=None) -> PlacedContent:
-    layout = SectionLayout(children, bounds, padding)
+def place_in_column(placeables: List, bounds: Rect, padding: int) -> PlacedContent:
+    current = bounds.top
+    contents = []
 
-    equal = equal in {True, 'True', 'true', 'yes', 'y', '1'}
-    # No more columns than children!
-    k = min(int(columns), len(children))
+    for item in placeables:
+        available = Rect(top=current, left=bounds.left, right=bounds.right, bottom=bounds.bottom)
+        p = item.place(available)
+        contents.append(p)
+        current = p.actual.bottom + padding
+
+    return PlacedGroupContent(contents, bounds)
+
+
+def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, equal=False) -> PlacedContent:
+    # Limit column count to child count -- no empty columns
+    k = min(int(columns), len(placeables))
     if k == 1:
-        return layout.place_in_column(0, len(children), bounds)
-    else:
-        return layout.optimize_column_layout(k, equal)
+        return place_in_column(placeables, bounds, padding)
+
+    layout = SectionLayout(placeables, bounds, padding)
+    equal = equal in {True, 'True', 'true', 'yes', 'y', '1'}
+    return layout.optimize_column_layout(k, equal)

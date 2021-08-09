@@ -11,7 +11,7 @@ formatters:
 handlers:
   all:
     class: logging.StreamHandler
-    level: DEBUG
+    level: NOTSET
     formatter: screen
     stream: ext://sys.stdout
 
@@ -33,49 +33,20 @@ handlers:
 
 loggers:
 
-  placement:
-    level: DEBUG
+  optimize:
+    handlers: [ important, file ]
+    propagate: no
+
+  sheet.placement:
+    handlers: [ important, file ]
+    propagate: no
+
+  sheet.layout:
+    level: WARNING
     handlers: [ all, file ]
     propagate: no
 
-  pdf:
-    level: DEBUG
-    handlers: [ important, file ]
-    propagate: no
-
-  reader:
-    level: DEBUG
-    handlers: [ important, file ]
-    propagate: no
-
-  layout:
-    level: DEBUG
-    handlers: [ important, file ]
-    propagate: no
-
-  layout.section:
-    level: DEBUG
-    handlers: [ all, file ]
-    propagate: no
-
-
-  layout.block:
-    level: DEBUG
-    handlers: [ important, file ]
-    propagate: no
-
-  layout.optimizer:
-    level: DEBUG
-    handlers: [ all, file ]
-    propagate: no
-
-  layout.table:
-    level: DEBUG
-    handlers: [ important, file ]
-    propagate: no
-
-  layout.DEBUG:
-    level: DEBUG
+  sheet:
     handlers: [ important, file ]
     propagate: no
 
@@ -86,5 +57,5 @@ loggers:
 
 
 root:
-  level: DEBUG
+  level: NOTSET
   handlers: [ important, file ]

@@ -40,7 +40,7 @@ class OptimizeProblem(abc.ABC):
     def run(self, x1init: OptParams) -> (float, OptParams, OptParams):
 
         if self.validity_error(x1init) > 0:
-            LOGGER.error("Initial parameters were invalid")
+            LOGGER.score_error("Initial parameters were invalid")
             raise ValueError("Initial parameters were invalid")
 
         LOGGER.info("Starting optimization using %s", x1init)
@@ -61,7 +61,7 @@ class OptimizeProblem(abc.ABC):
             f, opt2 = best_combos[opt1]
             return f, opt1, opt2
         else:
-            LOGGER.error("Optimization completely failed")
+            LOGGER.score_error("Optimization completely failed")
             return None, None, None
 
     def _stage2optimize(self, params1: OptParams) -> (float, OptParams):

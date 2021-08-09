@@ -23,7 +23,7 @@ def install():
 
 def show(file:str):
     sheet = reader.read_sheet(file)
-    sheet.print()
+    # sheet.print()
     out = file.replace('.rst', '.pdf').replace("../data", "../tmp")
     context = pdf.PDF(out, sheet.styles, sheet.pagesize, debug=False)
     layout_sheet(sheet, context)
@@ -33,9 +33,9 @@ if __name__ == '__main__':
     # Read
     install()
     show('../data/ethik.rst')
-    show('../data/grumph.rst')
-    show('../data/mouse.rst')
-    show('../data/luna.rst')
+    # show('../data/grumph.rst')
+    # show('../data/mouse.rst')
+    # show('../data/luna.rst')
 
 
 

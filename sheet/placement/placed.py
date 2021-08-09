@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import Iterable, NamedTuple
+from typing import Iterable, List, NamedTuple
 
 from reportlab.platypus import Flowable, Image, Paragraph, Table
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
-from sheet.model import Style
 from sheet import common
 from sheet.common import Rect
+from sheet.model import Style
 from sheet.pdf import PDF
 
 LOGGER = common.configured_logger(__name__)
@@ -41,6 +41,19 @@ class PlacementError(NamedTuple):
 
 
 _NO_ERROR = PlacementError()
+
+
+def _size_fit_error(x: float, overflow_factor, underflow_factor) -> float:
+    if x < 0:
+        return overflow_factor * -x
+    else:
+        return underflow_factor * x
+
+
+def score_error(e: PlacementError, overflow_factor=1, underflow_factor=0.01, ok_factor=10, bad_factor=100):
+    return _size_fit_error(e.surplus_width, overflow_factor, underflow_factor) \
+           + _size_fit_error(e.surplus_height, overflow_factor, underflow_factor) \
+           + e.bad_breaks * bad_factor + e.ok_breaks * ok_factor
 
 
 class PlacedContent(abc.ABC):
@@ -128,31 +141,47 @@ class PlacedFlowableContent(PlacedContent):
         self._set_error()
 
     def _init_table(self, table: Table):
-        self.actual = self.requested.resize(width=table._width, height=table._height)
-        self._set_error()
+        cells = table._cellvalues
+
+        ncols = max(len(row) for row in cells)
+        min_unused = [table._width] * ncols
+        sum_bad = 0
+        sum_ok = 0
+
+        try:
+            span_map = table._spanRanges
+        except:
+            indices = [(i,j) for i in range(0, ncols) for j in range(0, len(cells))]
+            span_map = dict((i, (i[0], i[1], i[0], i[1])) for i in indices)
+
+
+        for idx, span in span_map.items():
+            if span:
+                cell = cells[idx[1]][idx[0]]
+                if isinstance(cell[0], Paragraph):
+                    bad_breaks, ok_breaks, unused = _line_info(cell[0])
+                    sum_bad += bad_breaks
+                    sum_ok += ok_breaks
+
+                    # Divide unused up evenly across columns
+                    unused /= (1 + span[2]-span[0])
+                    for i in range(span[0], span[2]+1):
+                        min_unused[i] = min(min_unused[i], unused)
+                if isinstance(cell[0], Table):
+                    # TODO: something
+                    pass
+
+        self.actual = self.requested.resize(width=table._width-sum(min_unused), height=table._height)
+        self._set_error(bad_breaks=sum_bad, ok_breaks=sum_ok)
 
     def _init_paragraph(self, p: Paragraph):
-        frags = p.blPara
-
-        if frags.kind == 0:
-            unused = max(entry[0] for entry in frags.lines)
-            bad_breaks = sum(isinstance(c, _SplitWord) for entry in frags.lines for c in entry[1])
-            ok_breaks = len(frags.lines) - 1 - bad_breaks
-            width = p.width - unused
-            LOGGER.debug("Fragments = " + " | ".join(str(c) + ":" + type(c).__name__
-                                                     for entry in frags.lines for c in entry[1]))
-        elif frags.kind == 1:
-            unused = max(entry.extraSpace for entry in frags.lines)
-            width = p.width - unused
-            bad_breaks = sum(type(frag) == _SplitFrag for frag in p.frags)
-            specified_breaks = sum(item.lineBreak for item in frags.lines)
-            ok_breaks = len(frags.lines) - 1 - bad_breaks - specified_breaks
-            LOGGER.debug("Fragments = " + " | ".join((c[1][1] + ":" + type(c).__name__) for c in p.frags))
-        else:
-            raise NotImplementedError()
-
-        self.actual = self.requested.resize(width=math.ceil(width), height=math.ceil(p.height))
+        bad_breaks, ok_breaks, unused = _line_info(p)
+        self.actual = self.requested.resize(width=math.ceil(self.requested.width-unused), height=math.ceil(p.height))
         self._set_error(bad_breaks=bad_breaks, ok_breaks=ok_breaks)
+
+
+    def __str__(self) -> str:
+        return "Flow(%s:%dx%d)" % (self.flowable.__class__.__name__, self.actual.width, self.actual.height)
 
 
 class PlacedRectContent(PlacedContent):
@@ -177,14 +206,17 @@ class PlacedRectContent(PlacedContent):
         if self.stroke:
             self.pdf.stroke_rect(self.actual, self.style, self.rounded)
 
+    def __str__(self) -> str:
+        return "Rect(%s)" % str(self.actual)
+
 
 class PlacedGroupContent(PlacedContent):
     group: Iterable[PlacedContent]
 
-    def __init__(self, group: Iterable[PlacedContent], requested: Rect, pdf: PDF):
+    def __init__(self, group: List[PlacedContent], requested: Rect):
         LOGGER.info("Creating Placed Content for %d items in %s", len(group), requested)
         actual = Rect.union(p.actual for p in group)
-        super().__init__(requested, actual, pdf)
+        super().__init__(requested, actual, group[0].pdf)
         self.group = group
 
         sum_bad = sum(p.error().bad_breaks for p in group)
@@ -199,6 +231,18 @@ class PlacedGroupContent(PlacedContent):
         for p in self.group:
             p.move(dx, dy)
 
+    def __getitem__(self, item):
+        return self.group[item]
+
+    def __str__(self, depth: int = 1) -> str:
+        if depth:
+            content = ", ".join(
+                    c.__str__(depth - 1) if isinstance(c, PlacedGroupContent) else str(c) for c in self.group)
+            return "Group(%dx%d: %s)" % (self.actual.width, self.actual.height, content)
+        else:
+            return "Group(%dx%d: ...)" % (self.actual.width, self.actual.height)
+
+
 class EmptyPlacedContent(PlacedContent):
 
     def __init__(self, requested: Rect, pdf: PDF):
@@ -209,4 +253,25 @@ class EmptyPlacedContent(PlacedContent):
     def draw(self):
         pass
 
+    def __str__(self) -> str:
+        return "Empty"
 
+
+def _line_info(p):
+    """ Calculate line break info for a paragraph"""
+    frags = p.blPara
+    if frags.kind == 0:
+        unused = min(entry[0] for entry in frags.lines)
+        bad_breaks = sum(isinstance(c, _SplitWord) for entry in frags.lines for c in entry[1])
+        ok_breaks = len(frags.lines) - 1 - bad_breaks
+        LOGGER.fine("Fragments = " + " | ".join(str(c) + ":" + type(c).__name__
+                                                 for entry in frags.lines for c in entry[1]))
+    elif frags.kind == 1:
+        unused = min(entry.extraSpace for entry in frags.lines)
+        bad_breaks = sum(type(frag) == _SplitFrag for frag in p.frags)
+        specified_breaks = sum(item.lineBreak for item in frags.lines)
+        ok_breaks = len(frags.lines) - 1 - bad_breaks - specified_breaks
+        LOGGER.fine("Fragments = " + " | ".join((c[1][1] + ":" + type(c).__name__) for c in p.frags))
+    else:
+        raise NotImplementedError()
+    return bad_breaks, ok_breaks, unused

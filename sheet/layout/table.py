@@ -1,14 +1,14 @@
 from copy import copy
-from typing import Optional
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
 
+from optimize import Optimizer
 from sheet import common
 from sheet.common import Rect
-from sheet.layout.optimizer import OptParams, OptimizeProblem
+from sheet.layout.optimizer import OptParams
 from sheet.model import Block, Element, ElementType, Run, Style
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
+from sheet.placement.placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, score_error
 
 LOGGER = common.configured_logger(__name__)
 
@@ -81,25 +81,23 @@ def make_table(pdf, paragraphs, width, padding):
         return None, width, 1e9
 
 
-class TableColumnsOptimizer(OptimizeProblem):
-    """ A simple optimization problem; ignores second stage"""
+class TableColumnsOptimizer(Optimizer):
 
     def __init__(self, cells: [[]], style: TableStyle, width: int, pdf: PDF) -> None:
-        super().__init__()
+        ncols = max(len(row) for row in cells)
+        super().__init__(ncols)
         self.cells = cells
         self.style = style
         self.width = width
         self.pdf = pdf
 
-    def score(self, x1: OptParams, x2: OptParams) -> float:
-        cwids = list(x1.value) + [self.width - sum(x1.value)]
-        table = Table(self.cells, style=self.style, colWidths=cwids)
-        w, h = table.wrapOn(self.pdf, self.width, 1000)
-        LOGGER.debug("table widths =%s -> height=%d", cwids, h)
-        return h
+    def make(self, x: [float]) -> PlacedFlowableContent:
+        widths = self.divide_space(x, self.width)
+        table = Table(self.cells, style=self.style, colWidths=widths)
+        return PlacedFlowableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
 
-    def stage2parameters(self, stage1params: OptParams) -> Optional[OptParams]:
-        return OptParams((0,), 0, 1)
+    def score(self, placed: PlacedFlowableContent) -> float:
+        return score_error(placed.error())
 
     def validity_error(self, params: OptParams) -> float:
         """ >0 implies far away from desired """
@@ -125,7 +123,6 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
     ncols = max(len(row) for row in cells)
     if ncols * 10 >= width:
         LOGGER.info("Cannot fit %d columns into a table of width %d", ncols, width)
-        return None
     elif ncols > 1:
         # Pad short rows and add spans for them
         for i, row in enumerate(cells):
@@ -135,13 +132,11 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
                 commands.append(('SPAN', (n - 1, i), (-1, i)))
 
         optimizer = TableColumnsOptimizer(cells, TableStyle(commands), width, pdf)
-        init = OptParams(tuple([width // ncols] * (ncols - 1)), 10, width - (ncols - 1) * 10)
-        _1, cols, _2 = optimizer.run(init)
-        cwids = list(cols.value) + [width - sum(cols.value)]
-    else:
-        cwids = None
+        placed, _ = optimizer.run()
+        if placed:
+            return placed.flowable
 
-    return Table(cells, colWidths=cwids, style=(TableStyle(commands)))
+    return Table(cells, style=(TableStyle(commands)))
 
 
 def center_text(p: Flowable, bounds: Rect, pdf: PDF, style: Style) -> Rect:

@@ -132,16 +132,20 @@ _logging_initialized = False
 
 
 def _initialize_logging():
+    logging.FINE = 8
+    logging.addLevelName(logging.FINE, "FINE")
+
+    def fine(self, message, *args, **kws):
+        if self.isEnabledFor(logging.FINE):
+            self._log(logging.FINE, message, args, **kws)
+
+    logging.Logger.fine = fine
+
     path = Path(__file__).parent.joinpath('resources/logging.yaml')
     if os.path.exists(path):
         with open(path, 'rt') as f:
             try:
                 config = yaml.safe_load(f.read())
-
-                # Modify to set the console log level
-                console_log_level = os.environ.get("CONSOLE_LOG_LEVEL", None)
-                if console_log_level:
-                    config['handlers']['console']['level'] = console_log_level
 
                 # Ensure the log file directory exists
                 log_file = Path(config['handlers']['file']['filename'])
@@ -154,7 +158,6 @@ def _initialize_logging():
                 print('Error in Logging Configuration. Using default configs')
     else:
         print('Failed to load configuration file. Using default configs')
-    logging.basicConfig(level=logging.INFO)
 
 
 def configured_logger(name: str):
