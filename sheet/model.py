@@ -173,6 +173,12 @@ class Block:
                 return s
         return None
 
+    def __len__(self):
+        return len(self.content)
+
+    def __getitem__(self, item):
+        return self.content[item]
+
 
 @dataclass
 class Section:
@@ -196,6 +202,12 @@ class Section:
             c.fixup(self)
         if not self.content:
             parent.content.remove(self)
+
+    def __len__(self):
+        return len(self.content)
+
+    def __getitem__(self, item):
+        return self.content[item]
 
 
 def _to_size(txt: str) -> int:
@@ -247,6 +259,12 @@ class Sheet:
         if size:
             pair = size.split('x')
             self.pagesize = (_to_size(pair[0]), _to_size(pair[1]))
+
+    def __len__(self):
+        return len(self.content)
+
+    def __getitem__(self, item):
+        return self.content[item]
 
 
 def exists_in_helvetica(text):

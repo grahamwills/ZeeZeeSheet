@@ -144,11 +144,11 @@ class ImageOptimizer(Optimizer):
 
 def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -> PlacedContent:
     optimizer = ImageOptimizer(block, bounds, pdf, other_layout)
-    if not other_layout:
-        return optimizer.place_image(bounds)
-    else:
+    if block.content:
         placed, _ = optimizer.run()
         return placed
+    else:
+        return optimizer.place_image(bounds)
 
 
 def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:

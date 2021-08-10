@@ -244,24 +244,25 @@ def _table_info(table):
         indices = [(i, j) for i in range(0, ncols) for j in range(0, len(cells))]
         span_map = dict((i, (i[0], i[1], i[0], i[1])) for i in indices)
     for idx, span in span_map.items():
-        if span:
-            cell = cells[idx[1]][idx[0]]
-            if isinstance(cell[0], Paragraph):
-                bad_breaks, ok_breaks, unused = _line_info(cell[0])
-                sum_bad += bad_breaks
-                sum_ok += ok_breaks
-            elif isinstance(cell[0], Table):
-                tbad, tok, tunused = _table_info(cell[0])
-                sum_bad += tbad
-                sum_ok += tok
-                unused = sum(tunused)
-            else:
-                raise ValueError("Unknown item")
+        cell = cells[idx[1]][idx[0]]
+        if not span or not cell:
+            continue
+        if isinstance(cell[0], Paragraph):
+            bad_breaks, ok_breaks, unused = _line_info(cell[0])
+            sum_bad += bad_breaks
+            sum_ok += ok_breaks
+        elif isinstance(cell[0], Table):
+            tbad, tok, tunused = _table_info(cell[0])
+            sum_bad += tbad
+            sum_ok += tok
+            unused = sum(tunused)
+        else:
+            raise ValueError("Unknown item")
 
-            # Divide unused up evenly across columns
-            unused /= (1 + span[2] - span[0])
-            for i in range(span[0], span[2] + 1):
-                min_unused[i] = min(min_unused[i], unused)
+        # Divide unused up evenly across columns
+        unused /= (1 + span[2] - span[0])
+        for i in range(span[0], span[2] + 1):
+            min_unused[i] = min(min_unused[i], unused)
 
     return sum_bad, sum_ok, min_unused
 

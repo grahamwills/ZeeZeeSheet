@@ -117,7 +117,6 @@ def score_placement(columns: List[PlacedGroupContent]):
     diff = max_height
     err = sum(c.error() for c in columns)
 
-    LOGGER.debug("Scores")
     for i, c in enumerate(columns):
         LOGGER.debug("[%d] n=%d width=%d height=%d err=%1.3f", i,
                      len(c.group), c.actual.width, c.actual.height, c.error())

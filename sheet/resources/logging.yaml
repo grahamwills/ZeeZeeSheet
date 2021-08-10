@@ -33,6 +33,10 @@ handlers:
 
 loggers:
 
+  sheet.reader:
+    handlers: [ important, file ]
+    propagate: no
+
   optimize:
     handlers: [ important, file ]
     propagate: no
