@@ -7,7 +7,7 @@ from typing import List, Union
 from placement.placed import PlacedContent
 from sheet import common
 from sheet.common import Margins, Rect, configured_logger
-from sheet.layout.block import BlockLayout
+from sheet.layout.block import layout_block
 from sheet.layout.section import stack_in_columns
 from sheet.model import Block, Section, Sheet
 from sheet.pdf import PDF
@@ -16,9 +16,9 @@ LOGGER = configured_logger(__name__)
 
 
 @functools.lru_cache
-def make_block_layout(target: Block, width: int, pdf: PDF):
-    layout = BlockLayout(target, Rect(left=0, top=0, width=width, height=1000), pdf)
-    return layout.layout()
+def make_block_layout(target: Block, width: int, pdf: PDF) -> PlacedContent:
+    rect = Rect(left=0, top=0, width=width, height=1000)
+    return layout_block(target, rect, pdf)
 
 
 class BlockPlacement:

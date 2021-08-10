@@ -3,7 +3,7 @@ from __future__ import annotations, annotations
 
 import functools
 from pathlib import Path
-from typing import Callable, NamedTuple, Optional
+from typing import Callable, Optional
 
 from reportlab.platypus import Image
 
@@ -19,76 +19,54 @@ from sheet.placement.placed import EmptyPlacedContent, PlacedContent, PlacedFlow
 LOGGER = common.configured_logger(__name__)
 
 
-class BorderDetails(NamedTuple):
-    placed: Optional[PlacedContent]
-    insets: Margins
+def layout_block(block: Block, bounds: Rect, pdf: PDF):
+    pre, insets = _pre_content_layout(block, bounds, pdf)
+
+    content = _content_layout(block, bounds - insets, pdf)
+
+    inner = Rect(left=bounds.left, right=bounds.right, top=bounds.top,
+                 bottom=content.actual.bottom + insets.bottom)
+
+    back, post = _post_content_layout(block, inner, pdf)
+
+    items = [p for p in [back, pre, content, post] if p]
+    return PlacedGroupContent(items, bounds)
 
 
-# Creates insets for the next step and placed items to be drawn
-BorderPreLayout = Callable[[Block, Rect, str, PDF], BorderDetails]
+def _pre_content_layout(block, bounds, pdf) -> (PlacedContent, Margins):
+    title = block.title_method
+    title_style = title.options.get('style', 'default')
+    if title.command in {'hidden', 'none'}:
+        return banner_pre_layout(block, bounds, title_style, pdf, show_title=False)
+    elif title.command == 'banner':
+        return banner_pre_layout(block, bounds, title_style, pdf, show_title=True)
+    else:
+        raise ValueError("unknown title method '%s'" % title.command)
 
-# Creates placed items to be drawn as the final border
-BorderPostLayout = Callable[[Block, Rect, str, PDF], Optional[PlacedContent]]
 
-# Creates placed items to be drawn in the main section
-ContentLayout = Callable[[Block, Rect, PDF], Optional[PlacedContent]]
+def _post_content_layout(block, inner, pdf):
+    title = block.title_method
+    title_style = title.options.get('style', 'default')
+    style = pdf.style(block.base_style())
+    if style and style.background:
+        back = PlacedRectContent(inner, style, pdf, fill=True, stroke=False)
+    else:
+        back = None
+    post = outline_post_layout(inner, title_style, pdf)
+    return back, post
 
 
-class BlockLayout:
-    block: Block
-    bounds: Rect
-    title_style: str
-    pdf: PDF
-
-    pre_layout: BorderPreLayout
-    content_layout: ContentLayout
-    post_layout: BorderPostLayout
-
-    def __init__(self, block: Block, bounds: Rect, context: PDF):
-        self.pdf = context
-        self.bounds = bounds
-        self.block = block
-        self.set_methods(block.title_method)
-
-    def set_methods(self, title: common.Command):
-        self.title_style = title.options.get('style', 'default')
-        if title.command in {'hidden', 'none'}:
-            self.pre_layout = functools.partial(banner_pre_layout, show_title=False)
-            self.post_layout = outline_post_layout
-        elif title.command == 'banner':
-            self.pre_layout = functools.partial(banner_pre_layout, show_title=True)
-            self.post_layout = outline_post_layout
-        else:
-            raise ValueError("unknown title method '%s'" % title.command)
-
-        if not self.block.content:
-            self.content_layout = None
-        if self.block.block_method.command == 'key-values':
-            self.content_layout = key_values_layout
-        elif self.block.needs_table():
-            self.content_layout = table_layout
-        else:
-            self.content_layout = paragraph_layout
-
-        if self.block.image:
-            self.content_layout = functools.partial(image_layout, other_layout=self.content_layout)
-
-    def layout(self):
-        bounds = self.bounds
-        pre = self.pre_layout(self.block, bounds, self.title_style, self.pdf)
-        inner = bounds - pre.insets
-        content = self.content_layout(self.block, inner, self.pdf)
-        inner = Rect(left=bounds.left, right=bounds.right, top=bounds.top,
-                     bottom=content.actual.bottom + pre.insets.bottom)
-
-        style = self.pdf.style(self.block.base_style())
-        if style and style.background:
-            back = PlacedRectContent(inner, style, self.pdf, fill=True, stroke=False)
-        else:
-            back = None
-        post = self.post_layout(self.block, inner, self.title_style, self.pdf)
-        items = [p for p in [back, pre.placed, content, post] if p]
-        return PlacedGroupContent(items, bounds)
+def _content_layout(block, inner, pdf):
+    if block.block_method.command == 'key-values':
+        content_layout = key_values_layout
+    elif block.needs_table():
+        content_layout = table_layout
+    else:
+        content_layout = paragraph_layout
+    if block.image:
+        content_layout = functools.partial(image_layout, other_layout=content_layout)
+    content = content_layout(block, inner, pdf)
+    return content
 
 
 class ImageOptimizer(Optimizer):
@@ -117,7 +95,7 @@ class ImageOptimizer(Optimizer):
 
     def score(self, placed: PlacedGroupContent) -> float:
         # Want them about the same height if possible
-        return abs(placed[0].actual.height-placed[1].actual.height) + placed.error() * 40
+        return abs(placed[0].actual.height - placed[1].actual.height) + placed.error() * 40
 
     def place_image(self, b: Rect):
         im_info = self.block.image
@@ -175,7 +153,8 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
         return PlacedGroupContent(results, bounds)
 
 
-def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, show_title=True) -> BorderDetails:
+def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, show_title=True) -> (
+        PlacedContent, Margins):
     style = pdf.style(style_name)
     if style.has_border():
         line_width = int(style.borderWidth)
@@ -211,12 +190,12 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
 
         group = PlacedGroupContent(placed, bounds)
         group.margins = margins
-        return BorderDetails(group, margins)
+        return (group, margins)
     else:
-        return BorderDetails(None, margins)
+        return (None, margins)
 
 
-def outline_post_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF) -> Optional[PlacedContent]:
+def outline_post_layout(bounds: Rect, style_name: str, pdf: PDF) -> Optional[PlacedContent]:
     style = pdf.style(style_name)
     if style.has_border():
         return PlacedRectContent(bounds, style, pdf, fill=False, stroke=True)
