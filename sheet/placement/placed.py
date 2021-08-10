@@ -73,9 +73,6 @@ class PlacedContent(abc.ABC):
         """ Item placed on screen"""
         raise NotImplementedError()
 
-    def error(self) -> float:
-        return self._error_from_breaks() + self._error_from_size()
-
     def _set_error(self, bad_breaks=0, ok_breaks=0):
         self._error = PlacementError(
                 surplus_width=math.floor(self.requested.width - self.actual.width),
@@ -88,15 +85,15 @@ class PlacedContent(abc.ABC):
         self.actual = self.actual.move(dx=dx, dy=dy)
         self.requested = self.requested.move(dx=dx, dy=dy)
 
-    def _error_from_breaks(self):
-        return self._error.bad_breaks * 100 + self._error.ok_breaks * 10
+    def error_from_breaks(self):
+        return self._error.bad_breaks * 10 + self._error.ok_breaks
 
-    def _error_from_size(self):
+    def error_from_size(self):
         extra =  self.requested.width - self.actual.width
         if extra < 0:
-            return 100 * extra ** 2
+            return -10 * extra
         else:
-            return extra ** 2
+            return extra
 
 
 class PlacedFlowableContent(PlacedContent):
@@ -214,8 +211,8 @@ class PlacedGroupContent(PlacedContent):
         group = [copy(child) for child in self.group]
         return PlacedGroupContent(group, self.requested, actual=self.actual)
 
-    def _error_from_breaks(self):
-        return sum(child._error_from_breaks() for child in self.group)
+    def error_from_breaks(self):
+        return sum(child.error_from_breaks() for child in self.group)
 
 
 class EmptyPlacedContent(PlacedContent):

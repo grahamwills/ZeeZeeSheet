@@ -7,6 +7,8 @@ from sheet.common import Rect, configured_logger
 from sheet.placement.placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
+
+
 class LayoutDetails(NamedTuple):
     column_divisions: Tuple[(int, int)]
     allocation_divisions: Tuple[(int, int)]
@@ -79,10 +81,9 @@ class ColumnAllocationOptimizer(ColumnOptimizer):
         super().__init__(k, placeables, outer, padding)
         self.widths = widths
 
-
     def make(self, x: [float]) -> [PlacedContent]:
         counts = divide_space(x, len(self.placeables))
-        if any(c==0 for c in counts):
+        if any(c == 0 for c in counts):
             return None
         return self.place_all(self.widths, counts)
 
@@ -114,14 +115,22 @@ def score_placement(columns: List[PlacedGroupContent]):
     column_bounds = [c.actual for c in columns]
     max_height = max(c.height for c in column_bounds)
     min_height = min(c.height for c in column_bounds)
-    diff = max_height
-    err = sum(c.error() for c in columns)
+    wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
+    diff = (max_height - min_height) ** 2
+
+    breaks = 100 * sum(c.error_from_breaks() for c in columns)
+    fit = sum(c.error_from_size() for c in columns)
 
     for i, c in enumerate(columns):
-        LOGGER.debug("[%d] n=%d width=%d height=%d err=%1.3f", i,
-                     len(c.group), c.actual.width, c.actual.height, c.error())
-    LOGGER.debug("Score: base=%1.3f, err=%1.3f", diff, err)
-    return diff + err
+        LOGGER.debug("[%d] n=%d width=%d height=%d breaks=%1.3f fit=%1.3f", i,
+                     len(c.group), c.actual.width, c.actual.height,
+                     c.error_from_breaks(), c.error_from_size())
+
+    score = max_height + breaks + fit + diff + wasted_space
+
+    LOGGER.debug("Score: %1.3f -- breaks=%1.3f, fit=%1.3f, max=%1.3f, diff=%1.3f, waste=%1.3f",
+                 diff, breaks, fit, max_height, diff, wasted_space)
+    return score
 
 
 def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, equal=False) -> PlacedContent:

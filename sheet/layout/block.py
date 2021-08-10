@@ -1,4 +1,5 @@
 """ Defines layout methods """
+
 from __future__ import annotations, annotations
 
 import functools
@@ -10,10 +11,10 @@ from reportlab.platypus import Image
 from optimize import Optimizer
 from sheet import common
 from sheet.common import Margins, Rect
-from sheet.layout.table import as_one_line, key_values_layout, table_layout
+from sheet.layout.table import key_values_layout, one_line_flowable, table_layout
 from sheet.model import Block, Run
 from sheet.pdf import PDF
-from sheet.placement.placed import EmptyPlacedContent, PlacedContent, PlacedFlowableContent, PlacedGroupContent, \
+from sheet.placement.placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, \
     PlacedRectContent
 
 LOGGER = common.configured_logger(__name__)
@@ -63,10 +64,11 @@ def _content_layout(block, inner, pdf):
         content_layout = table_layout
     else:
         content_layout = paragraph_layout
+
     if block.image:
-        content_layout = functools.partial(image_layout, other_layout=content_layout)
-    content = content_layout(block, inner, pdf)
-    return content
+        return image_layout(block, inner, pdf, other_layout=content_layout)
+    else:
+        return content_layout(block, inner, pdf)
 
 
 class ImageOptimizer(Optimizer):
@@ -95,7 +97,7 @@ class ImageOptimizer(Optimizer):
 
     def score(self, placed: PlacedGroupContent) -> float:
         # Want them about the same height if possible
-        return abs(placed[0].actual.height - placed[1].actual.height) + placed.error() * 40
+        return abs(placed[0].actual.height - placed[1].actual.height) + placed.error_from_breaks() * 40
 
     def place_image(self, b: Rect):
         im_info = self.block.image
@@ -129,9 +131,9 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
         return optimizer.place_image(bounds)
 
 
-def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
+def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> Optional[PlacedContent]:
     if not block.content:
-        return EmptyPlacedContent(bounds.resize(height=0), pdf)
+        return None
 
     results = []
     style = pdf.style(block.base_style())
@@ -146,7 +148,7 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
         b = Rect(top=placed.actual.bottom + block.padding,
                  left=b.left, right=b.right, bottom=b.bottom)
     if not results:
-        return EmptyPlacedContent(bounds.resize(height=0), pdf)
+        return None
     elif len(results) == 1:
         return results[0]
     else:
@@ -172,19 +174,20 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
     if show_title and block.title:
         title_mod = Run([e.replace_style(style_name) for e in block.title.items])
         title_bounds = bounds - margins
-        paragraph, w, height = as_one_line(title_mod, pdf, title_bounds.width, margin)
+        title = one_line_flowable(title_mod, title_bounds, margin, pdf)
 
         # We remove the extra leading the paragraph gave us at the bottom (0.2 * font-size)
-        plaque_height = height + 2 * margin - style.size * 0.2
-        title_bounds = title_bounds.resize(height=height)
+        plaque_height = title.actual.height + 2 * margin - style.size * 0.2
+
+        # Move the title up a little to account for the descender
+        title.move(dy=-pdf.descender(style))
 
         placed = []
         if style.background:
             plaque = (bounds - Margins.all_equal(line_width)).resize(height=plaque_height)
             placed.append(PlacedRectContent(plaque, style, pdf, fill=True, stroke=False))
 
-        descent = pdf.descender(style)
-        placed.append(PlacedFlowableContent(paragraph, title_bounds.move(dy=-descent), pdf))
+        placed.append(title)
 
         margins = Margins(left=inset, right=inset, top=inset + plaque_height, bottom=inset)
 

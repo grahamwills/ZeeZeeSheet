@@ -1,114 +1,101 @@
-.. section: stack columns=2
-.. title: hidden
-.. style: title
-.. block: padding=0
+.. page: size=11inx8.5in
+.. section: stack columns=3
 
-**Mouse**
-=========
+**Ethik Beigleiter**
+====================
 
-.. style: big
-
-Qualities
- - If nobody notices me, no-one can hurt me
- - I know the city like the back of my hand
- - I can make it through this
-
-Picture
-
-.. image:: data/images/mouse.png
-   :height: 140
+.. image:: data/images/Ethik.png
+   :align: left
 ..
 
 
-
----------------------------------------------------------
-
-
-.. section: stack columns=2
-.. title: hidden
-.. style: title
-
-**Mouse**
-==========
-
-.. style: default
+ - is a **Chaotic Dwarven Adept**
+ - who  **Crafts Unique Objects**
+ - and is an **Initiate of the Inverted Pyramid**
 
 
-Qualities
- - If nobody notices me, no-one can hurt me
- - I know the city like the back of my hand
- - I can make it through this
+Base Info
+ - Tier     | 3
+ - Effort   | 3
 
-.. title: banner style=heading1
-.. style: default
-
-Team
- - Chris    | **Darien**
- - Graham   | **Mouse**
- - Josh     | **Warp**
- - Mike     | **Dreadnaught**
- - Suzanne  | **Ladybird**
- - Wes      | **Boo**
- - -- *"One day we will be a great team"*
+Pools
+ - Might       | 10   |
+ - Speed       | 13   |
+ - Intellect   | 21   | 2
 
 
-Specialities
- - Stealth          -- Expert
- - Investigation    -- Basic
- - Athletics        -- Basic
+Advancement
+ - **XP**: [X] [X] [X] [X] [] [] [] []
 
-.. title: hidden style=heading2
+ - [ ] Increase Abilities -- 4 pool
+ - [ ] Move to perfection -- +1 edge
+ - [X] Extra Effort
+ - [X] Skill Training
+ - [ ] Other -- spell/feature
 
-Resources
- - Stamina          | [ ][ ][ ][ ][ ][ ][ ]
- - Determination    | [ ][ ][ ]
-
-.. title: banner style=heading2
-.. style: back1
-
-Attributes
- - **Prowess**      | poor | **2**
- - **Coordination** | good | **5**
- - **Strength**     | poor | **2**
- - **Intellect**    | average | **3**
- - **Awareness**      | good | **5**
- - **Willpower**      | good | **5**
-
-.. title: banner style=heading1
-.. style: default
+Recoveries -- **1d6+4**
+ - [ ] 1 action | [ ] 10 mins | [ ] 1 hour | [ ] 10 hours
 
 
+Skills
+ - Magic                    | Specialized
 
-Powers
- - **Telepathy** [6]: Read thoughts, resisted by will
- - **Illusion** [telepathy]: Resisted by awareness
- - **Mind Control** [5]: With mind link, cannot cause target to directly harm self or others
+ - Craft: Clockwork         | Trained
+ - Craft: Weapons           | Trained
+ - Identification           | Trained
+ - Intellect defense        | Trained
+ - Mining and Shaping Tools | Trained
+ - Stonecraft               | Trained
 
-Notes
- - I live in the undercity and in the group apartment
- - I work at transient jobs, usually selling things (suits at the moment)
+ - Axes                     | Proficient
+
+ - Medium / Hvy weapons     | Inability
+ - People Trust Me          | Inability
 
 
+Special Abilities
+ - **Chaotic susceptibiity**: +1 damage from mental attacks
+ - **Chaotic Recovery**: On 10 hour recovery can re-roll, but GM can intrude
+ - **Spell Affinity**: Every day, choose a spell to cost one less
+ - **See Beyond**: I see dead people and auras (*perception assset*)
 
----------------------------------------------------------
+Spells
+ - I    | **Onslaught**             | Does 4 physical or 2 mental damage
+ - I    | **Resonance Field**       | Defend with intellect for one minute. On a defense of 19-20 attacker takes 1 or 4 damage
+ - 2I   | **Far Step**              | Leap up to long range
+ - 3I   | **Clockwork Assistant**   | level 2, one hour (*"Mr. Robinson"*)
+ - 3I   | **Stasis**                | Lasts one minute
 
+Artifacts and Cyphers:
+ - Anti-magic Lab Coat (1/20)
+ - Mechanical Man Statutue (???)
+ - Potion of knowledege enhancement
+ - Potion of moderate healing
+ - `_______________________________________`
+ - `_______________________________________`
+
+Equipment
+ - Bulls-eye Lantern
+ - Compass
+ - Fake 2-H dwarven axe and red beard
+ - `_______________________________________`
+ - `_______________________________________`
+
+Misc
+ - Known Passages to Dwarvenhearth (asset)
+ - `_______________________________________`
+ - `_______________________________________`
+
+
+Advances Taken
+ - 1: Effort, Edge, Spell (Stasis)
+ - 2: *Inverted Pyramid Focus*
+ - 2: Effort, Skill
+
+-----------------------------------------
 
 Styles
-------
+======
 
 default
-  family=Gotham color=#004 size=10 align=fill
-title
-  size=32 color=#008 family=BackIssues align=left color=black
-big
-  size=16 family=BackIssues align=left
-
-heading1
-  background=#449 color=white align=left
-
-heading2
-  inherit=heading1 borderColor=#449 borderWidth=0.5
-
-
-back1
-  background=#def
+  family=Roboto background=#eef

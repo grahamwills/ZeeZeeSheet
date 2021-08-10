@@ -65,6 +65,18 @@ def as_one_line(run: Run, pdf: PDF, width: int, padding: int):
     return make_table(pdf, cells, width, padding)
 
 
+def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
+    if any(e.which == ElementType.SPACER for e in run.items):
+        # Make a one-row table
+        cells = [make_row_from_run(run, pdf, bounds.width, padding)]
+        p, _1, _2 = make_table(pdf, cells, bounds.width, padding)
+        return PlacedFlowableContent(p, bounds, pdf)
+    else:
+        # No spacers -- nice and simple
+        p = pdf.make_paragraph(run)
+        return PlacedFlowableContent(p, bounds, pdf)
+
+
 def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     cells = [make_row_from_run(run, pdf, bounds.width, block.padding) for run in block.content]
     table, w, h = make_table(pdf, cells, bounds.width, block.padding)
@@ -96,7 +108,7 @@ class TableColumnsOptimizer(Optimizer):
         return PlacedFlowableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
 
     def score(self, placed: PlacedFlowableContent) -> float:
-        return placed.error()
+        return placed.error_from_breaks()
 
 
 def as_table(cells, width: int, pdf: PDF, padding: int):
