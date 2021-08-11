@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 import math
 from copy import copy
-from typing import List, NamedTuple
+from typing import List
 
 from colour import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
@@ -17,33 +17,6 @@ from sheet.model import Style
 from sheet.pdf import PDF
 
 LOGGER = common.configured_logger(__name__)
-
-
-class PlacementError(NamedTuple):
-    """
-        How good the placement is
-
-        Fields
-        ------
-
-        surplus_width
-            Unused area (negative means it did not fit)
-        bad_breaks
-            Line breaks in bad places, like within a word
-        ok_breaks
-            Number of line breaks
-        internal_variance
-            How well free space is balanced (e.g. in tables)
-
-
-    """
-    surplus_width: int = 0
-    ok_breaks: float = 0
-    bad_breaks: float = 0
-    internal_variance: float = 0
-
-
-_NO_ERROR = PlacementError()
 
 _DEBUG_RECT_STYLE = Style(background=Color('lightGray'))
 
@@ -66,21 +39,25 @@ class PlacedContent(abc.ABC):
     pdf: PDF
     requested: Rect
     actual: Rect
-    _error: PlacementError
+
+    unused_width: int
+    ok_breaks: float
+    bad_breaks: float
+    internal_variance: float
 
     def __init__(self, requested: Rect, actual: Rect, pdf: PDF) -> None:
         self.actual = actual
         self.requested = requested
         self.pdf = pdf
 
+        self.ok_breaks = 0
+        self.bad_breaks = 0
+        self.internal_variance = 0
+        self.unused_width = self._unused_requested_width()
+
     def draw(self):
         """ Item placed on screen"""
         raise NotImplementedError()
-
-    def _set_error(self, bad_breaks=0, ok_breaks=0, internal_variance=0, surplus_width=0):
-        surplus_width = max(surplus_width, self.requested.width - self.actual.width)
-        self._error = PlacementError(surplus_width=surplus_width,
-                bad_breaks=bad_breaks, ok_breaks=ok_breaks, internal_variance=round(internal_variance))
 
     def move(self, dx=0, dy=0):
         old = self.actual
@@ -89,11 +66,11 @@ class PlacedContent(abc.ABC):
 
     def error_from_variance(self, multiplier: float):
         """ Internal variance in free space"""
-        return multiplier * self._error.internal_variance
+        return multiplier * self.internal_variance
 
     def error_from_breaks(self, multiplier_bad: float, multiplier_good: float):
         """ Line breaks and word breaks"""
-        return multiplier_bad * self._error.bad_breaks + multiplier_good * self._error.ok_breaks
+        return multiplier_bad * self.bad_breaks + multiplier_good * self.ok_breaks
 
     def error_from_size(self, multiplier_bad: float, multiplier_good: float):
         """ Fit to the allocated sapce"""
@@ -101,7 +78,10 @@ class PlacedContent(abc.ABC):
         if extra < 0:
             return -extra * multiplier_bad
         else:
-            return max(extra, self._error.surplus_width) * multiplier_good
+            return max(extra, self.unused_width) * multiplier_good
+
+    def _unused_requested_width(self):
+        return max(0, self.requested.width - self.actual.width)
 
 
 class PlacedFlowableContent(PlacedContent):
@@ -143,14 +123,15 @@ class PlacedFlowableContent(PlacedContent):
 
     def _init_image(self, image: Image):
         self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
-        self._set_error()
+        self.unused_width = self._unused_requested_width()
 
     def _init_table(self, table: Table):
         sum_bad, sum_ok, unused = _table_info(table)
         self.actual = self.requested.resize(width=table._width, height=table._height)
-        free_space_diff = max(unused) - min(unused)
-        self._set_error(bad_breaks=sum_bad, ok_breaks=sum_ok,
-                        internal_variance=free_space_diff, surplus_width=int(sum(unused)))
+        self.ok_breaks = sum_ok
+        self.bad_breaks = sum_bad
+        self.internal_variance = round(max(unused) - min(unused))
+        self.unused_width = max(int(sum(unused)), self._unused_requested_width())
 
     def _init_paragraph(self, p: Paragraph):
         bad_breaks, ok_breaks, unused = _line_info(p)
@@ -158,20 +139,13 @@ class PlacedFlowableContent(PlacedContent):
             self.actual = self.requested.resize(width=math.ceil(self.requested.width), height=math.ceil(p.height))
         else:
             self.actual = self.requested.resize(width=math.ceil(self.requested.width - unused),
-                                            height=math.ceil(p.height))
-        self._set_error(bad_breaks=bad_breaks, ok_breaks=ok_breaks)
+                                                height=math.ceil(p.height))
+        self.ok_breaks = ok_breaks
+        self.bad_breaks = bad_breaks
+        self.unused_width = self._unused_requested_width()
 
     def __str__(self) -> str:
         return "Flow(%s:%dx%d)" % (self.flowable.__class__.__name__, self.actual.width, self.actual.height)
-
-    def error_from_size(self, multiplier_bad: float, multiplier_good: float):
-        """ Fit to the allocated space"""
-        extra = self.requested.width - self.actual.width
-        if extra < 0:
-            return -extra * multiplier_bad
-        else:
-            # Internal overflow also counts
-            return max(extra, self._extra) * multiplier_good
 
 
 class PlacedRectContent(PlacedContent):
@@ -187,7 +161,6 @@ class PlacedRectContent(PlacedContent):
         self.stroke = stroke
         self.fill = fill
         self.rounded = rounded
-        self._error = _NO_ERROR
 
     def draw(self):
         if self.fill:
@@ -199,14 +172,14 @@ class PlacedRectContent(PlacedContent):
     def __str__(self) -> str:
         return "Rect(%s)" % str(self.actual)
 
+
 class ErrorContent(PlacedRectContent):
 
     def __init__(self, bounds: Rect, pdf: PDF):
-        super().__init__(bounds, Style(background=Color('red')), pdf, 1, 1, 0)
+        super().__init__(bounds, Style(background=Color('red')), pdf, True, True, 0)
 
     def draw(self):
         super().draw()
-
 
     def error_from_size(self, multiplier_bad: float, multiplier_good: float):
         return 1e9 - self.actual.width * self.actual.height
@@ -219,8 +192,37 @@ class PlacedGroupContent(PlacedContent):
         LOGGER.debug("Creating Placed Content for %d items in %s", len(group), requested)
         actual = actual or Rect.union(p.actual for p in group)
         super().__init__(requested, actual, group[0].pdf)
-        self._set_error()
         self.group = group
+        self._set_placements()
+
+    def _set_placements(self):
+        # Sort left to right
+        items = sorted(self.group, key=lambda x: x.requested.left + x.actual.left * 0.0001)
+        self.unused_width = 0
+
+        # We will scan across the space, keeping track of unused space as we go
+        left, right, unused = -1, 0, 0
+        for item in items:
+            self.ok_breaks += item.ok_breaks
+            self.bad_breaks += item.bad_breaks
+
+            a = item.requested.left
+            b = item.requested.right
+
+            # If there is a clear gap, add that overlap space in and close the gap
+            if a > right:
+                unused += a - right
+                right = a
+
+            # Add in the unused amount in proportion to non-overlapped item
+            overlap_fraction = (right - a) / (right - left)
+            self.unused_width += (1 - overlap_fraction) * unused
+
+            # Update the scan to this item
+            left, right, unused = a, b, item.unused_width
+
+        # Handle any left overs
+        self.unused_width = round(self.unused_width + (self.requested.right - right) + unused)
 
     def draw(self):
         if self.pdf.debug:
@@ -254,12 +256,6 @@ class PlacedGroupContent(PlacedContent):
         # Shallow except for the children, whichj need copying
         group = [copy(child) for child in self.group]
         return PlacedGroupContent(group, self.requested, actual=self.actual)
-
-    def error_from_breaks(self, mula: float, mulb:float):
-        return sum(child.error_from_breaks(mula, mulb) for child in self.group)
-
-    def error_from_variance(self, multiplier: float):
-        return sum(child.error_from_variance(multiplier) for child in self.group)
 
 
 def _table_info(table):
@@ -316,5 +312,3 @@ def _line_info(p):
     else:
         raise NotImplementedError()
     return bad_breaks, ok_breaks, unused
-
-
