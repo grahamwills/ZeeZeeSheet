@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from typing import List, NamedTuple, Tuple
+import logging
+import statistics
+from functools import lru_cache
+from typing import List, NamedTuple, Optional, Tuple
 
 from optimize import Optimizer, divide_space
 from sheet.common import Rect, configured_logger
 from sheet.placement.placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
+
+MIN_COLUMN_WIDTH = 10
 
 
 class LayoutDetails(NamedTuple):
@@ -24,7 +29,11 @@ class LayoutDetails(NamedTuple):
         return self.placed.actual.height
 
 
-def place_in_column(placeables: List, bounds: Rect, padding: int) -> PlacedContent:
+def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[PlacedContent]:
+    if bounds.width < MIN_COLUMN_WIDTH:
+        LOGGER.warn("Column of width %f was smaller than the minimum of %d", bounds.width, MIN_COLUMN_WIDTH)
+        return None
+
     current = bounds.top
     contents = []
 
@@ -49,10 +58,27 @@ class ColumnOptimizer(Optimizer):
         self.padding = padding
 
     def score(self, columns: [PlacedGroupContent]) -> float:
-        placement = score_placement(columns)
-        return placement
+        column_bounds = [c.actual for c in columns]
+        max_height = max(c.height for c in column_bounds)
 
-    def place_all(self, widths: [int], counts: [int]) -> List[PlacedContent]:
+        stddev = statistics.stdev(c.height for c in column_bounds)
+        breaks = sum(c.error_from_breaks(20, 1) for c in columns)
+        fit = sum(c.error_from_size(1, 0.1) for c in columns)
+        var = sum(c.error_from_variance(0.1) for c in columns)
+
+        if LOGGER.getEffectiveLevel() >= logging.FINE:
+            for i, c in enumerate(columns):
+                LOGGER.fine("[%d] n=%d width=%d height=%d breaks=%1.3f fit=%1.3f var=%1.3f", i,
+                            len(c.group), c.actual.width, c.actual.height,
+                            c.error_from_breaks(20, 1), c.error_from_size(1, 0.1), c.error_from_variance(0.1))
+
+        score = max_height + breaks + fit + stddev + var
+
+        LOGGER.debug("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
+                     score, max_height, breaks, fit, stddev, var)
+        return score
+
+    def place_all(self, widths: Tuple[int], counts: Tuple[int]) -> List[PlacedContent]:
         LOGGER.debug("Placing with widths=%s, alloc=%s", widths, counts)
         placed_columns = []
         sum_widths = 0
@@ -68,24 +94,28 @@ class ColumnOptimizer(Optimizer):
             sum_counts += count
             last = sum_counts
 
-            b = Rect(left=left, right=right, top=self.outer.top, bottom=self.outer.bottom)
+            b = self.outer.modify_horizontal(left=left, right=right)
             placed = place_in_column(self.placeables[first:last], b, self.padding)
             placed_columns.append(placed)
         return placed_columns
 
+    def __hash__(self):
+        return id(self)
+
 
 class ColumnAllocationOptimizer(ColumnOptimizer):
-    widths: [int]
+    widths: Tuple[int]
 
     def __init__(self, k: int, placeables: List, outer: Rect, widths: [int], padding: int):
         super().__init__(k, placeables, outer, padding)
         self.widths = widths
 
-    def make(self, x: [float]) -> [PlacedContent]:
-        counts = divide_space(x, len(self.placeables))
-        if any(c == 0 for c in counts):
-            return None
+    def make(self, x: Tuple[float]) -> List[PlacedContent]:
+        counts = self.vector_to_counts(x)
         return self.place_all(self.widths, counts)
+
+    def vector_to_counts(self, x):
+        return divide_space(x, len(self.placeables), 1)
 
 
 class ColumnWidthOptimizer(ColumnOptimizer):
@@ -98,39 +128,25 @@ class ColumnWidthOptimizer(ColumnOptimizer):
     def make_for_known_widths(self, widths):
         counts = [len(self.placeables) // self.k] * self.k
         counts[0] += len(self.placeables) - sum(counts)
-        return self.place_all(widths, counts)
+        return self.place_all(widths, tuple(counts))
 
-    def make(self, x: [float]) -> [PlacedContent]:
-        widths = divide_space(x, self.available_width)
+    def make(self, x: Tuple[float]) -> Optional[List[PlacedContent]]:
+        try:
+            widths = self.vector_to_widths(x)
+        except ValueError:
+            LOGGER.error("Not enough space for columns", exc_info=True)
+            return None
 
         if len(self.placeables) == self.k:
-            return self.place_all(widths, [1] * self.k)
+            return self.place_all(widths, tuple([1] * self.k))
         else:
             alloc = ColumnAllocationOptimizer(self.k, self.placeables, self.outer, widths, self.padding)
-            result, _ = alloc.run()
+            result, (score, div) = alloc.run()
+            LOGGER.debug("For widths=%s, best counts=%s -> %1.3f", widths, alloc.vector_to_counts(div), score)
             return result
 
-
-def score_placement(columns: List[PlacedGroupContent]):
-    column_bounds = [c.actual for c in columns]
-    max_height = max(c.height for c in column_bounds)
-    min_height = min(c.height for c in column_bounds)
-    wasted_space = sum((max_height - r.height) * r.width for r in column_bounds) ** 0.5 / 10
-    diff = (max_height - min_height) ** 2
-
-    breaks = 100 * sum(c.error_from_breaks() for c in columns)
-    fit = sum(c.error_from_size() for c in columns)
-
-    for i, c in enumerate(columns):
-        LOGGER.debug("[%d] n=%d width=%d height=%d breaks=%1.3f fit=%1.3f", i,
-                     len(c.group), c.actual.width, c.actual.height,
-                     c.error_from_breaks(), c.error_from_size())
-
-    score = max_height + breaks + fit + diff + wasted_space
-
-    LOGGER.debug("Score: %1.3f -- breaks=%1.3f, fit=%1.3f, max=%1.3f, diff=%1.3f, waste=%1.3f",
-                 diff, breaks, fit, max_height, diff, wasted_space)
-    return score
+    def vector_to_widths(self, x):
+        return divide_space(x, self.available_width, MIN_COLUMN_WIDTH)
 
 
 def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, equal=False) -> PlacedContent:
@@ -144,10 +160,13 @@ def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, eq
     equal = equal in {True, 'True', 'true', 'yes', 'y', '1'}
     if equal:
         LOGGER.info("Allocating %d items in %d equal columns: %s", len(placeables), k, bounds)
-        widths = divide_space([1] * k, columns_optimizer.available_width)
+        widths = divide_space([1] * k, columns_optimizer.available_width, MIN_COLUMN_WIDTH)
         columns = columns_optimizer.make_for_known_widths(widths)
         return PlacedGroupContent(columns, bounds)
     else:
         LOGGER.info("Allocating %d items in %d unequal columns: %s", len(placeables), k, bounds)
-        columns, _ = columns_optimizer.run()
+        columns, (score, div) = columns_optimizer.run()
+        columns_optimizer.score(columns)
+        widths = columns_optimizer.vector_to_widths(div)
+        LOGGER.info("Allocation: %s -> %1.3f", widths, score)
         return PlacedGroupContent(columns, bounds)

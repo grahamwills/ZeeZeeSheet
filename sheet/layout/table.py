@@ -1,4 +1,5 @@
 from copy import copy
+from typing import List, Optional
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
 
@@ -85,11 +86,8 @@ def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
 
 def make_table(pdf, paragraphs, width, padding):
     table = as_table(paragraphs, width, pdf, padding)
-    if table:
-        w, h = table.wrapOn(pdf, width, 1000)
-        return table, w, h
-    else:
-        return None, width, 1e9
+    w, h = table.wrapOn(pdf, width, 1000)
+    return table, w, h
 
 
 class TableColumnsOptimizer(Optimizer):
@@ -102,13 +100,21 @@ class TableColumnsOptimizer(Optimizer):
         self.width = width
         self.pdf = pdf
 
-    def make(self, x: [float]) -> PlacedFlowableContent:
-        widths = divide_space(x, self.width)
+    def make(self, x: [float]) -> Optional[PlacedFlowableContent]:
+        LOGGER.debug("Trying table with divisions = %s", x)
+        try:
+            widths = divide_space(x, self.width, 10)
+        except ValueError:
+            LOGGER.warn("Too little space to fit table")
+            return None
         table = Table(self.cells, style=self.style, colWidths=widths)
         return PlacedFlowableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
 
     def score(self, placed: PlacedFlowableContent) -> float:
-        return placed.error_from_breaks()
+        s = placed.error_from_breaks(100, 5) + placed.error_from_variance(0.1)
+        # LOGGER.debug("Score = %1.3f (breaks=%1.3f, var=%1.3f)", s, placed.error_from_breaks(100, 10),
+        #              placed.error_from_variance(1))
+        return s
 
 
 def as_table(cells, width: int, pdf: PDF, padding: int):
@@ -124,7 +130,7 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
 
     ncols = max(len(row) for row in cells)
     if ncols * 10 >= width:
-        LOGGER.info("Cannot fit %d columns into a table of width %d", ncols, width)
+        LOGGER.warn("Cannot fit %d columns into a table of width %d", ncols, width)
     elif ncols > 1:
         # Pad short rows and add spans for them
         for i, row in enumerate(cells):
@@ -141,13 +147,14 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
     return Table(cells, style=(TableStyle(commands)))
 
 
-def center_text(p: Flowable, bounds: Rect, pdf: PDF, style: Style) -> Rect:
+def center_text(p: Paragraph, bounds: Rect, pdf: PDF, style: Style) -> Rect:
     p.wrapOn(pdf, bounds.width, bounds.height)
-    top = bounds.top + (bounds.height - style.size) / 2
+    desc = -p.blPara.descent
+    top = bounds.top + (bounds.height - style.size) / 2 - desc / 2
     return Rect(left=bounds.left, top=top, width=bounds.width, height=style.size)
 
 
-def stats_runs(run: [Element], pdf: PDF) -> [Paragraph]:
+def stats_runs(run: [Element], pdf: PDF) -> List[Paragraph]:
     items = run.items
     row = []
     start = 0
@@ -237,7 +244,7 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
         cell[0].wrapOn(pdf, r1.width, r1.height)
         cell[1].wrapOn(pdf, r2.width, r2.height)
         b1 = center_text(cell[0], r1.resize(width=r1.width - W3), pdf, text_style)
-        b2 = center_text(cell[1], r2, pdf, text_style_1).move(dy=1)
+        b2 = center_text(cell[1], r2, pdf, text_style_1)
         contents.append(PlacedFlowableContent(cell[0], b1, pdf))
         contents.append(PlacedFlowableContent(cell[1], b2, pdf))
 

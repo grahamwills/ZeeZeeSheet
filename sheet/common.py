@@ -111,6 +111,9 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
                     width=self.width if width is None else width,
                     height=self.height if height is None else height)
 
+    def modify_horizontal(self, *, width=None, left=None, right=None) -> Rect:
+        return Rect(top=self.top, bottom=self.bottom, left=left, right=right, width=width)
+
 
 def _consistent(low, high, size, description):
     n = (low is None) + (high is None) + (size is None)

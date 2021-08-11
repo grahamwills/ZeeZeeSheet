@@ -33,28 +33,43 @@ handlers:
 
 loggers:
 
-  sheet.reader:
-    handlers: [ important, file ]
-    propagate: no
-
   optimize:
+    level: DEBUG
     handlers: [ important, file ]
     propagate: no
 
   sheet.placement:
+    level: DEBUG
     handlers: [ important, file ]
     propagate: no
 
   sheet.layout:
+    level: DEBUG
     handlers: [ important, file ]
     propagate: no
 
   sheet.layout.section:
     level: DEBUG
-    handlers: [ all, file ]
+    handlers: [ important, file ]
+    propagate: no
+
+  sheet.layout.block:
+    level: DEBUG
+    handlers: [ important, file ]
+    propagate: no
+
+  sheet.layout.table:
+    level: DEBUG
+    handlers: [ important, file ]
     propagate: no
 
   sheet:
+    level: DEBUG
+    handlers: [ important, file ]
+    propagate: no
+
+  sheet.reader:
+    level: DEBUG
     handlers: [ important, file ]
     propagate: no
 

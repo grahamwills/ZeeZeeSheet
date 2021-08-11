@@ -64,7 +64,9 @@ class SectionPlacement:
     def place(self, bounds: Rect) -> PlacedContent:
         self.placed = self.method(bounds, self.children, self.target.padding)
         LOGGER.info("Placed %s: %s", self, self.placed)
-        LOGGER.debug("Cache info = %s", make_block_layout.cache_info())
+        if hasattr(make_block_layout, 'cache_info'):
+            LOGGER.debug("Cache info = %s", make_block_layout.cache_info())
+            make_block_layout.cache_clear()
         return self.placed
 
     def draw(self):

@@ -2,7 +2,7 @@
 import math
 import time
 from functools import lru_cache
-from typing import Generic, Tuple, TypeVar
+from typing import Generic, Iterable, Tuple, TypeVar
 
 import numpy as np
 import scipy.optimize
@@ -13,12 +13,16 @@ T = TypeVar('T')
 
 LOGGER = configured_logger(__name__)
 
-BAD_PARAMS_FACTOR = 1e6
+BAD_PARAMS_FACTOR = 1e12
 
 
 class Optimizer(Generic[T]):
     """
         Solve an optimization problem
+
+        The base idea is that we maintain a vector in [0,1]^(k-1) that must sum to < 1
+        This generates a k-dimensional point where all the values sum to one
+        That is then used to optimize allocation
 
         Fields
         ------
@@ -27,8 +31,7 @@ class Optimizer(Generic[T]):
             For debugging and logging
 
         k
-            The number of dimensions (number of parameters)
-            Parameters are in the range [0,1]
+            The number of dimensions (number of parameters-1)
 
     """
     name: str
@@ -46,40 +49,48 @@ class Optimizer(Generic[T]):
         """ Score the item """
         raise NotImplementedError()
 
-    def score_params(self, x: [float]) -> (float, T):
+    def score_params(self, p: Tuple[float]) -> (float, T):
         """ scoring function, also returns created object """
 
-        t = _params_invalid(x)
-        if t:
-            return BAD_PARAMS_FACTOR * (1 + t), None
-        item = self.make(x)
+        x, err = params_to_x(p)
+
+        if err:
+            return BAD_PARAMS_FACTOR * (1 + err), None
+        try:
+            item = self.make(x)
+        except ValueError:
+            return BAD_PARAMS_FACTOR, None
+
         f = self.score(item) if item else BAD_PARAMS_FACTOR
         LOGGER.fine("[%s] %s -> %s -> %1.3f", self.name, _pretty(x), item, f)
         return f, item
 
-    def run(self, x0: [float] = None, fast=True) -> (T, (float, [float])):
+    def run(self, method='COBYLA') -> (T, (float, [float])):
         """
             Run the optimization
             :param float[] x0: Optional starting value (defaults to 0.5s)
             :return: the optimal score, created item, and parameters
         """
 
-        x0 = x0 or [0.5] * self.k
+        x0 = (1.0 / self.k,) * (self.k - 1)
+        kwargs = {'method': 'COBYLA', 'constraints': {'type': 'ineq', 'fun': lambda p: params_to_x(p)[1]}}
+        LOGGER.info("[%s] Solving with %s, init=%s", self.name, method, _pretty(x0))
 
-        if _params_invalid(x0) > 0:
-            LOGGER.error("[%s] Initial parameters were invalid: %s", self.name, _pretty(x0))
-            x0 = [0.5] * self.k
-
-        cobyla_kwargs = {'method': 'COBYLA', 'constraints': {'type': 'ineq', 'fun': _params_invalid}}
 
         start = time.perf_counter()
-        if fast:
-            LOGGER.info("[%s] Solving with COBYLA, init=%s", self.name, _pretty(x0))
-            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **cobyla_kwargs)
-        else:
+
+        if method == 'basinhopping':
             LOGGER.info("[%s] Solving with basinhopping and COBYLA, init=%s", self.name, _pretty(x0))
-            solution = scipy.optimize.basinhopping(lambda x: _score(tuple(x), self), x0=x0,
-                                                   stepsize=1, niter=10, minimizer_kwargs=cobyla_kwargs)
+            solution = scipy.optimize.basinhopping(lambda x: _score(tuple(x), self), x0=x0, seed=13,
+                                                   stepsize=1, niter=10, minimizer_kwargs=kwargs)
+        elif method == 'COBYLA':
+            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
+        else:
+            initial_simplex = [[int(j == i) for j in range(self.k - 1)] for i in range(self.k)]
+            kwargs = {'method':  'Nelder-Mead', 'bounds': [(0, 1)] * (self.k - 1),
+                      'options': {'initial_simplex': initial_simplex}}
+            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
+
         duration = time.perf_counter() - start
 
         if hasattr(solution, 'success') and not solution.success:
@@ -87,27 +98,54 @@ class Optimizer(Generic[T]):
                         solution.message)
             results = None, (math.inf, None)
         else:
-            f, item = self.score_params(solution.x)
+            f, item = self.score_params(tuple(solution.x))
             assert f == solution.fun
             results = item, (f, solution.x)
             LOGGER.info("[%s]: Success in %1.2fs using %d evaluations: %s -> %s -> %1.3f",
                         self.name, duration, solution.nfev, _pretty(solution.x), item, f)
 
-        LOGGER.debug("Optimizer cache info = %s", str(_score.cache_info()).replace('CacheInfo', ''))
-        _score.cache_clear()
+        if hasattr(_score, 'cache_info'):
+            LOGGER.debug("Optimizer cache info = %s", str(_score.cache_info()).replace('CacheInfo', ''))
+            _score.cache_clear()
 
         return results
 
 
-def divide_space(x: [float], width: int) -> [int]:
-    """ Utility to divide up space according to the parameters """
-    t = width / sum(x)
-    result = [round(v * t) for v in x]
+def divide_space(x: [float], total: int, minval: int) -> Tuple[int]:
+    """
+        Maps parameters to integer values that sum to a given total
+
+        :param [float] x: non-negative parameters
+        :type float total: the resulting values will sum to this
+        :param float minval: A value of zero maps to this
+        :return: an array of integers, all at least 'min' size, that sum to the total
+    """
+
+    k = len(x)
+
+    wt_sum = sum(x)
+    if wt_sum == 0:
+        # If all zeros, treat as all equal
+        return divide_space((0.5,) * k, total, minval)
+
+    if minval * k > total:
+        raise ValueError("Combination of minimum (%s) and total (%s) impossible for k=%d" % (minval, total, k))
+    if any(v < 0 for v in x):
+        raise ValueError("Input data contained a negative value")
+
+    adjusted_total = int(total) - minval * k
+    t = adjusted_total / wt_sum
+
+    result = [math.floor(v * t + minval) for v in x]
 
     # Adjust for round-off error
-    err = width - sum(result)
-    result[0] += err
-    return result
+    err = int(total) - sum(result)
+    if err > 0:
+        # Sort into indices that most need fixing
+        for i in range(err):
+            result[i] += 1
+
+    return tuple(result)
 
 
 @lru_cache(maxsize=1024)
@@ -119,5 +157,10 @@ def _pretty(x: [float]) -> str:
     return '[' + ", ".join(["%1.3f" % v for v in x]) + ']'
 
 
-def _params_invalid(x: Tuple[float]) -> float:
-    return sum(max(0.0, -v) ** 2 + max(0.0, v - 1.0) ** 2 for v in x)
+def params_to_x(params: Iterable[float]) -> (Tuple[float], float):
+    total = sum(params)
+    err = max(0.0, total - 1.0) + sum(max(0.0, -v) ** 2 for v in params)
+    if err > 0:
+        return None, err
+
+    return tuple([1.0 - total] + list(params)), 0

@@ -49,56 +49,56 @@ def test_paragraph_on_one_line(simple, pdf):
     defined = Rect(left=0, top=0, width=150, height=40)
     p = PlacedFlowableContent(simple, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=27, surplus_height=28, bad_breaks=0, ok_breaks=0)
+    assert p._error == PlacementError(surplus_width=27, bad_breaks=0, ok_breaks=0)
 
 
 def test_paragraph_which_wraps_once(simple, pdf):
     defined = Rect(left=0, top=0, width=80, height=40)
     p = PlacedFlowableContent(simple, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=16, surplus_height=16, bad_breaks=0, ok_breaks=1)
+    assert p._error == PlacementError(surplus_width=16, bad_breaks=0, ok_breaks=1)
 
 
 def test_paragraph_which_wraps_a_lot(simple, pdf):
     defined = Rect(left=0, top=0, width=30, height=40)
     p = PlacedFlowableContent(simple, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=1, surplus_height=-20, bad_breaks=2, ok_breaks=2)
+    assert p._error == PlacementError(surplus_width=1, bad_breaks=2, ok_breaks=2)
 
 
 def test_paragraph_which_wraps_badly(simple, pdf):
     defined = Rect(left=0, top=0, width=24, height=40)
     p = PlacedFlowableContent(simple, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=1, surplus_height=-32, bad_breaks=5, ok_breaks=0)
+    assert p._error == PlacementError(surplus_width=1, bad_breaks=5, ok_breaks=0)
 
 
 def test_styled_paragraph_on_one_line(styled, pdf):
     defined = Rect(left=0, top=0, width=150, height=40)
     p = PlacedFlowableContent(styled, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=25, surplus_height=20, bad_breaks=0, ok_breaks=0)
+    assert p._error == PlacementError(surplus_width=25, bad_breaks=0, ok_breaks=0)
 
 
 def test_styled_paragraph_which_wraps_once(styled, pdf):
     defined = Rect(left=0, top=0, width=80, height=40)
     p = PlacedFlowableContent(styled, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=16, surplus_height=0, bad_breaks=0, ok_breaks=1)
+    assert p._error == PlacementError(surplus_width=16,bad_breaks=0, ok_breaks=1)
 
 
 def test_styled_paragraph_which_wraps_a_lot(styled, pdf):
     defined = Rect(left=0, top=0, width=30, height=40)
     p = PlacedFlowableContent(styled, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=1, surplus_height=-60, bad_breaks=2, ok_breaks=1)
+    assert p._error == PlacementError(surplus_width=1, bad_breaks=2, ok_breaks=1)
 
 
 def test_styled_paragraph_which_wraps_badly(styled, pdf):
     defined = Rect(left=0, top=0, width=24, height=40)
     p = PlacedFlowableContent(styled, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=1, surplus_height=-80, bad_breaks=3, ok_breaks=0)
+    assert p._error == PlacementError(surplus_width=1, bad_breaks=3, ok_breaks=0)
 
 
 def test_paragraph_which_wraps_because_of_newline(pdf):
@@ -106,7 +106,7 @@ def test_paragraph_which_wraps_because_of_newline(pdf):
     defined = Rect(left=0, top=0, width=200, height=40)
     p = PlacedFlowableContent(simple, defined, pdf)
     assert p.requested == defined
-    assert p._error == PlacementError(surplus_width=90, surplus_height=16, bad_breaks=0, ok_breaks=0)
+    assert p._error == PlacementError(surplus_width=90, bad_breaks=0, ok_breaks=0)
 
 
 def test_rectangle(pdf):
@@ -119,9 +119,13 @@ def test_group(simple, styled, pdf):
     simple_placed = PlacedFlowableContent(simple, Rect(left=0, top=40, width=80, height=40), pdf)
     styled_placed = PlacedFlowableContent(styled, Rect(left=0, top=5, width=24, height=40), pdf)
 
-    g = PlacedGroupContent([simple_placed, styled_placed], Rect(left=0, top=0, right=100, bottom=100), pdf)
+    g = PlacedGroupContent([simple_placed, styled_placed], Rect(left=0, top=0, right=100, bottom=100))
     assert g.actual == Rect(left=0, top=5, right=64, bottom=125)
-    assert g._error == PlacementError(surplus_width=36, surplus_height=-20, ok_breaks=1, bad_breaks=3)
+    assert g.error_from_variance(1) == 0
+    assert g.error_from_size(1, 0) == 0
+    assert g.error_from_size(0, 1) == 0
+    assert g.error_from_breaks(1, 0) == 3
+    assert g.error_from_breaks(0, 1) == 1
 
 
 def _show(p: PlacedContent, pdf: PDF):
@@ -134,24 +138,23 @@ def _show(p: PlacedContent, pdf: PDF):
 
 
 def test_table_in_plenty_of_space(table, pdf):
+    pdf = PDF("/tmp/killme.pdf", dict(), (620, 620), False)
     p = PlacedFlowableContent(table, Rect(left=10, top=10, width=400, height=100), pdf)
-    assert p._error == PlacementError(surplus_width=100, surplus_height=100 - 20 - 12 - 4 * 5,
-                                       bad_breaks=0,ok_breaks=0)
+    _show(p, pdf)
+    assert p._error == PlacementError(surplus_width=100, bad_breaks=0, ok_breaks=0)
 
 
 def test_table_with_one_wraps(table, pdf):
     p = PlacedFlowableContent(table, Rect(left=10, top=10, width=280, height=100), pdf)
-    assert p._error == PlacementError(surplus_width=12, surplus_height=100 - 20 - 2 * 12 - 4 * 5,
-                                       bad_breaks=0,ok_breaks=1)
+    assert p._error == PlacementError(surplus_width=12, bad_breaks=0, ok_breaks=1, internal_variance=2)
+
 
 def test_table_with_several_wraps(table, pdf):
     p = PlacedFlowableContent(table, Rect(left=10, top=10, width=180, height=100), pdf)
-    assert p._error == PlacementError(surplus_width=3, surplus_height=100 - 2*20 - 2 * 12 - 4 * 5,
-                                       bad_breaks=0,ok_breaks=3)
+    assert p._error == PlacementError(surplus_width=3,bad_breaks=0, ok_breaks=3)
 
-def test_table_with_terrible_wraps(table):
-    pdf = PDF("/tmp/killme.pdf", dict(), (620, 620), False)
+
+
+def test_table_with_terrible_wraps(table, pdf):
     p = PlacedFlowableContent(table, Rect(left=10, top=10, width=40, height=100), pdf)
-    _show(p, pdf)
-    assert p._error == PlacementError(surplus_width=-49, surplus_height=-68,
-                                       bad_breaks=0,ok_breaks=3)
+    assert p._error == PlacementError(surplus_width=0, bad_breaks=0, ok_breaks=9)
