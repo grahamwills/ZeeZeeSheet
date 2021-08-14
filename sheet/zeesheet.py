@@ -1,13 +1,12 @@
 from __future__ import annotations
+
 import subprocess
 from pathlib import Path
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-from sheet import common
-from sheet import pdf
-from sheet import reader
+from sheet import common, pdf, reader
 from sheet.layout.sheet import layout_sheet
 from sheet.pdf import build_font_choices
 
@@ -30,18 +29,17 @@ def show(file:str):
     subprocess.run(['open', out], check=True)
 
 
-
-
 if __name__ == '__main__':
     # Read
     install()
 
-    # show('../data/ethik.rst')
-    # show('../data/grumph.rst')
-    # show('../data/mouse.rst')
-    # show('../data/luna.rst')
-
-    show('../data/test.rst')
+    if True:
+        show('../data/ethik.rst')
+        show('../data/grumph.rst')
+        show('../data/mouse.rst')
+        show('../data/luna.rst')
+    else:
+        show('../data/test.rst')
 
 
 

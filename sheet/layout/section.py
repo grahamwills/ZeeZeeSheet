@@ -61,9 +61,9 @@ class ColumnOptimizer(Optimizer):
         column_bounds = [c.actual for c in columns]
         max_height = max(c.height for c in column_bounds)
 
-        stddev = statistics.stdev(c.height for c in column_bounds)
-        breaks = sum(c.error_from_breaks(100, 5) for c in columns)
-        fit = sum(c.error_from_size(1, 0.1) for c in columns)
+        stddev = statistics.stdev(c.height for c in column_bounds) / 10
+        breaks = sum(c.error_from_breaks(30, 3) for c in columns)
+        fit = sum(c.error_from_size(10, 0.01) for c in columns)
         var = sum(c.error_from_variance(0.1) for c in columns)
 
         if LOGGER.getEffectiveLevel() >= logging.FINE:
@@ -72,7 +72,9 @@ class ColumnOptimizer(Optimizer):
                             len(c.group), c.actual.width, c.actual.height,
                             c.error_from_breaks(20, 1), c.error_from_size(1, 0.1), c.error_from_variance(0.1))
 
-        score = max_height + breaks + fit + stddev + var
+        # score = max_height + breaks + fit + stddev + var
+
+        score = breaks + fit + max_height + stddev
 
         LOGGER.debug("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
                      score, max_height, breaks, fit, stddev, var)
@@ -194,7 +196,8 @@ def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, eq
         return PlacedGroupContent(columns, bounds)
     else:
         LOGGER.info("Allocating %d items in %d unequal columns: %s", len(placeables), k, bounds)
-        columns, (score, div) = columns_optimizer.run()
+        columns, (score, div) = columns_optimizer.run(method='nelder-meade')
         widths = columns_optimizer.vector_to_widths(div)
         LOGGER.info("Allocation: %s -> %1.3f", widths, score)
+        columns_optimizer.score(columns)
         return PlacedGroupContent(columns, bounds)

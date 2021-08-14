@@ -49,7 +49,7 @@ loggers:
     propagate: no
 
   sheet.layout.section:
-    level: INFO
+    level: DEBUG
     handlers: [ all, file ]
     propagate: no
 

@@ -76,7 +76,6 @@ class Optimizer(Generic[T]):
         kwargs = {'method': 'COBYLA', 'constraints': {'type': 'ineq', 'fun': lambda p: params_to_x(p)[1]}}
         LOGGER.info("[%s] Solving with %s, init=%s", self.name, method, _pretty(x0))
 
-
         start = time.perf_counter()
 
         if method == 'basinhopping':
@@ -86,7 +85,8 @@ class Optimizer(Generic[T]):
         elif method == 'COBYLA':
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
         else:
-            initial_simplex = [[int(j == i) for j in range(self.k - 1)] for i in range(self.k)]
+            lo = 1 / 3 / self.k
+            initial_simplex = [[2/3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
             kwargs = {'method':  'Nelder-Mead', 'bounds': [(0, 1)] * (self.k - 1),
                       'options': {'initial_simplex': initial_simplex}}
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
