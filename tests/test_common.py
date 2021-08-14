@@ -1,4 +1,4 @@
-from common import Rect
+from sheet.common import Rect
 
 
 def test_modify_horizontal():

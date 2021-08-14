@@ -13,7 +13,6 @@ Heavenly Tumbleweed
 
 
 .. image:: data/images/Heavenly_Tumbleweed.jpg
-   :width: 150
 ..
 
 

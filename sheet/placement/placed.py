@@ -126,7 +126,7 @@ class PlacedFlowableContent(PlacedContent):
         self.unused_width = self._unused_requested_width()
 
     def _init_table(self, table: Table):
-        sum_bad, sum_ok, unused = _table_info(table)
+        sum_bad, sum_ok, unused = table_info(table)
         self.actual = self.requested.resize(width=table._width, height=table._height)
         self.ok_breaks = sum_ok
         self.bad_breaks = sum_bad
@@ -134,7 +134,7 @@ class PlacedFlowableContent(PlacedContent):
         self.unused_width = max(int(sum(unused)), self._unused_requested_width())
 
     def _init_paragraph(self, p: Paragraph):
-        bad_breaks, ok_breaks, unused = _line_info(p)
+        bad_breaks, ok_breaks, unused = line_info(p)
         if p.style.alignment == TA_JUSTIFY or p.style.alignment == TA_CENTER:
             self.actual = self.requested.resize(width=math.ceil(self.requested.width), height=math.ceil(p.height))
         else:
@@ -258,7 +258,7 @@ class PlacedGroupContent(PlacedContent):
         return PlacedGroupContent(group, self.requested, actual=self.actual)
 
 
-def _table_info(table):
+def table_info(table):
     """ Calculate breaks and unused space """
     cells = table._cellvalues
     ncols = max(len(row) for row in cells)
@@ -275,11 +275,11 @@ def _table_info(table):
         if not span or not cell:
             continue
         if isinstance(cell[0], Paragraph):
-            bad_breaks, ok_breaks, unused = _line_info(cell[0])
+            bad_breaks, ok_breaks, unused = line_info(cell[0])
             sum_bad += bad_breaks
             sum_ok += ok_breaks
         elif isinstance(cell[0], Table):
-            tbad, tok, tunused = _table_info(cell[0])
+            tbad, tok, tunused = table_info(cell[0])
             sum_bad += tbad
             sum_ok += tok
             unused = sum(tunused)
@@ -294,12 +294,12 @@ def _table_info(table):
     return sum_bad, sum_ok, min_unused
 
 
-def _line_info(p):
+def line_info(p):
     """ Calculate line break info for a paragraph"""
     frags = p.blPara
     if frags.kind == 0:
         unused = min(entry[0] for entry in frags.lines)
-        bad_breaks = sum(isinstance(c, _SplitWord) for entry in frags.lines for c in entry[1])
+        bad_breaks = sum(type(c) == _SplitWord for entry in frags.lines for c in entry[1])
         ok_breaks = len(frags.lines) - 1 - bad_breaks
         LOGGER.fine("Fragments = " + " | ".join(str(c) + ":" + type(c).__name__
                                                 for entry in frags.lines for c in entry[1]))

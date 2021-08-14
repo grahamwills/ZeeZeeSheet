@@ -7,7 +7,7 @@ from typing import Callable, Optional, Tuple
 
 from reportlab.platypus import Image
 
-from optimize import Optimizer, divide_space
+from sheet.optimize import Optimizer, divide_space
 from sheet import common
 from sheet.common import Margins, Rect
 from sheet.layout.table import key_values_layout, one_line_flowable, table_layout

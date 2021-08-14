@@ -95,7 +95,7 @@ class PDF(canvas.Canvas):
         except:
             LOGGER.error("Error trying to draw %s into %s", flowable.__class__.__name__, bounds)
 
-    def make_paragraph(self, run: Run, align=None, size_factor=1.0):
+    def make_paragraph(self, run: Run, align=None, size_factor=1.0) -> Paragraph:
         style = self.style(run.base_style())
 
         align = align or style.align
@@ -111,8 +111,10 @@ class PDF(canvas.Canvas):
         # Add spaces between check boxes and other items
         items = []
         for e in run.items:
+            # Strangely, a span containing a non-breaking space allows braks to happen between images,
+            # whereas simple spaces do not
             if e is not run.items[0] and not e.value[0] in ":;-=":
-                items.append(' ')
+                items.append('&nbsp;')
             items.append(_element_to_html(e, self, style))
         return Paragraph("".join(items), pStyle)
 

@@ -29,16 +29,19 @@ def show(file:str):
     layout_sheet(sheet, context)
     subprocess.run(['open', out], check=True)
 
+
+
+
 if __name__ == '__main__':
     # Read
     install()
 
-    show('../data/ethik.rst')
-    show('../data/grumph.rst')
-    show('../data/mouse.rst')
-    show('../data/luna.rst')
+    # show('../data/ethik.rst')
+    # show('../data/grumph.rst')
+    # show('../data/mouse.rst')
+    # show('../data/luna.rst')
 
-    # show('../data/test.rst')
+    show('../data/test.rst')
 
 
 

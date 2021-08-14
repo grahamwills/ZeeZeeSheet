@@ -79,7 +79,7 @@ class Run:
     def __str__(self):
         return " ".join(str(e) for e in self.items)
 
-    def add(self, txt, style, modifiers):
+    def add(self, txt, style, modifiers) -> Run:
         # Search for all the special codes
         parts = re.split(r'[ \t]*(\||--|\[[XO ]?])[ \t]*', txt)
         for p in parts:
@@ -93,6 +93,7 @@ class Run:
                 self.items.append(Element(ElementType.CHECKBOX, value=v, style=style))
             elif p:
                 self.items.append(Element(ElementType.TEXT, value=p, style=style, modifiers=modifiers))
+        return self
 
     def valid(self):
         return len(self.items) > 0

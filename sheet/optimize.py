@@ -100,7 +100,7 @@ class Optimizer(Generic[T]):
         else:
             f, item = self.score_params(tuple(solution.x))
             assert f == solution.fun
-            results = item, (f, solution.x)
+            results = item, (f, params_to_x(solution.x)[0])
             LOGGER.info("[%s]: Success in %1.2fs using %d evaluations: %s -> %s -> %1.3f",
                         self.name, duration, solution.nfev, _pretty(solution.x), item, f)
 

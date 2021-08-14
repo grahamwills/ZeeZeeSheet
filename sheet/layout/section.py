@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import logging
+import math
 import statistics
-from functools import lru_cache
 from typing import List, NamedTuple, Optional, Tuple
 
-from optimize import Optimizer, divide_space
 from sheet.common import Rect, configured_logger
+from sheet.optimize import Optimizer, divide_space
 from sheet.placement.placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
@@ -29,7 +29,7 @@ class LayoutDetails(NamedTuple):
         return self.placed.actual.height
 
 
-def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[PlacedContent]:
+def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[PlacedGroupContent]:
     if bounds.width < MIN_COLUMN_WIDTH:
         LOGGER.warn("Column of width %f was smaller than the minimum of %d", bounds.width, MIN_COLUMN_WIDTH)
         return None
@@ -37,9 +37,9 @@ def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[Pl
     current = bounds.top
     contents = []
 
-    for item in placeables:
+    for place in placeables:
         available = Rect(top=current, left=bounds.left, right=bounds.right, bottom=bounds.bottom)
-        p = item.place(available)
+        p = place(available)
         contents.append(p)
         current = p.actual.bottom + padding
 
@@ -62,7 +62,7 @@ class ColumnOptimizer(Optimizer):
         max_height = max(c.height for c in column_bounds)
 
         stddev = statistics.stdev(c.height for c in column_bounds)
-        breaks = sum(c.error_from_breaks(20, 1) for c in columns)
+        breaks = sum(c.error_from_breaks(100, 5) for c in columns)
         fit = sum(c.error_from_size(1, 0.1) for c in columns)
         var = sum(c.error_from_variance(0.1) for c in columns)
 
@@ -118,6 +118,14 @@ class ColumnAllocationOptimizer(ColumnOptimizer):
         return divide_space(x, len(self.placeables), 1)
 
 
+def add_recursive(possibilities, idx, k, current, current_sum, N):
+    if idx == k - 1:
+        possibilities.append(current + [N - current_sum])
+    else:
+        for i in range(1, N - current_sum - (k - idx - 2)):
+            add_recursive(possibilities, idx + 1, k, current + [i], current_sum + i, N)
+
+
 class ColumnWidthOptimizer(ColumnOptimizer):
     available_width: int
 
@@ -130,6 +138,24 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         counts[0] += len(self.placeables) - sum(counts)
         return self.place_all(widths, tuple(counts))
 
+    def brute_allocation(self, widths: Tuple[int]) -> (List[PlacedContent], float, List[int]):
+        k = self.k
+        N = len(self.placeables)
+
+        possibilities = []
+        add_recursive(possibilities, idx=0, k=k, current=[], current_sum=0, N=N)
+
+        best = None, math.inf, None
+        for alloc in possibilities:
+            columns = self.place_all(widths, alloc)
+            s = self.score(columns)
+            if s < best[1]:
+                best = columns, s, alloc
+
+        LOGGER.debug("Brute force allocation widths=%s: %s -> %1.3f", widths, best[2], best[1])
+        return best
+
+
     def make(self, x: Tuple[float]) -> Optional[List[PlacedContent]]:
         try:
             widths = self.vector_to_widths(x)
@@ -137,19 +163,22 @@ class ColumnWidthOptimizer(ColumnOptimizer):
             LOGGER.error("Not enough space for columns", exc_info=True)
             return None
 
-        if len(self.placeables) == self.k:
-            return self.place_all(widths, tuple([1] * self.k))
+        if len(self.placeables) < 10:
+            result, score, div = self.brute_allocation(widths)
+            LOGGER.info("For widths=%s, best counts=%s -> %1.3f", widths, div, score)
+            return result
         else:
             alloc = ColumnAllocationOptimizer(self.k, self.placeables, self.outer, widths, self.padding)
             result, (score, div) = alloc.run()
-            LOGGER.debug("For widths=%s, best counts=%s -> %1.3f", widths, alloc.vector_to_counts(div), score)
+            LOGGER.info("For widths=%s, best counts=%s -> %1.3f", widths, alloc.vector_to_counts(div), score)
             return result
+
 
     def vector_to_widths(self, x):
         return divide_space(x, self.available_width, MIN_COLUMN_WIDTH)
 
 
-def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, equal=False) -> PlacedContent:
+def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, equal=False) -> PlacedGroupContent:
     # Limit column count to child count -- no empty columns
     k = min(int(columns), len(placeables))
     if k == 1:
@@ -166,7 +195,6 @@ def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, eq
     else:
         LOGGER.info("Allocating %d items in %d unequal columns: %s", len(placeables), k, bounds)
         columns, (score, div) = columns_optimizer.run()
-        columns_optimizer.score(columns)
         widths = columns_optimizer.vector_to_widths(div)
         LOGGER.info("Allocation: %s -> %1.3f", widths, score)
         return PlacedGroupContent(columns, bounds)

@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import functools
-from copy import copy, deepcopy
+from copy import copy
 from typing import List, Union
 
-from placement.placed import PlacedContent
 from sheet import common
 from sheet.common import Margins, Rect, configured_logger
 from sheet.layout.block import layout_block
 from sheet.layout.section import stack_in_columns
 from sheet.model import Block, Section, Sheet
 from sheet.pdf import PDF
+from sheet.placement.placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 
@@ -46,8 +46,11 @@ class BlockPlacement:
     def draw(self):
         self.placed.draw()
 
+    def __call__(self, bounds: Rect) -> PlacedContent:
+        return self.place(bounds)
 
-class SectionPlacement:
+
+class _SectionPlacement:
     target: Union[Section, Sheet]
     children: List
     padding: int
@@ -70,25 +73,7 @@ class SectionPlacement:
         return self.placed
 
     def draw(self):
-        for c in self.children:
-            c.draw()
-
-    def draw_sheet(self, pdf):
-        page_index = 1
-        margin = self.target.margin
-        cumulative_offset = 0
-        for c in self.children:
-            child_bounds = c.placed.actual
-            if child_bounds.bottom > cumulative_offset + self.target.pagesize[1] - margin:
-                pdf.showPage()
-                page_index += 1
-                dy = child_bounds.top - margin
-                pdf.translate(dx=0, dy=dy)
-                cumulative_offset += dy
-            c.draw()
-
-        pdf.showPage()
-        pdf.save()
+        self.placed.draw()
 
 
 def choose_method(method: common.Command):
@@ -103,11 +88,56 @@ def make_placement(target: Union[Block, Section, Sheet], pdf: PDF):
         return BlockPlacement(target, pdf)
     else:
         children = [make_placement(item, pdf) for item in target.content]
-        return SectionPlacement(target, children)
+        return _SectionPlacement(target, children)
+
+
+def analyze_placement(p: PlacedContent, depth=0):
+    print('..' * depth, p)
+    print('..' * depth, "  PLACE -> bad=%s, ok=%s, unused=%s, var=%s" %
+          (p.bad_breaks, p.ok_breaks, p.unused_width, p.internal_variance))
+    try:
+        for c in p.group:
+            analyze_placement(c, depth + 1)
+    except:
+        pass
+
+
+def place_section(bounds: Rect, section: Section, pdf: PDF) -> PlacedContent:
+    children = [BlockPlacement(block, pdf) for block in section.content]
+    placed = stack_in_columns(bounds, children, section.padding, **section.layout_method.options)
+    LOGGER.info("Placed %s", section)
+    if hasattr(make_block_layout, 'cache_info'):
+        LOGGER.debug("Cache info = %s", make_block_layout.cache_info())
+        make_block_layout.cache_clear()
+    return placed
+
+
+
+def place_sheet(sheet: Sheet, bounds: Rect, pdf: PDF) -> PlacedGroupContent:
+    children = [functools.partial(place_section, section=section, pdf=pdf) for section in sheet.content]
+    return stack_in_columns(bounds, children, sheet.padding)
+
+
+def draw_sheet(sheet: Sheet, sections: List[PlacedContent], pdf):
+    page_index = 1
+    margin = sheet.margin
+    cumulative_offset = 0
+    for section in sections:
+        section_bounds = section.actual
+        if section_bounds.bottom > cumulative_offset + sheet.pagesize[1] - margin:
+            pdf.showPage()
+            page_index += 1
+            dy = section_bounds.top - margin
+            pdf.translate(dx=0, dy=dy)
+            cumulative_offset += dy
+        section.draw()
+
+    pdf.showPage()
+    pdf.save()
 
 
 def layout_sheet(sheet: Sheet, pdf: PDF):
     outer = Rect(left=0, top=0, right=sheet.pagesize[0], bottom=sheet.pagesize[1]) - Margins.all_equal(sheet.margin)
-    placement = make_placement(sheet, pdf)
-    placement.place(outer)
-    placement.draw_sheet(pdf)
+    top = place_sheet(sheet, outer, pdf)
+    draw_sheet(sheet, top.group, pdf)
+    # analyze_placement(top)

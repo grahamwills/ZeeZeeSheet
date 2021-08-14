@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from optimize import Optimizer, divide_space
+from sheet.optimize import Optimizer, divide_space
 
 
 def test_multiple_minima_d():

@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
 
-from optimize import Optimizer, divide_space
+from sheet.optimize import Optimizer, divide_space
 from sheet import common
 from sheet.common import Rect
 from sheet.model import Block, Element, ElementType, Run, Style
@@ -19,7 +19,7 @@ def _add_run(elements: [Element], row: [], pdf: PDF, align: str):
         row.append(para)
 
 
-def make_row_from_run(run: [Element], pdf: PDF, width: int, padding: int) -> [Flowable]:
+def make_row_from_run(run: Run, pdf: PDF, width: int, padding: int) -> [Flowable]:
     items = run.items
 
     spacer_count = sum(e.which == ElementType.SPACER for e in items)

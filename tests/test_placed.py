@@ -1,13 +1,13 @@
-import subprocess
-
 import pytest
+from colour import Color
 from reportlab.lib import colors
 from reportlab.platypus import Paragraph, Table, TableStyle
 
-from model import Style
+import zeesheet
 from sheet.common import Rect
+from sheet.model import Run, Style
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
+from sheet.placement.placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, line_info
 
 
 @pytest.fixture
@@ -66,8 +66,8 @@ def test_paragraph_which_wraps_once(simple, pdf):
 def test_paragraph_which_wraps_a_lot(simple, pdf):
     defined = Rect(left=0, top=0, width=30, height=40)
     p = PlacedFlowableContent(simple, defined, pdf)
-    assert p.bad_breaks == 2
-    assert p.ok_breaks == 2
+    assert p.bad_breaks == 1
+    assert p.ok_breaks == 3
     assert p.unused_width == 1
     assert p.internal_variance == 0
 
@@ -75,8 +75,8 @@ def test_paragraph_which_wraps_a_lot(simple, pdf):
 def test_paragraph_which_wraps_badly(simple, pdf):
     defined = Rect(left=0, top=0, width=24, height=40)
     p = PlacedFlowableContent(simple, defined, pdf)
-    assert p.bad_breaks == 5
-    assert p.ok_breaks == 0
+    assert p.bad_breaks == 3
+    assert p.ok_breaks == 2
     assert p.unused_width == 1
     assert p.internal_variance == 0
 
@@ -160,17 +160,18 @@ def test_group_with_space_horizontal(simple, styled, pdf):
     assert gp.unused_width == 35 + b.actual.left - a.actual.right
     assert gp.internal_variance == 0
 
+
 def test_group_with_space_vertical(simple, styled, pdf):
     a = PlacedFlowableContent(simple, Rect(left=10, top=20, right=200, height=40), pdf)
     b = PlacedFlowableContent(styled, Rect(left=40, top=50, right=200, height=40), pdf)
 
     gp = PlacedGroupContent([a, b], Rect(left=0, top=0, right=200, bottom=100))
-    _show(gp, pdf)
 
     assert gp.bad_breaks == 0
     assert gp.ok_breaks == 0
-    assert gp.unused_width == 77
+    assert gp.unused_width == 56
     assert gp.internal_variance == 0
+
 
 def test_group_with_space_vertical_second(simple, styled, pdf):
     a = PlacedFlowableContent(simple, Rect(left=10, top=20, right=200, height=40), pdf)
@@ -181,7 +182,7 @@ def test_group_with_space_vertical_second(simple, styled, pdf):
 
     assert gp.bad_breaks == 0
     assert gp.ok_breaks == 0
-    assert gp.unused_width == 56
+    assert gp.unused_width == 23
     assert gp.internal_variance == 0
 
 
@@ -209,26 +210,38 @@ def test_table_with_several_wraps(table, pdf):
     assert p.internal_variance == 0
 
 
-
 def test_table_with_terrible_wraps(table, pdf):
     p = PlacedFlowableContent(table, Rect(left=10, top=10, width=40, height=100), pdf)
+
     assert p.bad_breaks == 0
     assert p.ok_breaks == 9
     assert p.unused_width == 0
     assert p.internal_variance == 0
 
-def _show(p: PlacedContent, pdf: PDF):
 
-    pdf.setStrokeColorRGB(0,0,0, 0.2)
-    pdf.setLineWidth(0.25)
-    for v in range(0,1000, 10):
-        pdf.line(v, 0, v, 1000)
-        pdf.line(0, v, 1000,v)
+def test_line_info():
+    zeesheet.install()
+    style = Style(align='left', font='Gotham', size=10, color=Color('black'))
+    pdf = PDF("/tmp/killme.pdf", {'default': style}, (500, 1000), True)
+
+    run = Run().add("basic test", 'default', '')
+
+    p = pdf.make_paragraph(run)
+    p.wrapOn(pdf, 10, 100)
+    bad_breaks, ok_breaks, unused = line_info(p)
+    assert bad_breaks == 4
+    assert ok_breaks == 1
 
 
-    pdf.setFillColorRGB(1, 0, 0, 0.2)
-    pdf.rect(p.requested.left, pdf.page_height - p.requested.bottom, p.requested.width, p.requested.height, 0, 1)
-    p.draw()
-    pdf.showPage()
-    pdf.save()
-    subprocess.run(['open', "/tmp/killme.pdf"], check=True)
+def test_line_info_for_boxes():
+    zeesheet.install()
+    style = Style(align='left', font='Gotham', size=10, color=Color('black'))
+    pdf = PDF("/tmp/killme.pdf", {'default': style}, (500, 1000), True)
+
+    run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default', '')
+
+    p = pdf.make_paragraph(run)
+    p.wrapOn(pdf, 20, 100)
+    bad_breaks, ok_breaks, unused = line_info(p)
+    assert bad_breaks == 0
+    assert ok_breaks == 7
