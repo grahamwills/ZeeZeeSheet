@@ -100,9 +100,6 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
     def valid(self) -> bool:
         return self.left <= self.right and self.top <= self.bottom
 
-    def round(self) -> Rect:
-        return Rect(left=round(self.left), right=round(self.right), top=round(self.top), bottom=round(self.bottom))
-
     def move(self, *, dx=0, dy=0) -> Rect:
         return Rect(left=self.left + dx, top=self.top + dy, width=self.width, height=self.height)
 
@@ -122,11 +119,11 @@ def _consistent(low, high, size, description):
     if n > 1:
         raise ValueError("Must specify at least two arguments of: " + description)
     if low is None:
-        return high - size, high, size
+        return round(high) - round(size), round(high), round(size)
     if high is None:
-        return low, low + size, size
+        return round(low),  round(low) + round(size), round(size)
     if size is None:
-        return low, high, high - low
+        return  round(low), round(high), round(high) -  round(low)
 
 
 # LOGGING #######################################################################################################

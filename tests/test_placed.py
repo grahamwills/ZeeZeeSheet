@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 import pytest
 from colour import Color
 from reportlab.lib import colors
@@ -7,7 +9,8 @@ import zeesheet
 from sheet.common import Rect
 from sheet.model import Run, Style
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, line_info
+from sheet.placement.placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, \
+    calculate_unused_width_for_group, line_info
 
 
 @pytest.fixture
@@ -169,7 +172,7 @@ def test_group_with_space_vertical(simple, styled, pdf):
 
     assert gp.bad_breaks == 0
     assert gp.ok_breaks == 0
-    assert gp.unused_width == 56
+    assert gp.unused_width == 61
     assert gp.internal_variance == 0
 
 
@@ -182,7 +185,7 @@ def test_group_with_space_vertical_second(simple, styled, pdf):
 
     assert gp.bad_breaks == 0
     assert gp.ok_breaks == 0
-    assert gp.unused_width == 23
+    assert gp.unused_width == 29
     assert gp.internal_variance == 0
 
 
@@ -245,3 +248,20 @@ def test_line_info_for_boxes():
     bad_breaks, ok_breaks, unused = line_info(p)
     assert bad_breaks == 0
     assert ok_breaks == 7
+
+MockContent = namedtuple('MockContent', 'requested unused_width')
+
+def test_unused_group_of_horizontal():
+    bounds = Rect(left = 100, top=100, right=200, bottom=200)
+
+    a = MockContent(Rect(left=130, top=100, right=170, bottom=200), 17)
+    b = MockContent(Rect(left=180, top=100, right=190, bottom=200), 2)
+    c = MockContent(Rect(left=100, top=100, right=190, bottom=200), 2)
+
+    assert calculate_unused_width_for_group([a], bounds) == 30 + 30 + 17
+    assert calculate_unused_width_for_group([a,b], bounds) == 30 + 10 + 10 + 17 + 2
+    assert calculate_unused_width_for_group([c], bounds) == 10 + 2
+    assert calculate_unused_width_for_group([a,c], bounds) == 10 + 2
+    assert calculate_unused_width_for_group([b,c], bounds) == 10 + 2
+    assert calculate_unused_width_for_group([a,b, c], bounds) == 10 + 2
+

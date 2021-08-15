@@ -70,7 +70,7 @@ class ColumnOptimizer(Optimizer):
             for i, c in enumerate(columns):
                 LOGGER.fine("[%d] n=%d width=%d height=%d breaks=%1.3f fit=%1.3f var=%1.3f", i,
                             len(c.group), c.actual.width, c.actual.height,
-                            c.error_from_breaks(20, 1), c.error_from_size(1, 0.1), c.error_from_variance(0.1))
+                            c.error_from_breaks(30,3), c.error_from_size(10, 1), c.error_from_variance(0.1))
 
         # score = max_height + breaks + fit + stddev + var
 

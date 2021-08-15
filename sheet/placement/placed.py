@@ -74,14 +74,13 @@ class PlacedContent(abc.ABC):
 
     def error_from_size(self, multiplier_bad: float, multiplier_good: float):
         """ Fit to the allocated sapce"""
-        extra = self.requested.width - self.actual.width
-        if extra < 0:
-            return -extra * multiplier_bad
+        if self.unused_width < 0:
+            return -self.unused_width * multiplier_bad
         else:
-            return max(extra, self.unused_width) * multiplier_good
+            return self.unused_width * multiplier_good
 
     def _unused_requested_width(self):
-        return max(0, self.requested.width - self.actual.width)
+        return self.requested.width - self.actual.width
 
 
 class PlacedFlowableContent(PlacedContent):
@@ -122,12 +121,14 @@ class PlacedFlowableContent(PlacedContent):
         self.pdf.draw_flowable(self.flowable, self.actual)
 
     def _init_image(self, image: Image):
-        self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
+        rect = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
+        self.actual = rect
         self.unused_width = self._unused_requested_width()
 
     def _init_table(self, table: Table):
         sum_bad, sum_ok, unused = table_info(table)
-        self.actual = self.requested.resize(width=table._width, height=table._height)
+        rect = self.requested.resize(width=table._width, height=table._height)
+        self.actual = rect
         self.ok_breaks = sum_ok
         self.bad_breaks = sum_bad
         self.internal_variance = round(max(unused) - min(unused))
@@ -136,10 +137,12 @@ class PlacedFlowableContent(PlacedContent):
     def _init_paragraph(self, p: Paragraph):
         bad_breaks, ok_breaks, unused = line_info(p)
         if p.style.alignment == TA_JUSTIFY or p.style.alignment == TA_CENTER:
-            self.actual = self.requested.resize(width=math.ceil(self.requested.width), height=math.ceil(p.height))
+            rect = self.requested.resize(width=math.ceil(self.requested.width), height=math.ceil(p.height))
+            self.actual = rect
         else:
-            self.actual = self.requested.resize(width=math.ceil(self.requested.width - unused),
-                                                height=math.ceil(p.height))
+            rect1 = self.requested.resize(width=math.ceil(self.requested.width - unused),
+                                          height=math.ceil(p.height))
+            self.actual = rect1
         self.ok_breaks = ok_breaks
         self.bad_breaks = bad_breaks
         self.unused_width = self._unused_requested_width()
@@ -193,36 +196,15 @@ class PlacedGroupContent(PlacedContent):
         actual = actual or Rect.union(p.actual for p in group)
         super().__init__(requested, actual, group[0].pdf)
         self.group = group
-        self._set_placements()
 
-    def _set_placements(self):
-        # Sort left to right
-        items = sorted(self.group, key=lambda x: x.requested.left + x.actual.left * 0.0001)
-        self.unused_width = 0
+        self.ok_breaks = sum(item.ok_breaks for item in (self.group))
+        self.bad_breaks = sum(item.bad_breaks for item in (self.group))
 
-        # We will scan across the space, keeping track of unused space as we go
-        left, right, unused = -1, 0, 0
-        for item in items:
-            self.ok_breaks += item.ok_breaks
-            self.bad_breaks += item.bad_breaks
-
-            a = item.requested.left
-            b = item.requested.right
-
-            # If there is a clear gap, add that overlap space in and close the gap
-            if a > right:
-                unused += a - right
-                right = a
-
-            # Add in the unused amount in proportion to non-overlapped item
-            overlap_fraction = (right - a) / (right - left)
-            self.unused_width += (1 - overlap_fraction) * unused
-
-            # Update the scan to this item
-            left, right, unused = a, b, item.unused_width
-
-        # Handle any left overs
-        self.unused_width = round(self.unused_width + (self.requested.right - right) + unused)
+        # If not enough room, that's all that matters
+        if self.requested.width < self.actual.width:
+            self.unused_width = self.requested.width - self.actual.width
+        else:
+            self.unused_width = calculate_unused_width_for_group(self.group, self.requested)
 
     def draw(self):
         if self.pdf.debug:
@@ -312,3 +294,40 @@ def line_info(p):
     else:
         raise NotImplementedError()
     return bad_breaks, ok_breaks, unused
+
+
+def _unused_horizontal_strip(group: List[PlacedContent], bounds:Rect):
+    """ Unused space, assuming items horizontally laid out, more or less"""
+    ox = bounds.left
+    # Create an array of bytes that indicate spaces is used
+    used = bytearray(bounds.width)
+    for g in group:
+        d = g.unused_width
+        left = g.requested.left + d // 2
+        right = g.requested.right - d + d // 2
+        for i in range(left - ox, right - ox):
+            used[i] = 1
+    return bounds.width - sum(used)
+
+
+def calculate_unused_width_for_group(group: List[PlacedContent], bounds: Rect) -> int:
+    # Sort vertically by tops
+    items = sorted(group, key=lambda x: x.requested.top)
+
+    unused = bounds.width
+
+    # Scan down the items
+    idx = 0
+    while idx < len(items):
+
+        # Accumualte all the items that overlap the current one
+        across = [items[idx]]
+        lower = items[idx].requested.bottom
+        idx += 1
+        while idx < len(items) and items[idx].requested.top < lower:
+            across.append(items[idx])
+            idx += 1
+        unused = min(unused, _unused_horizontal_strip(items, bounds))
+
+    return  unused
+

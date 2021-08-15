@@ -47,10 +47,10 @@ loggers:
     level: DEBUG
     handlers: [ important, file ]
     propagate: no
-
+˜
   sheet.layout.section:
     level: DEBUG
-    handlers: [ all, file ]
+    handlers: [ important, file ]
     propagate: no
 
   sheet.layout.block:

@@ -113,8 +113,7 @@ class ImagePlacement(Optimizer):
 
     def place_image(self, bounds: Rect):
         im = self.make_image(bounds)
-        w, h = im.wrapOn(self.pdf, bounds.width, bounds.height)
-        return PlacedFlowableContent(im, bounds.resize(width=w, height=h), self.pdf)
+        return PlacedFlowableContent(im, bounds, self.pdf)
 
     def make_image(self, bounds) -> Image:
         im_info = self.block.image

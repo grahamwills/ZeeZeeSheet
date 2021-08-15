@@ -24,7 +24,7 @@ def show(file:str):
     sheet = reader.read_sheet(file)
     # sheet.print()
     out = file.replace('.rst', '.pdf').replace("../data", "../tmp")
-    context = pdf.PDF(out, sheet.styles, sheet.pagesize, debug=False)
+    context = pdf.PDF(out, sheet.styles, sheet.pagesize, debug=True)
     layout_sheet(sheet, context)
     subprocess.run(['open', out], check=True)
 
