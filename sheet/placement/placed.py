@@ -126,7 +126,6 @@ class PlacedFlowableContent(PlacedContent):
     def parent_sized(self, bounds: Rect):
         if isinstance(self.flowable, Image):
             self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
-            LOGGER.error("Setting breaks to represent short image: %d", self.ok_breaks)
 
     def _init_image(self, image: Image):
         rect = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))

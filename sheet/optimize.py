@@ -79,9 +79,9 @@ class Optimizer(Generic[T]):
         start = time.perf_counter()
 
         if method == 'basinhopping':
-            LOGGER.info("[%s] Solving with basinhopping and COBYLA, init=%s", self.name, _pretty(x0))
+            LOGGER.info("[%s] Solving with basinhopping, init=%s", self.name, _pretty(x0))
             solution = scipy.optimize.basinhopping(lambda x: _score(tuple(x), self), x0=x0, seed=13,
-                                                   stepsize=1, niter=10, minimizer_kwargs=kwargs)
+                                                   stepsize=1, niter=10)
         elif method == 'COBYLA':
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
         else:
@@ -148,7 +148,7 @@ def divide_space(x: [float], total: int, minval: int) -> Tuple[int]:
     return tuple(result)
 
 
-@lru_cache(maxsize=1024)
+@lru_cache
 def _score(x: [float], optimizer: Optimizer) -> float:
     return optimizer.score_params(x)[0]
 

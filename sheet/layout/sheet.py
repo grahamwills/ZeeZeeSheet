@@ -31,7 +31,7 @@ def place_section(bounds: Rect, section: Section, pdf: PDF) -> PlacedContent:
     placed = stack_in_columns(bounds, children, section.padding, **section.layout_method.options)
     LOGGER.info("Placed %s", section)
     if hasattr(make_block_layout, 'cache_info'):
-        LOGGER.debug("Cache info = %s", make_block_layout.cache_info())
+        LOGGER.debug("Block Layout Cache info = %s", make_block_layout.cache_info())
         make_block_layout.cache_clear()
     return placed
 

@@ -1,4 +1,5 @@
 from copy import copy
+from functools import lru_cache
 from typing import List, Optional
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
@@ -130,7 +131,7 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
 
     ncols = max(len(row) for row in cells)
     if ncols * 10 >= width:
-        LOGGER.warn("Cannot fit %d columns into a table of width %d", ncols, width)
+        LOGGER.debug("Cannot fit %d columns into a table of width %d", ncols, width)
     elif ncols > 1:
         # Pad short rows and add spans for them
         for i, row in enumerate(cells):
