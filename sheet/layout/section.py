@@ -66,15 +66,13 @@ class ColumnOptimizer(Optimizer):
         fit = sum(c.error_from_size(10, 0.01) for c in columns)
         var = sum(c.error_from_variance(0.1) for c in columns)
 
-        if LOGGER.getEffectiveLevel() >= logging.FINE:
+        if LOGGER.getEffectiveLevel() <= logging.FINE:
             for i, c in enumerate(columns):
-                LOGGER.fine("[%d] n=%d width=%d height=%d breaks=%1.3f fit=%1.3f var=%1.3f", i,
+                LOGGER.fine("[%d] n=%d width=%d height=%d breaks=%1.3f fit=%1.3f", i,
                             len(c.group), c.actual.width, c.actual.height,
-                            c.error_from_breaks(30,3), c.error_from_size(10, 1), c.error_from_variance(0.1))
+                            c.error_from_breaks(30,3), c.error_from_size(10, 0.01))
 
-        # score = max_height + breaks + fit + stddev + var
-
-        score = breaks + fit + max_height + stddev
+        score = max_height + breaks + fit + stddev
 
         LOGGER.debug("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
                      score, max_height, breaks, fit, stddev, var)

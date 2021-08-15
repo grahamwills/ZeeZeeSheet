@@ -64,6 +64,9 @@ class PlacedContent(abc.ABC):
         self.actual = self.actual.move(dx=dx, dy=dy)
         self.requested = self.requested.move(dx=dx, dy=dy)
 
+    def parent_sized(self, bounds: Rect):
+        pass
+
     def error_from_variance(self, multiplier: float):
         """ Internal variance in free space"""
         return multiplier * self.internal_variance
@@ -119,6 +122,11 @@ class PlacedFlowableContent(PlacedContent):
 
     def draw(self):
         self.pdf.draw_flowable(self.flowable, self.actual)
+
+    def parent_sized(self, bounds: Rect):
+        if isinstance(self.flowable, Image):
+            self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
+            LOGGER.error("Setting breaks to represent short image: %d", self.ok_breaks)
 
     def _init_image(self, image: Image):
         rect = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
@@ -206,6 +214,10 @@ class PlacedGroupContent(PlacedContent):
         else:
             self.unused_width = calculate_unused_width_for_group(self.group, self.requested)
 
+        # Inform children of our size
+        for c in group:
+            c.parent_sized(self.requested)
+
     def draw(self):
         if self.pdf.debug:
             self.pdf.saveState()
@@ -222,6 +234,14 @@ class PlacedGroupContent(PlacedContent):
         super().move(dx, dy)
         for p in self.group:
             p.move(dx, dy)
+
+    def parent_sized(self, bounds: Rect):
+        for c in self.group:
+            # If just one child, should fill the parent of this
+            if len(self.group) > 1:
+                c.parent_sized(self.requested)
+            else:
+                c.parent_sized(bounds)
 
     def __getitem__(self, item):
         return self.group[item]
@@ -296,7 +316,7 @@ def line_info(p):
     return bad_breaks, ok_breaks, unused
 
 
-def _unused_horizontal_strip(group: List[PlacedContent], bounds:Rect):
+def _unused_horizontal_strip(group: List[PlacedContent], bounds: Rect):
     """ Unused space, assuming items horizontally laid out, more or less"""
     ox = bounds.left
     # Create an array of bytes that indicate spaces is used
@@ -329,5 +349,4 @@ def calculate_unused_width_for_group(group: List[PlacedContent], bounds: Rect) -
             idx += 1
         unused = min(unused, _unused_horizontal_strip(items, bounds))
 
-    return  unused
-
+    return unused

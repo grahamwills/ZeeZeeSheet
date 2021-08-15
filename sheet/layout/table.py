@@ -140,7 +140,7 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
                 commands.append(('SPAN', (n - 1, i), (-1, i)))
 
         optimizer = TableColumnsOptimizer(cells, TableStyle(commands), width, pdf)
-        placed, _ = optimizer.run()
+        placed, _ = optimizer.run(method='Nelder-Mead')
         if placed:
             return placed.flowable
 
