@@ -12,7 +12,7 @@ Heavenly Tumbleweed
 .. section: stack columns=2
 
 
-.. image:: data/images/Heavenly_Tumbleweed.jpg
+.. image:: Heavenly_Tumbleweed.jpg
 ..
 
 

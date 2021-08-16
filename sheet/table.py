@@ -3,12 +3,12 @@ from typing import List, Optional
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
 
-from sheet.optimize import Optimizer, divide_space
+from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 from sheet import common
 from sheet.common import Rect
 from sheet.model import Block, Element, ElementType, Run, Style
+from sheet.optimize import Optimizer, divide_space
 from sheet.pdf import PDF
-from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 
 LOGGER = common.configured_logger(__name__)
 
@@ -85,7 +85,7 @@ class TableColumnsOptimizer(Optimizer):
     def make(self, x: [float]) -> Optional[PlacedFlowableContent]:
         LOGGER.debug("Trying table with divisions = %s", x)
         try:
-            widths = divide_space(x, self.width, 10)
+            widths = divide_space(x, self.width, 10, granularity=5)
         except ValueError:
             LOGGER.warn("Too little space to fit table")
             return None

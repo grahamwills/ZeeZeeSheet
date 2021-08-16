@@ -98,14 +98,14 @@ class Run:
     def valid(self):
         return len(self.items) > 0
 
-    def base_style(self) -> str:
+    def base_style(self) -> Optional[str]:
         #  Lazy, just use the first
         for item in self.items:
             if item.style:
                 return item.style
         return None
 
-    def fixup(self, parent):
+    def fixup(self):
         self.items = ensure_representable(self.items)
 
 
@@ -153,10 +153,10 @@ class Block:
 
     def fixup(self, parent: Section):
         if self.title:
-            self.title.fixup(self)
+            self.title.fixup()
         if self.content:
             for r in self.content:
-                r.fixup(self)
+                r.fixup()
         elif not self.image:
             if self.title:
                 # Move the title to the content

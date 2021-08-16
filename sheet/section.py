@@ -6,13 +6,13 @@ import statistics
 import time
 from typing import List, Optional, Tuple
 
+from placed import PlacedContent, PlacedGroupContent
 from sheet.common import Rect, configured_logger
 from sheet.optimize import Optimizer, divide_space
-from placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 
-MIN_COLUMN_WIDTH = 10
+MIN_COLUMN_WIDTH = 40
 
 
 def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[PlacedGroupContent]:
@@ -64,7 +64,6 @@ class ColumnOptimizer(Optimizer):
                      score, max_height, breaks, fit, stddev, var)
         return score
 
-    
     def place_all(self, widths: Tuple[int], counts: Tuple[int]) -> List[PlacedContent]:
         LOGGER.debug("Placing with widths=%s, alloc=%s", widths, counts)
         placed_columns = []
@@ -156,14 +155,14 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         else:
             alloc = ColumnAllocationOptimizer(self.k, self.placeables, self.outer, widths, self.padding)
             result, (score, div) = alloc.run()
-            if result != None:
-                LOGGER.info("For widths=%s, best counts=%s -> %1.3f", widths, alloc.vector_to_counts(div), score)
-            else:
+            if result is None:
                 LOGGER.info("No solution for widths=%s", widths)
+            else:
+                LOGGER.info("For widths=%s, best counts=%s -> %1.3f", widths, alloc.vector_to_counts(div), score)
             return result
 
     def vector_to_widths(self, x):
-        return divide_space(x, self.available_width, MIN_COLUMN_WIDTH)
+        return divide_space(x, self.available_width, MIN_COLUMN_WIDTH, granularity=5)
 
 
 def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, equal=False) -> PlacedGroupContent:
@@ -177,7 +176,7 @@ def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, eq
     equal = equal in {True, 'True', 'true', 'yes', 'y', '1'}
     if equal:
         LOGGER.info("Allocating %d items in %d equal columns: %s", len(placeables), k, bounds)
-        widths = divide_space([1] * k, columns_optimizer.available_width, MIN_COLUMN_WIDTH)
+        widths = divide_space([1] * k, columns_optimizer.available_width, MIN_COLUMN_WIDTH, granularity=5)
         columns = columns_optimizer.make_for_known_widths(widths)
         return PlacedGroupContent(columns, bounds)
     else:

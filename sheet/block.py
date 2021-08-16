@@ -7,14 +7,13 @@ from typing import Callable, Optional, Tuple
 
 from reportlab.platypus import Image
 
-from sheet.optimize import Optimizer, divide_space
+from placed import ErrorContent, PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 from sheet import common
 from sheet.common import Margins, Rect
-from table import key_values_layout, one_line_flowable, table_layout
 from sheet.model import Block, Run
+from sheet.optimize import Optimizer, divide_space
 from sheet.pdf import PDF
-from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, \
-    PlacedRectContent, ErrorContent
+from table import key_values_layout, one_line_flowable, table_layout
 
 LOGGER = common.configured_logger(__name__)
 
@@ -85,7 +84,6 @@ class ImagePlacement(Optimizer):
         padding = self.block.padding
         widths = divide_space(x, outer.width - padding, 10 + (padding + 1) // 2)
 
-
         LOGGER.fine("Allocating %d to image, %d to other", widths[0], widths[1])
 
         if self.on_right():
@@ -117,7 +115,7 @@ class ImagePlacement(Optimizer):
 
     def make_image(self, bounds) -> Image:
         im_info = self.block.image
-        file = Path(__file__).parent.parent.joinpath(im_info['uri'])
+        file = self.pdf.working_dir.joinpath(im_info['uri'])
         width = int(im_info['width']) if 'width' in im_info else None
         height = int(im_info['height']) if 'height' in im_info else None
         if width and height:
@@ -218,9 +216,9 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
 
         group = PlacedGroupContent(placed, bounds)
         group.margins = margins
-        return (group, margins)
+        return group, margins
     else:
-        return (None, margins)
+        return None, margins
 
 
 def outline_post_layout(bounds: Rect, style_name: str, pdf: PDF) -> Optional[PlacedContent]:

@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 from collections import namedtuple
 from math import ceil
+from pathlib import Path
 from textwrap import dedent
-from typing import Dict, List, NamedTuple
+from typing import Dict, List, NamedTuple, Optional
 
 import xmltodict
 
@@ -30,14 +31,14 @@ ACTION_TYPE = {
 
 
 def read_rules_elements() -> Dict:
-    d = xml_file_to_dict('../data/dnd4e_rules/combined.dnd40.xml')
+    d = xml_file_to_dict('../data/system/dnd4e_rules/combined.dnd40.xml')
     top = d['D20Rules']['RulesElement']
     result = dict((p['@internal-id'], p) for p in top)
     print("Read %d rules" % len(result))
     return result
 
 
-def _find(txt: str, rule: Dict) -> str:
+def _find(txt: str, rule: Dict) -> Optional[str]:
     for item in rule['specific']:
         if item['@name'] == txt:
             return item.get('#text', None)
@@ -111,7 +112,7 @@ class Power(NamedTuple):
         elif atk_target != 'Personal':
             line_attack = (None, None, atk_target)
         else:
-            line_attack =  None
+            line_attack = None
 
         lines_main = []
         for key in "Requirement Trigger Hit Miss Effect".split():
@@ -151,9 +152,11 @@ class Power(NamedTuple):
             lines.append(" - *%s*" % line_flavor)
 
         if line_info[0]:
-            lines.append(" - <font size=6 color='gray'>%s • %s</font> -- <font size=6 color='gray'>%s</font>" % line_info)
+            lines.append(
+                    " - <font size=6 color='gray'>%s • %s</font> -- <font size=6 color='gray'>%s</font>" % line_info)
         else:
-            lines.append(" - <font size=6 color='gray'>%s</font> -- <font size=6 color='gray'>%s</font>" % (line_info[1], line_info[2]))
+            lines.append(" - <font size=6 color='gray'>%s</font> -- <font size=6 color='gray'>%s</font>" % (
+                line_info[1], line_info[2]))
 
         return '\n'.join(line for line in lines if line)
 
@@ -280,9 +283,9 @@ class DnD4E:
         return name, value[0]
 
     def rule(self, rule_type: str) -> (str, str):
-        rules = self.rules(rule_type)
-        assert len(rules) == 1
-        return rules[0]
+        targets = self.rules(rule_type)
+        assert len(targets) == 1
+        return targets[0]
 
     def rules(self, rule_type: str) -> List[(str, str)]:
         """ Returns a list of matching items, as tuples of name, description"""
@@ -390,11 +393,12 @@ class DnD4E:
         power_mapping = self.power_mappings()
 
         powers = [_to_power(s) for s in self.character['PowerStats']['Power']]
-        powers.sort(key=lambda p:p.order())
+        powers.sort(key=lambda p: p.order())
 
         items = [p.to_rst(power_mapping.get(p.name), self.make_replacements(p)) for p in powers] \
-                +[self.item_to_rst(item) for item in self.item_list()]
+                + [self.item_to_rst(item) for item in self.item_list()]
 
+        EVERY = 0
         for pages in range(2, 10):
             EVERY = ceil(len(items) / pages)
             if EVERY < 16:
@@ -563,22 +567,20 @@ class DnD4E:
         if power:
             rparen = power.index('):')
             usage = power[7:rparen].strip()
-            txt = power[rparen+2:].strip()
-            dot =  txt.index('.')
-            action = txt[:dot].strip().replace(' Action','')
-            power = (action,txt[dot+1:].replace('Trigger', '*Trigger*').replace('Effect', '*Effect*'))
+            txt = power[rparen + 2:].strip()
+            dot = txt.index('.')
+            action = txt[:dot].strip().replace(' Action', '')
+            power = (action, txt[dot + 1:].replace('Trigger', '*Trigger*').replace('Effect', '*Effect*'))
             box = '' if usage == 'At-Will' else ' []'
             info = ACTION_TYPE[action]
             line_title = "%s **%s** -- %s/%s%s" % (info[1], name, info[2], usage, box)
         else:
             line_title = "**%s** -- %s" % (name, slot or item_type)
 
-
         if '@source' in rule:
             source = rule['@source'].replace("Player's Handbook ", 'PHB').replace(" Magazine", '')
         else:
             source = ''
-
 
         line_info = (rarity, price, slot or item_type)
 
@@ -591,7 +593,6 @@ class DnD4E:
             lines_main.append(power)
 
         color = USAGE_TYPE['Item'][1]
-
 
         lines = [
             ".. title: banner style=banner_%s\n.. style: back_%s\n" % (color, color),
@@ -606,20 +607,29 @@ class DnD4E:
         if source:
             lines.append(" - -- <font size=6 color='gray'>%s</font>" % source)
 
-
         return '\n'.join(line for line in lines if line)
 
 
-def read_dnd4e(file, rules: Dict) -> DnD4E:
-    dict = xml_file_to_dict(file)
+def read_dnd4e(f, rules: Dict) -> DnD4E:
+    dict = xml_file_to_dict(f)
     return DnD4E(dict, rules)
 
 
-def xml_file_to_dict(file):
-    with open(file, 'r') as file:
-        data = file.read()
+def xml_file_to_dict(filename):
+    with open(filename, 'r') as f:
+        data = f.read()
     dict = xmltodict.parse(data, process_namespaces=True, )
     return dict
+
+def convert(file:Path) -> Path:
+    rules = read_rules_elements()
+    dnd = read_dnd4e(file, rules)
+    out = dnd.to_rst()
+    out_file = file.parent.joinpath(file.stem+'.rst')
+
+    with open(out_file, 'w') as file:
+        file.write(out)
+    return out_file
 
 
 if __name__ == '__main__':
@@ -630,5 +640,5 @@ if __name__ == '__main__':
 
     out = dnd.to_rst()
 
-    with open('../data/grumph.rst', 'w') as file:
+    with open('../data/characters/Grumph/grumph.rst', 'w') as file:
         file.write(out)

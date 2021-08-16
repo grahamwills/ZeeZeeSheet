@@ -86,7 +86,7 @@ class Optimizer(Generic[T]):
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
         else:
             lo = 1 / 3 / self.k
-            initial_simplex = [[2/3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
+            initial_simplex = [[2 / 3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
             kwargs = {'method':  'Nelder-Mead', 'bounds': [(0, 1)] * (self.k - 1),
                       'options': {'initial_simplex': initial_simplex}}
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
@@ -111,40 +111,43 @@ class Optimizer(Generic[T]):
         return results
 
 
-def divide_space(x: [float], total: int, minval: int) -> Tuple[int]:
+def divide_space(x: [float], total: int, minval: int, granularity=1) -> Tuple[int]:
     """
         Maps parameters to integer values that sum to a given total
 
         :param [float] x: non-negative parameters
         :type float total: the resulting values will sum to this
         :param float minval: A value of zero maps to this
+        :granularity: divide space up in multiples of this
         :return: an array of integers, all at least 'min' size, that sum to the total
     """
 
+    total = int(total)
     k = len(x)
-
-    wt_sum = sum(x)
-    if wt_sum == 0:
-        # If all zeros, treat as all equal
-        return divide_space((0.5,) * k, total, minval)
 
     if minval * k > total:
         raise ValueError("Combination of minimum (%s) and total (%s) impossible for k=%d" % (minval, total, k))
     if any(v < 0 for v in x):
         raise ValueError("Input data contained a negative value")
 
-    adjusted_total = int(total) - minval * k
-    t = adjusted_total / wt_sum
+    wt_total = sum(x)
 
-    result = [math.floor(v * t + minval) for v in x]
+    available = (total-k*minval) // granularity
 
-    # Adjust for round-off error
-    err = int(total) - sum(result)
-    if err > 0:
-        # Sort into indices that most need fixing
-        for i in range(err):
-            result[i] += 1
+    wt = 0
+    result = [0] * k
 
+    # Scan across columns (except the last)
+    for i in range(0, k-1):
+        last = round(available * wt/wt_total)
+        wt += x[i]
+        this = round(available * wt/wt_total) - last
+
+        result[i] = this  * granularity + minval
+
+
+    result[-1] = total - sum(result)
+    assert result[-1] >= minval
     return tuple(result)
 
 

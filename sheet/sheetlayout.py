@@ -4,12 +4,12 @@ import functools
 from copy import copy
 from typing import List
 
-from sheet.common import Margins, Rect, configured_logger
 from block import layout_block
+from placed import PlacedContent, PlacedGroupContent
 from section import stack_in_columns
+from sheet.common import Margins, Rect, configured_logger
 from sheet.model import Block, Section, Sheet
 from sheet.pdf import PDF
-from placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 

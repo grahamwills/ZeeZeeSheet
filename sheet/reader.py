@@ -41,7 +41,7 @@ class Status:
                              % (last, self._name(node)))
         return report
 
-    def style_modifers(self):
+    def style_modifiers(self):
         bold = self.within('strong')
         italic = self.within('emphasis')
         if bold and italic:
@@ -221,7 +221,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
     def visit_Text(self, node: docutils.nodes.Text) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         txt = node.astext().replace('\n', ' ')
-        modifiers = self.status.style_modifers()
+        modifiers = self.status.style_modifiers()
 
         if self.status.run is None:
             self.status.block = None
@@ -245,7 +245,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def visit_system_message(self, node: docutils.nodes.system_message) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
-        LOGGER.warn("System warning: %s", node.astext())
+        LOGGER.debug("System warning: %s", node.astext())
         raise docutils.nodes.SkipChildren
 
     def unknown_visit(self, node: docutils.nodes.Node) -> None:
@@ -311,7 +311,7 @@ def _modify_style(styles, key, txt):
         elif k in {'align', 'alignment'}:
             s.align = str(v)
         elif k in {'border', 'borderColor'}:
-            s.borderColor = Color(v) if v and  v not in {'none', 'None'} else None
+            s.borderColor = Color(v) if v and v not in {'none', 'None'} else None
         elif k in {'width', 'borderWidth'}:
             s.borderWidth = float(v)
         else:

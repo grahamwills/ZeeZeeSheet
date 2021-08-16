@@ -4,7 +4,7 @@
 **Ethik Beigleiter**
 ====================
 
-.. image:: data/images/Ethik.png
+.. image:: Ethik.png
    :align: left
 ..
 

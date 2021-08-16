@@ -9,6 +9,7 @@ from typing import List
 from colour import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import Flowable, Image, Paragraph, Table
+# noinspection PyProtectedMember
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
 from sheet import common
@@ -76,7 +77,7 @@ class PlacedContent(abc.ABC):
         return multiplier_bad * self.bad_breaks + multiplier_good * self.ok_breaks
 
     def error_from_size(self, multiplier_bad: float, multiplier_good: float):
-        """ Fit to the allocated sapce"""
+        """ Fit to the allocated space"""
         if self.unused_width < 0:
             return -self.unused_width * multiplier_bad
         else:
@@ -110,7 +111,7 @@ class PlacedFlowableContent(PlacedContent):
         self.flowable = flowable
 
         if hasattr(flowable, 'height'):
-            LOGGER.warn("Redundant wrapping call")
+            LOGGER.debug("Redundant wrapping call for %s in %s", type(flowable).__name__, requested)
         flowable.wrapOn(pdf, requested.width, requested.height)
 
         if isinstance(flowable, Paragraph):
@@ -204,8 +205,8 @@ class PlacedGroupContent(PlacedContent):
         super().__init__(requested, actual, group[0].pdf)
         self.group = group
 
-        self.ok_breaks = sum(item.ok_breaks for item in (self.group))
-        self.bad_breaks = sum(item.bad_breaks for item in (self.group))
+        self.ok_breaks = sum(item.ok_breaks for item in self.group)
+        self.bad_breaks = sum(item.bad_breaks for item in self.group)
 
         # If not enough room, that's all that matters
         if self.requested.width < self.actual.width:
@@ -254,7 +255,7 @@ class PlacedGroupContent(PlacedContent):
             return "Group(%dx%d: ...)" % (self.actual.width, self.actual.height)
 
     def __copy__(self):
-        # Shallow except for the children, whichj need copying
+        # Shallow except for the children, which need copying
         group = [copy(child) for child in self.group]
         return PlacedGroupContent(group, self.requested, actual=self.actual)
 

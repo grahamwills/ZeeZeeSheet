@@ -13,7 +13,7 @@
 Redfield Valley
 ===============
 
-.. image:: data/images/Redfield_Valley_Map.png
+.. image:: Redfield_Valley_Map.png
 ..
 
 .. title: hidden

@@ -11,6 +11,7 @@ from typing import Dict, NamedTuple, Optional
 
 import yaml
 
+DATA_DIR = Path(__file__).parent.parent.joinpath('data')
 
 @dataclass
 class Command:
@@ -121,9 +122,9 @@ def _consistent(low, high, size, description):
     if low is None:
         return round(high) - round(size), round(high), round(size)
     if high is None:
-        return round(low),  round(low) + round(size), round(size)
+        return round(low), round(low) + round(size), round(size)
     if size is None:
-        return  round(low), round(high), round(high) -  round(low)
+        return round(low), round(high), round(high) - round(low)
 
 
 # LOGGING #######################################################################################################

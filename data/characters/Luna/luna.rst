@@ -6,7 +6,7 @@
 
 .. title: hidden
 
-.. image:: data/images/13thAgelogo.png
+.. image:: 13thAgelogo.png
    :height: 34
    :align: left
 ..
@@ -61,7 +61,7 @@ Hits: **35**                            --  Staggered: **17**
 
 Picture
 
-.. image:: data/images/luna.jpg
+.. image:: luna.jpg
 ..
 
 .. title: banner style=heading_blue
@@ -251,7 +251,7 @@ Feats
 .. title: hidden
 
 
-.. image:: data/images/divider-roses.gif
+.. image:: divider-roses.gif
    :align: left
 
 
@@ -266,7 +266,7 @@ Feats
 Redfield Valley
 ===============
 
-.. image:: data/images/Redfield_Valley_Map.png
+.. image:: Redfield_Valley_Map.png
 ..
 
 .. title: hidden

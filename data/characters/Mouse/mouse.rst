@@ -15,7 +15,7 @@ Qualities
 
 Picture
 
-.. image:: data/images/mouse.png
+.. image:: mouse.png
    :height: 140
 ..
 

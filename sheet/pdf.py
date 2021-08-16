@@ -15,19 +15,23 @@ from sheet.model import Element, ElementType, Run, Style
 
 LOGGER = common.configured_logger(__name__)
 
-_CHECKED_BOX = '../data/images/system/checked.png'
-_UNCHECKED_BOX = '../data/images/system/unchecked.png'
+_CHECKED_BOX = '../data/system/images/checked.png'
+_UNCHECKED_BOX = '../data/system/images/unchecked.png'
+
 
 class PDF(canvas.Canvas):
-    output_file: str
+    working_dir: Path
     page_height: int
     _styles: Dict[str, Style]
     debug: bool
 
     _name_index: int
 
-    def __init__(self, output_file, styles: Dict, pagesize: (int, int), debug: bool = False) -> None:
-        super().__init__(output_file, pagesize=pagesize)
+    def __init__(self, output_file:Path, styles: Dict, pagesize: (int, int), debug: bool = False) -> None:
+        super().__init__(str(output_file.absolute()), pagesize=pagesize)
+        fonts = install_fonts()
+        LOGGER.info("Installed fonts = %s", fonts)
+        self.working_dir = output_file.parent
         self.page_height = int(pagesize[1])
         self._styles = styles
 
@@ -53,7 +57,7 @@ class PDF(canvas.Canvas):
         self.acroForm.checkbox(name=name, x=x - 0.5, y=y - 0.5, size=min(width, height) + 1,
                                fillColor=reportlab.lib.colors.Color(1, 1, 1),
                                buttonStyle='cross', borderWidth=0.5, checked=state)
-        return (width, height)
+        return width, height
 
     def style(self, style):
         return self._styles[style] if style else None
@@ -85,10 +89,6 @@ class PDF(canvas.Canvas):
     def draw_flowable(self, flowable, bounds):
         if self.debug:
             self.stroke_rect(bounds, Style(borderColor=Color('red')))
-
-        if hasattr(flowable, 'style'):
-            self._drawing_style = flowable.style
-
         try:
             flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
         except:
@@ -159,8 +159,10 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
         return txt
 
 
-def build_font_choices() -> [str]:
+
+def install_fonts() -> [str]:
     user_fonts = []
+    install_font('Symbola', 'Symbola', user_fonts)
     install_font('Baskerville', 'Baskerville', user_fonts)
     install_font('Droid', 'DroidSerif', user_fonts)
     install_font('Parisienne', 'Parisienne', user_fonts)
@@ -189,7 +191,7 @@ def base_fonts():
 
 
 def create_single_font(name, resource_name, default_font_name, user_fonts):
-    loc = Path(__file__).parent.parent.joinpath('data/fonts/', resource_name + ".ttf")
+    loc = Path(__file__).parent.parent.joinpath('data/system/fonts/', resource_name + ".ttf")
     if loc.exists():
         pdfmetrics.registerFont(TTFont(name, loc))
         user_fonts.append(name)
