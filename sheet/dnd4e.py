@@ -30,7 +30,7 @@ ACTION_TYPE = {
 
 
 def read_rules_elements() -> Dict:
-    d = xml_file_to_dict('../../data/dnd4e_rules/combined.dnd40.xml')
+    d = xml_file_to_dict('../data/dnd4e_rules/combined.dnd40.xml')
     top = d['D20Rules']['RulesElement']
     result = dict((p['@internal-id'], p) for p in top)
     print("Read %d rules" % len(result))
@@ -626,9 +626,9 @@ if __name__ == '__main__':
 
     rules = read_rules_elements()
 
-    dnd = read_dnd4e('../../data/import/Grumph-5.dnd4e', rules)
+    dnd = read_dnd4e('../data/import/Grumph-5.dnd4e', rules)
 
     out = dnd.to_rst()
 
-    with open('../../data/grumph.rst', 'w') as file:
+    with open('../data/grumph.rst', 'w') as file:
         file.write(out)

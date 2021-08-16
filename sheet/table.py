@@ -1,5 +1,4 @@
 from copy import copy
-from functools import lru_cache
 from typing import List, Optional
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
@@ -9,7 +8,7 @@ from sheet import common
 from sheet.common import Rect
 from sheet.model import Block, Element, ElementType, Run, Style
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
+from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 
 LOGGER = common.configured_logger(__name__)
 
@@ -55,24 +54,12 @@ def make_row_from_run(run: Run, pdf: PDF, width: int, padding: int) -> [Flowable
         return row
 
 
-def as_one_line(run: Run, pdf: PDF, width: int, padding: int):
-    if not any(e.which == ElementType.SPACER for e in run.items):
-        # No spacers -- nice and simple
-        p = pdf.make_paragraph(run)
-        w, h = p.wrapOn(pdf, width, 1000)
-        return p, w, h
-
-    # Make a one-row table
-    cells = [make_row_from_run(run, pdf, width, padding)]
-    return make_table(pdf, cells, width, padding)
-
-
 def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
     if any(e.which == ElementType.SPACER for e in run.items):
         # Make a one-row table
         cells = [make_row_from_run(run, pdf, bounds.width, padding)]
-        p, _1, _2 = make_table(pdf, cells, bounds.width, padding)
-        return PlacedFlowableContent(p, bounds, pdf)
+        table = as_table(cells, bounds.width, pdf, padding)
+        return PlacedFlowableContent(table, bounds, pdf)
     else:
         # No spacers -- nice and simple
         p = pdf.make_paragraph(run)
@@ -81,14 +68,8 @@ def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
 
 def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     cells = [make_row_from_run(run, pdf, bounds.width, block.padding) for run in block.content]
-    table, w, h = make_table(pdf, cells, bounds.width, block.padding)
-    return PlacedFlowableContent(table, bounds.resize(width=w, height=h), pdf)
-
-
-def make_table(pdf, paragraphs, width, padding):
-    table = as_table(paragraphs, width, pdf, padding)
-    w, h = table.wrapOn(pdf, width, 1000)
-    return table, w, h
+    table = as_table(cells, bounds.width, pdf, block.padding)
+    return PlacedFlowableContent(table, bounds, pdf)
 
 
 class TableColumnsOptimizer(Optimizer):

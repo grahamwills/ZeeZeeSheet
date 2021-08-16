@@ -5,16 +5,6 @@ import pytest
 from sheet.optimize import Optimizer, divide_space
 
 
-def test_multiple_minima_d():
-    opt = Optimizer(2, "Simple 1D")
-    opt.score = lambda x: math.sin(x) + math.sin((10.0 / 3.0) * x)
-    opt.make = lambda x: x[0] * 10 - 3
-
-    optx, (optv, c) = opt.run(method='basinhopping')
-    assert optv == pytest.approx(opt.score(5.145735), 1e-3, 1e-3)
-    assert optx == pytest.approx(5.145735, 1e-3, 1e-3)
-
-
 @pytest.mark.parametrize("input,total,min,output", [
     ([1, 1, 1, 1], 4, 1, (1, 1, 1, 1)),
     ([20, 20, 20, 20], 4, 1, (1, 1, 1, 1)),

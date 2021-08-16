@@ -10,14 +10,13 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-from sheet.model import Element, ElementType, Run, Style
 from sheet import common
+from sheet.model import Element, ElementType, Run, Style
 
 LOGGER = common.configured_logger(__name__)
 
 _CHECKED_BOX = '../data/images/system/checked.png'
 _UNCHECKED_BOX = '../data/images/system/unchecked.png'
-
 
 class PDF(canvas.Canvas):
     output_file: str
@@ -106,15 +105,15 @@ class PDF(canvas.Canvas):
         pStyle = ParagraphStyle(name='tmp',
                                 fontName=style.font, fontSize=size, leading=size * 1.2,
                                 allowWidows=0, embeddedHyphenation=1, alignment=alignment,
+                                hyphenationMinWordLength=1,
                                 textColor=reportlab.lib.colors.Color(*style.color.rgb))
 
         # Add spaces between check boxes and other items
         items = []
         for e in run.items:
-            # Strangely, a span containing a non-breaking space allows braks to happen between images,
-            # whereas simple spaces do not
+            # Strangely, anon-breaking space allows braks to happen between images, whereas simple spaces do not
             if e is not run.items[0] and not e.value[0] in ":;-=":
-                items.append('&nbsp;')
+                items.append('<font size=0>&nbsp;</font> ')
             items.append(_element_to_html(e, self, style))
         return Paragraph("".join(items), pStyle)
 

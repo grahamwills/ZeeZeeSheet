@@ -4,12 +4,11 @@ import logging
 import math
 import statistics
 import time
-from functools import lru_cache
 from typing import List, Optional, Tuple
 
 from sheet.common import Rect, configured_logger
 from sheet.optimize import Optimizer, divide_space
-from sheet.placement.placed import PlacedContent, PlacedGroupContent
+from placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 

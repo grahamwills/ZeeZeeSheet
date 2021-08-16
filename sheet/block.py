@@ -10,10 +10,10 @@ from reportlab.platypus import Image
 from sheet.optimize import Optimizer, divide_space
 from sheet import common
 from sheet.common import Margins, Rect
-from sheet.layout.table import key_values_layout, one_line_flowable, table_layout
+from table import key_values_layout, one_line_flowable, table_layout
 from sheet.model import Block, Run
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, \
+from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, \
     PlacedRectContent, ErrorContent
 
 LOGGER = common.configured_logger(__name__)
@@ -117,7 +117,7 @@ class ImagePlacement(Optimizer):
 
     def make_image(self, bounds) -> Image:
         im_info = self.block.image
-        file = Path(__file__).parent.parent.parent.joinpath(im_info['uri'])
+        file = Path(__file__).parent.parent.joinpath(im_info['uri'])
         width = int(im_info['width']) if 'width' in im_info else None
         height = int(im_info['height']) if 'height' in im_info else None
         if width and height:
@@ -168,8 +168,7 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> Optional[PlacedCon
     b = bounds.move(dy=-(style.size * 0.2))
     for item in block.content:
         p = pdf.make_paragraph(item)
-        w, h = p.wrapOn(pdf, b.width, b.height)
-        placed = PlacedFlowableContent(p, b.resize(width=w, height=h), pdf)
+        placed = PlacedFlowableContent(p, b, pdf)
         results.append(placed)
         b = Rect(top=placed.actual.bottom + block.padding,
                  left=b.left, right=b.right, bottom=b.bottom)

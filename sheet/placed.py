@@ -109,6 +109,8 @@ class PlacedFlowableContent(PlacedContent):
         super().__init__(requested, requested, pdf)
         self.flowable = flowable
 
+        if hasattr(flowable, 'height'):
+            LOGGER.warn("Redundant wrapping call")
         flowable.wrapOn(pdf, requested.width, requested.height)
 
         if isinstance(flowable, Paragraph):
@@ -165,7 +167,6 @@ class PlacedRectContent(PlacedContent):
     rounded: int
 
     def __init__(self, bounds: Rect, style: Style, pdf: PDF, fill: bool = False, stroke: bool = True, rounded=0):
-        LOGGER.info("Creating Placed Rectangle %s", bounds)
         super().__init__(bounds, bounds, pdf)
         self.style = style
         self.stroke = stroke
@@ -199,7 +200,6 @@ class PlacedGroupContent(PlacedContent):
     group: [PlacedContent]
 
     def __init__(self, group: List[PlacedContent], requested: Rect, actual=None):
-        LOGGER.debug("Creating Placed Content for %d items in %s", len(group), requested)
         actual = actual or Rect.union(p.actual for p in group)
         super().__init__(requested, actual, group[0].pdf)
         self.group = group
@@ -339,7 +339,7 @@ def calculate_unused_width_for_group(group: List[PlacedContent], bounds: Rect) -
     idx = 0
     while idx < len(items):
 
-        # Accumualte all the items that overlap the current one
+        # Accumulate all the items that overlap the current one
         across = [items[idx]]
         lower = items[idx].requested.bottom
         idx += 1

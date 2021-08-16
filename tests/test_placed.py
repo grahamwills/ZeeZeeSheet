@@ -9,7 +9,7 @@ import zeesheet
 from sheet.common import Rect
 from sheet.model import Run, Style
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, \
+from placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, \
     calculate_unused_width_for_group, line_info
 
 

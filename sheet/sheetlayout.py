@@ -5,11 +5,11 @@ from copy import copy
 from typing import List
 
 from sheet.common import Margins, Rect, configured_logger
-from sheet.layout.block import layout_block
-from sheet.layout.section import stack_in_columns
+from block import layout_block
+from section import stack_in_columns
 from sheet.model import Block, Section, Sheet
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedContent, PlacedGroupContent
+from placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 

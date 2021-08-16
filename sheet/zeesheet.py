@@ -7,7 +7,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 from sheet import common, pdf, reader
-from sheet.layout.sheet import layout_sheet
+from sheetlayout import layout_sheet
 from sheet.pdf import build_font_choices
 
 LOGGER = common.configured_logger(__name__)

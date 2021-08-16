@@ -1,7 +1,7 @@
 import subprocess
 
 from sheet.pdf import PDF
-from sheet.placement.placed import PlacedContent
+from placed import PlacedContent
 
 
 def debug_placed_content(p: PlacedContent, pdf: PDF):
