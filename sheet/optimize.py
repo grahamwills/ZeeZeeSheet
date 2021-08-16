@@ -68,7 +68,7 @@ class Optimizer(Generic[T]):
     def run(self, method='COBYLA') -> (T, (float, [float])):
         """
             Run the optimization
-            :param float[] x0: Optional starting value (defaults to 0.5s)
+            :param method method: Layout method
             :return: the optimal score, created item, and parameters
         """
 
@@ -84,12 +84,14 @@ class Optimizer(Generic[T]):
                                                    stepsize=1, niter=10)
         elif method == 'COBYLA':
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
-        else:
+        elif method.lower() == 'nelder-mead':
             lo = 1 / 3 / self.k
             initial_simplex = [[2 / 3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
             kwargs = {'method':  'Nelder-Mead', 'bounds': [(0, 1)] * (self.k - 1),
                       'options': {'initial_simplex': initial_simplex}}
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
+        else:
+            raise ValueError("Unknown optimize method '%s'",method)
 
         duration = time.perf_counter() - start
 
@@ -132,19 +134,18 @@ def divide_space(x: [float], total: int, minval: int, granularity=1) -> Tuple[in
 
     wt_total = sum(x)
 
-    available = (total-k*minval) // granularity
+    available = (total - k * minval) // granularity
 
     wt = 0
     result = [0] * k
 
     # Scan across columns (except the last)
-    for i in range(0, k-1):
-        last = round(available * wt/wt_total)
+    for i in range(0, k - 1):
+        last = round(available * wt / wt_total)
         wt += x[i]
-        this = round(available * wt/wt_total) - last
+        this = round(available * wt / wt_total) - last
 
-        result[i] = this  * granularity + minval
-
+        result[i] = this * granularity + minval
 
     result[-1] = total - sum(result)
     assert result[-1] >= minval

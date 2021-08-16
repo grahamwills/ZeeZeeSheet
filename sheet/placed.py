@@ -14,8 +14,8 @@ from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
 from sheet import common
 from sheet.common import Rect
-from sheet.model import Style
 from sheet.pdf import PDF
+from style import Style
 
 LOGGER = common.configured_logger(__name__)
 
@@ -61,7 +61,6 @@ class PlacedContent(abc.ABC):
         raise NotImplementedError()
 
     def move(self, dx=0, dy=0):
-        old = self.actual
         self.actual = self.actual.move(dx=dx, dy=dy)
         self.requested = self.requested.move(dx=dx, dy=dy)
 

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import functools
+import warnings
 from copy import copy
 from typing import List
 
-from block import layout_block
+from layoutblock import layout_block
+from layoutsection import stack_in_columns
 from placed import PlacedContent, PlacedGroupContent
-from section import stack_in_columns
 from sheet.common import Margins, Rect, configured_logger
 from sheet.model import Block, Section, Sheet
 from sheet.pdf import PDF
@@ -61,6 +62,13 @@ def draw_sheet(sheet: Sheet, sections: List[PlacedContent], pdf):
 
 def layout_sheet(sheet: Sheet, pdf: PDF):
     outer = Rect(left=0, top=0, right=sheet.pagesize[0], bottom=sheet.pagesize[1]) - Margins.all_equal(sheet.margin)
-    top = place_sheet(sheet, outer, pdf)
-    draw_sheet(sheet, top.group, pdf)
+    with warnings.catch_warnings(record=True) as warns:
+        top = place_sheet(sheet, outer, pdf)
+        for w in warns:
+            LOGGER.warning("[%s:%s] While placing: %s" % (w.filename, w.lineno, w.message))
+
+    with warnings.catch_warnings(record=True) as warns:
+        draw_sheet(sheet, top.group, pdf)
+        for w in warns:
+            LOGGER.warning("[%s:%s] While drawing: %s" % (w.filename, w.lineno, w.message))
     # analyze_placement(top)

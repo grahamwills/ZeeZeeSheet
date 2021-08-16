@@ -182,7 +182,7 @@ def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, eq
     else:
         LOGGER.info("Allocating %d items in %d unequal columns: %s", len(placeables), k, bounds)
         start = time.process_time()
-        columns, (score, div) = columns_optimizer.run(method='nelder-meade')
+        columns, (score, div) = columns_optimizer.run(method='nelder-mead')
         widths = columns_optimizer.vector_to_widths(div)
         LOGGER.info("Completed in %1.2fs, widths=%s, score=%1.3f", time.process_time() - start, widths, score)
         return PlacedGroupContent(columns, bounds)

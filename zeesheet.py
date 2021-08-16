@@ -7,20 +7,11 @@ from pathlib import Path
 from typing import Optional
 
 import dnd4e
-from common import DATA_DIR
+from sheet.common import DATA_DIR
 from sheet import common, pdf, reader
-from sheetlayout import layout_sheet
+from layoutsheet import layout_sheet
 
 LOGGER = common.configured_logger(__name__)
-
-
-def show(file: str):
-    sheet = reader.read_sheet(file)
-    # sheet.print()
-    out = file.replace('.rst', '.pdf').replace("../data", "../tmp")
-    context = pdf.PDF(out, sheet.styles, sheet.pagesize, debug=False)
-    layout_sheet(sheet, context)
-    subprocess.run(['open', out], check=True)
 
 
 def find_file(d, ext) -> Optional[Path]:
@@ -58,9 +49,8 @@ if __name__ == '__main__':
         file_rst = find_file(d, 'rst')
         if file_rst:
             sheet = reader.read_sheet(file_rst)
-            # sheet.print()
             out = file_rst.parent.joinpath(file_rst.stem + '.pdf')
-            context = pdf.PDF(out, sheet.styles, sheet.pagesize, debug=DEBUG)
+            context = pdf.PDF(out, sheet.stylesheet, sheet.pagesize, debug=DEBUG)
             layout_sheet(sheet, context)
             subprocess.run(['open', out], check=True)
         else:

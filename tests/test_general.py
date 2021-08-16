@@ -4,7 +4,7 @@ import table
 import zeesheet
 from conftest import debug_placed_content
 from sheet.common import Rect
-from block import layout_block
+from layoutblock import layout_block
 from sheet.model import Block, Run, Style
 from sheet.pdf import PDF
 from placed import PlacedFlowableContent
@@ -16,10 +16,10 @@ def test_table_creation():
     pdf = PDF("/tmp/killme.pdf", {'default': style}, (500, 1000), True)
     bounds = Rect(left=0, top=0, right=120, bottom=100)
 
-    r1 = Run().add("Kung Fu Points:", 'default', '')
-    r2 = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default', '')
-    r3 = Run().add("Impediments:", 'default', '')
-    r4 = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default', '')
+    r1 = Run().add("Kung Fu Points:", 'default')
+    r2 = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
+    r3 = Run().add("Impediments:", 'default')
+    r4 = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
     cells = [
         [pdf.make_paragraph(r1), pdf.make_paragraph(r2)],
@@ -46,10 +46,10 @@ def test_block_table_creation():
 
     block = Block()
     # block.title_method = common.Command = common.parse_directive('banner style=banner')
-    block.title = Run().add("Status", 'default', '')
+    block.title = Run().add("Status", 'default')
     block.content = [
-        Run().add("Kung Fu Points: | [ ][ ][ ][ ][ ][ ][ ][ ]", 'default', ''),
-        Run().add("Impediments:    | [ ][ ][ ][ ][ ][ ][ ][ ]", 'default', '')
+        Run().add("Kung Fu Points: | [ ][ ][ ][ ][ ][ ][ ][ ]", 'default'),
+        Run().add("Impediments:    | [ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
     ]
 
     content = layout_block(block, bounds, pdf)

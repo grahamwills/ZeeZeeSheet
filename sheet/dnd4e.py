@@ -621,11 +621,12 @@ def xml_file_to_dict(filename):
     dict = xmltodict.parse(data, process_namespaces=True, )
     return dict
 
-def convert(file:Path) -> Path:
+
+def convert(file: Path) -> Path:
     rules = read_rules_elements()
     dnd = read_dnd4e(file, rules)
     out = dnd.to_rst()
-    out_file = file.parent.joinpath(file.stem+'.rst')
+    out_file = file.parent.joinpath(file.stem + '.rst')
 
     with open(out_file, 'w') as file:
         file.write(out)

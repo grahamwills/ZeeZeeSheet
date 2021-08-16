@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, OrderedDict
+from typing import Dict, List, Optional
 
 from colour import Color
 from reportlab.lib.pagesizes import letter
@@ -13,24 +13,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import Font
 
 from sheet import common
+from style import Stylesheet
 
 BLACK = Color('black')
 
 HELVETICA: Font = pdfmetrics.getFont('Helvetica')
-
-
-@dataclass
-class Style:
-    font: str = None
-    align: str = None
-    size: float = None
-    color: Color = None
-    background: Color = None
-    borderColor: Color = None
-    borderWidth: float = 0.5
-
-    def has_border(self):
-        return self.borderColor is not None and self.borderWidth > 0
 
 
 class ElementType(Enum):
@@ -46,7 +33,6 @@ class Element:
     which: ElementType
     value: str = None
     style: str = None
-    modifiers: str = None
 
     def __str__(self):
         if self.which == ElementType.CHECKBOX:
@@ -61,15 +47,13 @@ class Element:
 
         has_style = self.style and self.style != 'default'
 
-        if has_style and self.modifiers:
-            return "<%s|%s-%s>" % (self.value, self.style, self.modifiers)
-        elif has_style or self.modifiers:
-            return "<%s|%s>" % (self.value, (self.modifiers or self.style))
+        if has_style:
+            return "<%s|%s>" % (self.value, self.style)
         else:
             return self.value
 
     def replace_style(self, style: str):
-        return Element(which=self.which, value=self.value, style=style, modifiers=self.modifiers)
+        return Element(which=self.which, value=self.value, style=style)
 
 
 @dataclass
@@ -79,7 +63,7 @@ class Run:
     def __str__(self):
         return " ".join(str(e) for e in self.items)
 
-    def add(self, txt, style, modifiers) -> Run:
+    def add(self, txt, style) -> Run:
         # Search for all the special codes
         parts = re.split(r'[ \t]*(\||--|\[[XO ]?])[ \t]*', txt)
         for p in parts:
@@ -92,7 +76,7 @@ class Run:
                 v = p[1] if len(p) > 2 else 'O'
                 self.items.append(Element(ElementType.CHECKBOX, value=v, style=style))
             elif p:
-                self.items.append(Element(ElementType.TEXT, value=p, style=style, modifiers=modifiers))
+                self.items.append(Element(ElementType.TEXT, value=p, style=style))
         return self
 
     def valid(self):
@@ -106,7 +90,7 @@ class Run:
         return None
 
     def fixup(self):
-        self.items = ensure_representable(self.items)
+        self.items = _ensure_representable(self.items)
 
 
 @dataclass
@@ -114,22 +98,16 @@ class Block:
     title: Optional[Run] = None
     content: List[Run] = field(default_factory=list)
     image: Dict[str, str] = field(default_factory=dict)
-    block_method: common.Command = common.parse_directive('default')
-    title_method: common.Command = common.parse_directive('banner')
+    block_method: common.Directive = common.parse_directive('default')
+    title_method: common.Directive = common.parse_directive('banner')
     margin: int = 4
     padding: int = 2
 
     def add_title(self):
         self.title = Run()
 
-    def add_txt_to_title(self, txt: str, style: str, modifiers: str):
-        self.title.add(txt, style, modifiers)
-
     def add_content(self):
         self.content.append(Run())
-
-    def add_txt_to_run(self, txt: str, style: str, modifiers: str):
-        self.content[-1].add(txt, style, modifiers)
 
     def print(self):
         print("  • Block title='%s',padding=%d" % (self.title, self.padding))
@@ -166,7 +144,7 @@ class Block:
                 # Nothing is defined so kill this
                 parent.content.remove(self)
 
-    def base_style(self) -> str:
+    def base_style(self) -> Optional[str]:
         #  Lazy, just use the first
         for item in self.content:
             s = item.base_style()
@@ -184,7 +162,7 @@ class Block:
 @dataclass
 class Section:
     content: List[Block] = field(default_factory=list)
-    layout_method: common.Command = common.parse_directive("banner style=_banner")
+    layout_method: common.Directive = common.parse_directive("banner style=_banner")
     padding: int = 4
 
     def add_block(self, block: Block):
@@ -226,29 +204,16 @@ def _to_size(txt: str) -> int:
 @dataclass
 class Sheet:
     content: List[Section] = field(default_factory=list)
-    styles: Dict[str, Style] = field(default_factory=OrderedDict)
+    stylesheet: Stylesheet = field(default_factory=Stylesheet)
     layout_method: str = common.parse_directive('stack')
     pagesize: (int, int) = letter
     margin: int = 36
     padding: int = 8
 
-    def print(self):
-        print("Sheet margin=%d, padding=%d)" % (self.margin, self.padding))
-        print("  Styles:")
-        for p in self.styles.items():
-            print("%16s = %s" % p)
-        for p in self.content:
-            p.print()
-
     def __str__(self):
-        return "Sheet(%d sections, %d styles)" % (len(self.content), len(self.styles))
+        return "Sheet(%d sections, %d styles)" % (len(self.content), len(self.stylesheet))
 
     def fixup(self):
-        if not 'default' in self.styles:
-            self.styles['default'] = Style(font='Gotham', align='fill', size=9, color=Color('black'))
-        if not '_banner' in self.styles:
-            self.styles['_banner'] = Style(font='Gotham', align='left', size=10, color=Color('white'),
-                                           background=Color('navy'), borderColor=Color('navy'))
         for c in self.content:
             c.fixup(self)
 
@@ -268,25 +233,25 @@ class Sheet:
         return self.content[item]
 
 
-def exists_in_helvetica(text):
+def _exists_in_helvetica(text):
     """ If it is not substituted, it exists """
     return unicode2T1(text, [HELVETICA])[0][0] == HELVETICA
 
 
-def ensure_representable(items: List[Element]) -> List[Element]:
+def _ensure_representable(items: List[Element]) -> List[Element]:
     result = []
     for item in items:
         if item.which == ElementType.TEXT:
             run_start = 0
             for i, c in enumerate(item.value):
                 # If helvetica doesn't support it, call it special
-                if not exists_in_helvetica(c):
+                if not _exists_in_helvetica(c):
                     if i > run_start:
-                        result.append(Element(ElementType.TEXT, item.value[run_start:i], item.style, item.modifiers))
-                    result.append(Element(ElementType.SYMBOL, c, item.style, item.modifiers))
+                        result.append(Element(ElementType.TEXT, item.value[run_start:i], item.style))
+                    result.append(Element(ElementType.SYMBOL, c, item.style))
                     run_start = i + 1
             if len(item.value) > run_start:
-                result.append(Element(ElementType.TEXT, item.value[run_start:], item.style, item.modifiers))
+                result.append(Element(ElementType.TEXT, item.value[run_start:], item.style))
         else:
             result.append(item)
 

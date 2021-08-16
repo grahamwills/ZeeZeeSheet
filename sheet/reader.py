@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -5,12 +6,12 @@ import docutils.frontend
 import docutils.nodes
 import docutils.parsers.rst
 import docutils.utils
-from colour import Color
 
-from sheet import common
-from sheet.model import BLACK, Block, Run, Section, Sheet, Style
+from sheet.common import configured_logger, parse_directive, parse_options
+from sheet.model import Block, Run, Section, Sheet
+from sheet.style import Stylesheet
 
-LOGGER = common.configured_logger(__name__)
+LOGGER = configured_logger(__name__)
 
 LOG_UNHANDLED = False
 
@@ -40,17 +41,6 @@ class Status:
             raise ValueError("Inconsistent departure: expected '%s', but was '%s'"
                              % (last, self._name(node)))
         return report
-
-    def style_modifiers(self):
-        bold = self.within('strong')
-        italic = self.within('emphasis')
-        if bold and italic:
-            return 'BI'
-        if bold:
-            return 'B'
-        if italic:
-            return 'I'
-        return None
 
     def within(self, name):
         return name in self.stack
@@ -93,12 +83,12 @@ def line_of(node: docutils.nodes.Node):
 
 # noinspection PyPep8Naming
 class StyleVisitor(docutils.nodes.NodeVisitor):
-    sheet: Sheet
+    sheet: Stylesheet
     style_name: Optional[str]
 
     def __init__(self, document, sheet: Sheet):
         super().__init__(document)
-        self.sheet = sheet
+        self.styles = sheet.stylesheet
         self.style_name = None
 
     def unknown_visit(self, node: docutils.nodes.Node) -> None:
@@ -120,7 +110,7 @@ class StyleVisitor(docutils.nodes.NodeVisitor):
     def visit_Text(self, node: docutils.nodes.Text) -> None:
         txt = node.astext().replace('\n', ' ')
         LOGGER.debug("Style - modifying '%s' with '%s'", self.style_name, txt)
-        _modify_style(self.sheet.styles, self.style_name, txt)
+        self.styles.define(self.style_name, **parse_options(txt))
         raise docutils.nodes.SkipChildren
 
 
@@ -128,35 +118,46 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def __init__(self, document, sheet: Sheet):
         super().__init__(document)
-        self.block_layout_method = common.parse_directive('default')
-        self.section_layout_method = common.parse_directive('stack')
-        self.title_display_method = common.parse_directive("banner style=_banner")
-        self.style = 'default'
-        self.current_style_def_name = None
-
         self.status = Status()
         self.sheet = sheet
+
+        self.block_method = parse_directive('default')
+        self.section_method = parse_directive('stack')
+        self.title_method = parse_directive("banner style=_banner")
+
+        self.content_style = 'default'
+        self.emphasis_style = '_emphasis'
+        self.strong_style = '_strong'
 
     def visit_comment(self, node: docutils.nodes.comment) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         txt = node.astext().strip()
         if not txt:
             return
-        command = common.parse_directive(txt)
+        command = parse_directive(txt)
         if not command.tag:
             raise ValueError("Comment directive did not have a tag: '%s'", txt)
         if command.tag == 'section':
             LOGGER.info(".. setting section layout method: %s", command)
-            self.section_layout_method = command
+            self.section_method = command
         elif command.tag == 'block':
             LOGGER.info(".. setting block layout method: %s", command)
-            self.block_layout_method = command
+            self.block_method = command
         elif command.tag == 'title':
             LOGGER.info(".. setting title display method: %s", command)
-            self.title_display_method = command
+            self.title_method = command
         elif command.tag == 'style':
             LOGGER.info(".. setting style: %s", command)
-            self.style = command.command
+            if command.command:
+                self.content_style = command.command
+            for k, v in command.options.items():
+                if k == 'emphasis' or k.lower() == 'i':
+                    self.emphasis_style = v
+                elif k == 'strong' or k.lower() == 'b':
+                    self.strong_style = v
+                else:
+                    warnings.warn("Unrecognized style option '%s'" % k)
+
         elif command.tag == 'page':
             LOGGER.info(".. setting page info: %s", command)
             if command.command:
@@ -221,7 +222,6 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
     def visit_Text(self, node: docutils.nodes.Text) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         txt = node.astext().replace('\n', ' ')
-        modifiers = self.status.style_modifiers()
 
         if self.status.run is None:
             self.status.block = None
@@ -232,7 +232,14 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         else:
             LOGGER.info("... Adding text '%s'", txt)
 
-        self.status.run.add(txt, self.style, modifiers)
+        if self.status.within('strong'):
+            style = self.strong_style + ":" + self.content_style
+        elif self.status.within('emphasis'):
+            style = self.emphasis_style + ":" + self.content_style
+        else:
+            style = self.content_style
+
+        self.status.run.add(txt, style)
 
     def visit_image(self, node: docutils.nodes.image) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
@@ -264,8 +271,8 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         if not self.status.section:
             self.create_section()
 
-        title_display = self.title_display_method
-        block_display = self.block_layout_method
+        title_display = self.title_method
+        block_display = self.block_method
         self.status.block = Block(title_method=title_display, block_method=block_display)
         if 'padding' in block_display.options:
             self.status.block.padding = int(block_display.options['padding'])
@@ -275,48 +282,10 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
     def create_section(self):
         assert self.status.section is None
 
-        layout = self.section_layout_method
+        layout = self.section_method
         LOGGER.info("... Adding section with layout = %s", layout)
         self.status.section = Section(layout_method=layout, padding=self.sheet.padding)
         self.sheet.content.append(self.status.section)
-
-
-def _modify_style(styles, key, txt):
-    if not styles:
-        # Ensure there is a default style
-        styles['default'] = Style(font='Times', size=10, color=BLACK, align='left')
-
-    s = styles.get(key, None)
-    if not s:
-        s = Style()
-    items = dict((k.strip(), v.strip()) for k, v in tuple(pair.split('=') for pair in txt.split()))
-    if not 'inherit' in items:
-        items['inherit'] = 'default'
-    for k, v in items.items():
-        if k == 'inherit':
-            parent = styles[v]
-            s.color = s.color or parent.color
-            s.size = s.size or parent.size
-            s.font = s.font or parent.font
-            s.align = s.align or parent.align
-            s.background = s.background or parent.background
-        elif k in {'color', 'foreground', 'fg'}:
-            s.color = Color(v)
-        elif k in {'background', 'bg'}:
-            s.background = Color(v)
-        elif k in {'size', 'fontSize', 'fontsize'}:
-            s.size = float(v)
-        elif k in {'font', 'family', 'face'}:
-            s.font = str(v)
-        elif k in {'align', 'alignment'}:
-            s.align = str(v)
-        elif k in {'border', 'borderColor'}:
-            s.borderColor = Color(v) if v and v not in {'none', 'None'} else None
-        elif k in {'width', 'borderWidth'}:
-            s.borderWidth = float(v)
-        else:
-            raise ValueError("Illegal style definition: %s" % k)
-    styles[key] = s
 
 
 def read_sheet(file) -> Sheet:
@@ -326,8 +295,13 @@ def read_sheet(file) -> Sheet:
 
 
 def build_sheet(data):
-    doc = parse_rst(data)
-    sheet = Sheet()
-    doc.walkabout(SheetVisitor(doc, sheet))
-    sheet.fixup()
-    return sheet
+
+    with warnings.catch_warnings(record=True) as warns:
+        warnings.simplefilter("always")
+        doc = parse_rst(data)
+        sheet = Sheet()
+        doc.walkabout(SheetVisitor(doc, sheet))
+        sheet.fixup()
+        for w in warns:
+            LOGGER.warning("[%s:%s] While reading: %s" % (w.filename, w.lineno, w.message))
+        return sheet

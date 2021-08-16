@@ -1,6 +1,5 @@
 import io
 from pathlib import Path
-from typing import Dict
 
 import reportlab.lib.colors
 from colour import Color
@@ -11,7 +10,8 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
 from sheet import common
-from sheet.model import Element, ElementType, Run, Style
+from sheet.model import Element, ElementType, Run
+from style import Style, Stylesheet
 
 LOGGER = common.configured_logger(__name__)
 
@@ -22,18 +22,18 @@ _UNCHECKED_BOX = '../data/system/images/unchecked.png'
 class PDF(canvas.Canvas):
     working_dir: Path
     page_height: int
-    _styles: Dict[str, Style]
+    _stylesheet: Stylesheet
     debug: bool
 
     _name_index: int
 
-    def __init__(self, output_file:Path, styles: Dict, pagesize: (int, int), debug: bool = False) -> None:
+    def __init__(self, output_file: Path, styles: Stylesheet, pagesize: (int, int), debug: bool = False) -> None:
         super().__init__(str(output_file.absolute()), pagesize=pagesize)
         fonts = install_fonts()
         LOGGER.info("Installed fonts = %s", fonts)
         self.working_dir = output_file.parent
         self.page_height = int(pagesize[1])
-        self._styles = styles
+        self._stylesheet = styles
 
         self.debug = debug
         self._name_index = 0
@@ -60,7 +60,7 @@ class PDF(canvas.Canvas):
         return width, height
 
     def style(self, style):
-        return self._styles[style] if style else None
+        return self._stylesheet[style]
 
     def fillColor(self, color: Color, alpha=None):
         self.setFillColorRGB(*color.rgb, alpha=alpha)
@@ -126,12 +126,13 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
         txt = e.value
     else:
         txt = str(e)
-    if e.modifiers:
-        if 'I' in e.modifiers:
-            txt = '<i>' + txt + '</i>'
-        if 'B' in e.modifiers:
-            txt = '<b>' + txt + '</b>'
     style = pdf.style(e.style)
+
+    if style.italic:
+        txt = '<i>' + txt + '</i>'
+    if style.bold:
+        txt = '<b>' + txt + '</b>'
+
 
     if style.size and style.size != base_style.size:
         size = " size='%d'" % style.size
@@ -157,7 +158,6 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
         return "<font %s%s%s>%s</font>" % (face, size, color, txt)
     else:
         return txt
-
 
 
 def install_fonts() -> [str]:

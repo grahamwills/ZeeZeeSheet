@@ -13,14 +13,15 @@ import yaml
 
 DATA_DIR = Path(__file__).parent.parent.joinpath('data')
 
+
 @dataclass
-class Command:
+class Directive:
     tag: Optional[str]
     command: str
     options: Dict
 
 
-def parse_directive(txt: str) -> Command:
+def parse_directive(txt: str) -> Directive:
     """ Converts a string into an optionally tagged command"""
     colon_index = txt.find(':')
     if colon_index < 0:
@@ -35,14 +36,29 @@ def parse_directive(txt: str) -> Command:
     else:
         command = items[0]
         items = items[1:]
+    return Directive(tag, command, parse_options(items))
+
+
+def _simplify(txt):
+    txt = txt.strip()
+    if txt[0] == '"' and txt[-1] == '"' or txt[0] == "'" and txt[-1] == "'":
+        return txt[1:-1]
+    else:
+        return txt
+
+
+def parse_options(items) -> Dict[str, str]:
+    if isinstance(items, str):
+        items = items.strip().split()
     options = dict()
     for o in items:
         pair = o.split('=')
+        key = _simplify(pair[0])
         if len(pair) == 1:
-            options[pair[0]] = 'True'
+            options[key] = 'True'
         else:
-            options[pair[0]] = pair[1]
-    return Command(tag, command, options)
+            options[key] = _simplify(pair[1])
+    return options
 
 
 class Margins(NamedTuple):

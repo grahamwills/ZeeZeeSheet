@@ -6,9 +6,10 @@ from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
 from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 from sheet import common
 from sheet.common import Rect
-from sheet.model import Block, Element, ElementType, Run, Style
+from sheet.model import Block, Element, ElementType, Run
 from sheet.optimize import Optimizer, divide_space
 from sheet.pdf import PDF
+from style import Style
 
 LOGGER = common.configured_logger(__name__)
 
@@ -19,7 +20,7 @@ def _add_run(elements: [Element], row: [], pdf: PDF, align: str):
         row.append(para)
 
 
-def make_row_from_run(run: Run, pdf: PDF, width: int, padding: int) -> [Flowable]:
+def make_row_from_run(run: Run, pdf: PDF, width: int) -> [Flowable]:
     items = run.items
 
     spacer_count = sum(e.which == ElementType.SPACER for e in items)
@@ -57,7 +58,7 @@ def make_row_from_run(run: Run, pdf: PDF, width: int, padding: int) -> [Flowable
 def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
     if any(e.which == ElementType.SPACER for e in run.items):
         # Make a one-row table
-        cells = [make_row_from_run(run, pdf, bounds.width, padding)]
+        cells = [make_row_from_run(run, pdf, bounds.width)]
         table = as_table(cells, bounds.width, pdf, padding)
         return PlacedFlowableContent(table, bounds, pdf)
     else:
@@ -67,7 +68,7 @@ def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
 
 
 def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
-    cells = [make_row_from_run(run, pdf, bounds.width, block.padding) for run in block.content]
+    cells = [make_row_from_run(run, pdf, bounds.width) for run in block.content]
     table = as_table(cells, bounds.width, pdf, block.padding)
     return PlacedFlowableContent(table, bounds, pdf)
 

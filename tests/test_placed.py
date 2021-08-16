@@ -1,4 +1,5 @@
 from collections import namedtuple
+from pathlib import Path
 
 import pytest
 from colour import Color
@@ -176,7 +177,7 @@ def test_group_with_space_vertical(simple, styled, pdf):
     assert gp.internal_variance == 0
 
 
-def test_group_with_space_vertical_second(simple, styled, pdf):
+def test_group_with_space_vertical_second(simple, pdf):
     a = PlacedFlowableContent(simple, Rect(left=10, top=20, right=200, height=40), pdf)
     b = PlacedFlowableContent(Paragraph("a very long piece of text that will just fit"),
                               Rect(left=20, top=50, right=200, height=40), pdf)
@@ -223,11 +224,10 @@ def test_table_with_terrible_wraps(table, pdf):
 
 
 def test_line_info():
-    zeesheet.install()
     style = Style(align='left', font='Gotham', size=10, color=Color('black'))
-    pdf = PDF("/tmp/killme.pdf", {'default': style}, (500, 1000), True)
+    pdf = PDF(Path("/tmp/killme.pdf"), {'default': style}, (500, 1000), True)
 
-    run = Run().add("basic test", 'default', '')
+    run = Run().add("basic test", 'default')
 
     p = pdf.make_paragraph(run)
     p.wrapOn(pdf, 10, 100)
@@ -237,11 +237,10 @@ def test_line_info():
 
 
 def test_line_info_for_boxes():
-    zeesheet.install()
     style = Style(align='left', font='Gotham', size=10, color=Color('black'))
-    pdf = PDF("/tmp/killme.pdf", {'default': style}, (500, 1000), True)
+    pdf = PDF(Path("/tmp/killme.pdf"), {'default': style}, (500, 1000), True)
 
-    run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default', '')
+    run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
     p = pdf.make_paragraph(run)
     p.wrapOn(pdf, 20, 100)
