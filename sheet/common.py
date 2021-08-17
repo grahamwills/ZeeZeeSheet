@@ -83,6 +83,11 @@ class Margins(NamedTuple):
         return Margins(size, size, size, size)
 
 
+class Point(NamedTuple):
+    x: float
+    y: float
+
+
 class Rect(namedtuple('Rect', 'left right top bottom width height')):
 
     @classmethod
@@ -99,6 +104,9 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
         top, bottom, height = _consistent(top, bottom, height, "top, bottom, height")
         return super().__new__(cls, left, right, top, bottom, width, height)
 
+    def center(self) -> Point:
+        return Point((self.left + self.right) / 2, (self.top + self.bottom) / 2)
+
     def __add__(self, off: Margins) -> Rect:
         return Rect(left=self.left - off.left,
                     right=self.right + off.right,
@@ -110,8 +118,7 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
         return Rect(left=self.left + off.left,
                     right=self.right - off.right,
                     top=self.top + off.top,
-                    bottom=self.bottom - off.bottom,
-                    )
+                    bottom=self.bottom - off.bottom)
 
     def __str__(self):
         return "[l=%d r=%d t=%d b=%d]" % (self.left, self.right, self.top, self.bottom)

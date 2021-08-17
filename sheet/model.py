@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from colour import Color
 from reportlab.lib.pagesizes import letter
@@ -13,7 +13,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import Font
 
 from sheet import common
-from style import Stylesheet
+from style import Style, Stylesheet
 
 BLACK = Color('black')
 
@@ -32,7 +32,7 @@ class ElementType(Enum):
 class Element:
     which: ElementType
     value: str = None
-    style: str = None
+    style: Union[str, Style] = None
 
     def __str__(self):
         if self.which == ElementType.CHECKBOX:
@@ -216,7 +216,7 @@ class Sheet:
         for c in self.content:
             c.fixup(self)
 
-    def apply_styles(self, margin=None, padding=None, size=None):
+    def apply_directive(self, margin=None, padding=None, size=None):
         if margin:
             self.margin = _to_size(margin)
         if padding:

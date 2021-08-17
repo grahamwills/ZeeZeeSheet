@@ -2,6 +2,7 @@
 
 from __future__ import annotations, annotations
 
+import warnings
 from typing import Callable, Optional, Tuple
 
 from reportlab.platypus import Image
@@ -12,7 +13,7 @@ from sheet.common import Margins, Rect
 from sheet.model import Block, Run
 from sheet.optimize import Optimizer, divide_space
 from sheet.pdf import PDF
-from table import key_values_layout, one_line_flowable, table_layout
+from table import badges_layout, key_values_layout, one_line_flowable, table_layout
 
 LOGGER = common.configured_logger(__name__)
 
@@ -55,17 +56,23 @@ def _post_content_layout(block, inner, pdf):
 
 
 def _content_layout(block, inner, pdf):
-    if block.block_method.command == 'key-values':
+    method = block.block_method.command
+    if method == 'key-values':
         content_layout = key_values_layout
-    elif block.needs_table():
-        content_layout = table_layout
+    elif method == 'badge':
+        content_layout = badges_layout
     else:
-        content_layout = paragraph_layout
+        if method != 'default':
+            warnings.warn("Unknown block method '%s'. Using default instead" % method)
+        if block.needs_table():
+            content_layout = table_layout
+        else:
+            content_layout = paragraph_layout
 
     if block.image:
         return image_layout(block, inner, pdf, other_layout=content_layout)
     else:
-        return content_layout(block, inner, pdf)
+        return content_layout(block, inner, pdf, **block.block_method.options)
 
 
 class ImagePlacement(Optimizer):

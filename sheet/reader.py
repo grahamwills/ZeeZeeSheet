@@ -162,7 +162,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             LOGGER.info(".. setting page info: %s", command)
             if command.command:
                 self.sheet.layout_method = command
-            self.sheet.apply_styles(**command.options)
+            self.sheet.apply_directive(**command.options)
         else:
             raise ValueError("Unknown comment directive: '%s', line=%d" % (command, line_of(node)))
         raise docutils.nodes.SkipChildren

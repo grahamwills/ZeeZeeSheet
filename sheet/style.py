@@ -31,14 +31,26 @@ class Style:
         return self.borderColor is not None and self.borderWidth > 0
 
     def modify_using(self, style: Style) -> Style:
+        return self.modify(**style.__dict__)
+
+    def modify(self, **kwargs) -> Style:
         result = copy(self)
-        for k, v in style.__dict__.items():
+        for k, v in kwargs.items():
             if v is not None:
                 setattr(result, k, v)
         return result
 
+    def with_fontsize(self, multiplier=None, size=None) -> Style:
+        s = copy(self)
+        if size is not None:
+            s.size = size
+        if multiplier is not None:
+            s.size = s.size * multiplier
+        return s
 
-DEFAULT = Style(inherit='<none>', color=Color('black'), borderWidth=0.5, font='Gotham', size=9, align='fill')
+
+DEFAULT = Style(inherit='<none>', color=Color('black'),
+                borderWidth=0.5, borderColor=Color('black'), font='Gotham', size=9, align='fill')
 
 _MAPPINGS = {
     'parent':     'inherit',

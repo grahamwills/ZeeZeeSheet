@@ -410,7 +410,7 @@ class DnD4E:
 
     def to_rst(self):
         front_page = [
-            ".. section: stack columns=3\n.. title: hidden\n.. style: title",
+            ".. section: stack columns=3 padding=12\n.. title: hidden\n.. style: title",
             self.character_title(),
 
             ".. block: default\n.. title: banner style=banner\n.. style: default",
@@ -424,7 +424,7 @@ class DnD4E:
 
             self.divider(),
 
-            ".. section: stack columns=2\n.. block: default\n.. title: banner style=banner",
+            ".. section: stack padding=12 columns=2\n.. block: default\n.. title: banner style=banner",
             ".. style: default",
 
             self.skills(),
@@ -491,19 +491,15 @@ class DnD4E:
                 bold color=black opacity=1
             title
                 size=28 color=navy 
-            back
-                background=#ffe borderColor=#ddc color=black
             
             banner
-                background=navy color=white borderColor=navy
+                background=#88c color=white
             banner_green
                 inherit=banner background=green borderColor=#7a7
             banner_red
                 inherit=banner background=red borderColor=#f88
             banner_black
                 inherit=banner background=black borderColor=#888
-            banner_blue
-                inherit=banner background=navy
             banner_orange
                 inherit=banner background=orange borderColor=#fe8
             

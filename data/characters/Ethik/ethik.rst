@@ -18,11 +18,14 @@ Base Info
  - Tier     | 3
  - Effort   | 3
 
-Pools
- - Might       | 10   |
- - Speed       | 13   |
- - Intellect   | 21   | 2
+.. block: badge tags=Pool,Edge, shape=oval
 
+Pools
+ - Might        |   | **10**    |
+ - Speed        |   | **13**    |
+ - Intellect    |   | **21**    | *edge*:2
+
+.. block: default
 
 Advancement
  - **XP**: [X] [X] [X] [X] [] [] [] []

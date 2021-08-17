@@ -8,6 +8,7 @@ from typing import List
 
 from colour import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Flowable, Image, Paragraph, Table
 # noinspection PyProtectedMember
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
@@ -60,9 +61,10 @@ class PlacedContent(abc.ABC):
         """ Item placed on screen"""
         raise NotImplementedError()
 
-    def move(self, dx=0, dy=0):
+    def move(self, dx=0, dy=0) -> PlacedContent:
         self.actual = self.actual.move(dx=dx, dy=dy)
         self.requested = self.requested.move(dx=dx, dy=dy)
+        return self
 
     def parent_sized(self, bounds: Rect):
         pass
@@ -145,7 +147,7 @@ class PlacedFlowableContent(PlacedContent):
 
     def _init_paragraph(self, p: Paragraph):
         bad_breaks, ok_breaks, unused = line_info(p)
-        if p.style.alignment == TA_JUSTIFY or p.style.alignment == TA_CENTER:
+        if p.style.alignment == TA_JUSTIFY:
             rect = self.requested.resize(width=math.ceil(self.requested.width), height=math.ceil(p.height))
             self.actual = rect
         else:
@@ -182,6 +184,42 @@ class PlacedRectContent(PlacedContent):
 
     def __str__(self) -> str:
         return "Rect(%s)" % str(self.actual)
+
+
+class PlacedPathContent(PlacedContent):
+    style: Style
+    stroke: bool
+    fill: bool
+    path: PDFPathObject
+    offset: (int, int)
+
+    def __init__(self, path: PDFPathObject, bounds: Rect, style: Style, pdf: PDF, fill: bool = False,
+                 stroke: bool = True):
+        super().__init__(bounds, bounds, pdf)
+        self.style = style
+        self.stroke = stroke
+        self.fill = fill
+        self.path = path
+        self.offset = (0, 0)
+
+    def draw(self):
+        self.pdf.saveState()
+        self.pdf.transform(1, 0, 0, -1, self.offset[0], self.pdf.page_height - self.offset[1])
+        if self.fill:
+            self.pdf.fill_path(self.path, self.style)
+
+        if self.stroke:
+            self.pdf.stroke_path(self.path, self.style)
+
+        self.pdf.restoreState()
+
+    def __str__(self) -> str:
+        return "Path(%s)" % str(self.path)
+
+    def move(self, dx=0, dy=0) -> PlacedPathContent:
+        super().move(dx, dy)
+        self.offset = (self.offset[0] + dx, self.offset[1] + dy)
+        return self
 
 
 class ErrorContent(PlacedRectContent):
@@ -229,10 +267,11 @@ class PlacedGroupContent(PlacedContent):
         for p in self.group:
             p.draw()
 
-    def move(self, dx=0, dy=0):
+    def move(self, dx=0, dy=0) -> PlacedGroupContent:
         super().move(dx, dy)
         for p in self.group:
             p.move(dx, dy)
+        return self
 
     def parent_sized(self, bounds: Rect):
         for c in self.group:

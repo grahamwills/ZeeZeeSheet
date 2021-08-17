@@ -1,5 +1,6 @@
 import io
 from pathlib import Path
+from typing import Optional
 
 import reportlab.lib.colors
 from colour import Color
@@ -7,6 +8,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
+from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Flowable, Paragraph
 
 from sheet import common
@@ -60,7 +62,10 @@ class PDF(canvas.Canvas):
         return width, height
 
     def style(self, style):
-        return self._stylesheet[style]
+        if isinstance(style, Style):
+            return style
+        else:
+            return self._stylesheet[style]
 
     def fillColor(self, color: Color, alpha=None):
         self.setFillColorRGB(*color.rgb, alpha=alpha)
@@ -87,15 +92,30 @@ class PDF(canvas.Canvas):
             else:
                 self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=0, stroke=1)
 
+    def fill_path(self, path: PDFPathObject, style: Style):
+        if style.background:
+            self.fillColor(style.background, alpha=style.opacity)
+            self.setLineWidth(0)
+            self.drawPath(path, fill=1, stroke=0)
+
+    def stroke_path(self, path: PDFPathObject, style: Style):
+        if style.borderColor and style.borderWidth:
+            self.strokeColor(style.borderColor, alpha=style.opacity)
+            self.setLineWidth(style.borderWidth)
+            self.drawPath(path, fill=0, stroke=1)
+
     def draw_flowable(self, flowable: Flowable, bounds):
         if self.debug:
-            self.stroke_rect(bounds, Style(borderColor=Color('red')))
+            self.stroke_rect(bounds, Style(borderColor=Color('red'), borderWidth=0.5))
         try:
             flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
         except:
             LOGGER.error("Error trying to draw %s into %s", flowable.__class__.__name__, bounds)
 
-    def make_paragraph(self, run: Run, align=None, size_factor=1.0) -> Paragraph:
+    def make_paragraph(self, run: Run, align=None, size_factor=1.0) -> Optional[Paragraph]:
+        if not len(run.items):
+            return None
+
         style = self.style(run.base_style())
 
         align = align or style.align
@@ -129,6 +149,7 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
         txt = e.value
     else:
         txt = str(e)
+
     style = pdf.style(e.style)
 
     if style.italic:
@@ -149,7 +170,7 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
     if style.color and (style.color != base_style.color or style.opacity != base_style.opacity):
         opacity = style.opacity if style.opacity is not None else 1.0
         color = " color='rgba(%d, %d, %d, %1.2f)'" % (
-            round(255*style.color.get_red()),
+            round(255 * style.color.get_red()),
             round(255 * style.color.get_green()),
             round(255 * style.color.get_blue()),
             opacity
