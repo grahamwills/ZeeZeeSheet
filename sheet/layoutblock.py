@@ -7,6 +7,7 @@ from typing import Callable, Optional, Tuple
 
 from reportlab.platypus import Image
 
+import para
 from placed import ErrorContent, PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
 from sheet import common
 from sheet.common import Margins, Rect
@@ -43,7 +44,7 @@ def _pre_content_layout(block, bounds, pdf) -> (PlacedContent, Margins):
         raise ValueError("unknown title method '%s'" % title.command)
 
 
-def _post_content_layout(block, inner, pdf):
+def _post_content_layout(block: Block, inner, pdf):
     title = block.title_method
     title_style = title.options.get('style', 'default')
     style = pdf.style(block.base_style())
@@ -161,21 +162,22 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
         return placer.place_image(bounds)
 
 
-def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> Optional[PlacedContent]:
+def paragraph_layout(block: Block, bounds: Rect, pdf: PDF, padding: int=None) -> Optional[PlacedContent]:
     if not block.content:
         return None
 
     results = []
     style = pdf.style(block.base_style())
 
+    padding = int(padding) if padding is not None else block.padding
+
     # Move up by the excess leading
     b = bounds.move(dy=-(style.size * 0.2))
     for item in block.content:
-        p = pdf.make_paragraph(item)
+        p = para.make_paragraph(item, pdf)
         placed = PlacedFlowableContent(p, b, pdf)
         results.append(placed)
-        b = Rect(top=placed.actual.bottom + block.padding,
-                 left=b.left, right=b.right, bottom=b.bottom)
+        b = Rect(top=placed.actual.bottom + padding, left=b.left, right=b.right, bottom=b.bottom)
     if not results:
         return None
     elif len(results) == 1:
@@ -200,25 +202,27 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
     inset = line_width + margin
     margins = Margins.all_equal(inset)
 
-    if show_title and block.title:
-        title_mod = Run([e.replace_style(style_name) for e in block.title.items])
-        title_bounds = bounds - margins
-        title = one_line_flowable(title_mod, title_bounds, margin, pdf)
+    plaque_height = round(style.size + margin * 2)
 
-        # We remove the extra leading the paragraph gave us at the bottom (0.2 * font-size)
-        plaque_height = title.actual.height + 2 * margin - style.size * 0.2
+    if show_title and block.title:
+        placed = []
+        plaque = bounds.resize(height=plaque_height)
+
+        title_bounds = plaque - margins
+        title_mod = Run([e.replace_style(style_name) for e in block.title.items])
+        title = one_line_flowable(title_mod, title_bounds, margin, pdf)
+        extraLines = title.ok_breaks + title.bad_breaks
+        if extraLines:
+            plaque = plaque.resize(height=plaque.height + extraLines*pdf.style(style_name).size)
+
+        if style.background:
+            placed.append(PlacedRectContent(plaque, style, pdf, fill=True, stroke=False))
 
         # Move the title up a little to account for the descender
         title.move(dy=-pdf.descender(style))
-
-        placed = []
-        if style.background:
-            plaque = (bounds - Margins.all_equal(line_width)).resize(height=plaque_height)
-            placed.append(PlacedRectContent(plaque, style, pdf, fill=True, stroke=False))
-
         placed.append(title)
 
-        margins = Margins(left=inset, right=inset, top=inset + plaque_height, bottom=inset)
+        margins = Margins(left=inset, right=inset, top=inset + plaque.height, bottom=inset)
 
         group = PlacedGroupContent(placed, bounds)
         group.margins = margins

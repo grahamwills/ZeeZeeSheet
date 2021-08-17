@@ -6,6 +6,7 @@ from colour import Color
 from reportlab.lib import colors
 from reportlab.platypus import Paragraph, Table, TableStyle
 
+import para
 import zeesheet
 from sheet.common import Rect
 from sheet.model import Run
@@ -230,7 +231,7 @@ def test_line_info():
 
     run = Run().add("basic test", 'default')
 
-    p = pdf.make_paragraph(run)
+    p = para.make_paragraph(run, pdf)
     p.wrapOn(pdf, 10, 100)
     bad_breaks, ok_breaks, unused = line_info(p)
     assert bad_breaks == 4
@@ -243,7 +244,7 @@ def test_line_info_for_boxes():
 
     run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
-    p = pdf.make_paragraph(run)
+    p = para.make_paragraph(run, pdf)
     p.wrapOn(pdf, 20, 100)
     bad_breaks, ok_breaks, unused = line_info(p)
     assert bad_breaks == 0

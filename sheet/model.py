@@ -82,7 +82,7 @@ class Run:
     def valid(self):
         return len(self.items) > 0
 
-    def base_style(self) -> Optional[str]:
+    def style(self) -> Optional[str]:
         #  Lazy, just use the first
         for item in self.items:
             if item.style:
@@ -147,7 +147,7 @@ class Block:
     def base_style(self) -> Optional[str]:
         #  Lazy, just use the first
         for item in self.content:
-            s = item.base_style()
+            s = item.style()
             if s:
                 return s
         return None

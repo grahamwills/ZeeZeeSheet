@@ -50,7 +50,7 @@ class Style:
 
 
 DEFAULT = Style(inherit='<none>', color=Color('black'),
-                borderWidth=0.5, borderColor=Color('black'), font='Gotham', size=9, align='fill')
+                borderWidth=0.5, font='Gotham', size=9, align='fill')
 
 _MAPPINGS = {
     'parent':     'inherit',

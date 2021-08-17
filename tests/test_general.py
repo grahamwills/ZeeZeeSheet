@@ -3,6 +3,7 @@ from pathlib import Path
 from colour import Color
 
 import common
+import para
 import table
 from conftest import debug_placed_content
 from layoutblock import layout_block
@@ -25,8 +26,8 @@ def test_table_creation():
     r4 = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
     cells = [
-        [pdf.make_paragraph(r1), pdf.make_paragraph(r2)],
-        [pdf.make_paragraph(r3), pdf.make_paragraph(r4)]
+        [para.make_paragraph(r1, pdf), para.make_paragraph(r2, pdf)],
+        [para.make_paragraph(r3, pdf), para.make_paragraph(r4, pdf)]
     ]
 
     t = table.as_table(cells, bounds.width, pdf, 10)

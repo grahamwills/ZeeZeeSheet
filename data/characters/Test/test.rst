@@ -1,64 +1,77 @@
-.. page: size=8inx8.5in
-.. section: stack columns=3 equal
+.. section: stack columns=2 equal
+.. title: banner style=title
 
-**Ethik Beigleiter**
-====================
+**Lunathien Calenmaethor**
+==========================
 
- - is a **Chaotic Dwarven Adept**
- - who  **Crafts Unique Objects**
- - and is an **Initiate of the Inverted Pyramid**
+.. title: hidden
 
+.. image:: ../Luna/13thAgelogo.png
+   :height: 34
+   :align: left
+..
 
-.. block: badge tags=Pool,Edge shape=rectangle style=badge
+- Race:**Wood Elf**     |   Class:**Druid** |   Gender:**Female**   |   Age:**62**
 
-Pools
- - Might      | | 10   | 1
- - Speed      |  | 13   |
- - Intellect  |  | 21   | 2
+.. style: big
 
+- My firstborn will be the next Elf Queen
 
-.. block: badge tags=,Edge, shape=hexagon style=badge
+.. style: default
 
-Pools
- - Might      | 3 | 10   |
- - Speed      |  | 13   | 4
+.. block: key-values style=heading_green rows=3
+.. style: stat_style
 
- - Etc      |  | 13   |
- - More So      |  | 13   |
+Attributes
+ - Strength     | **8**  | -1
+ - Constitution | **12** | +1
+ - Dexterity    | **18** | +4
+ - Intelligence | **8**  | -1
+ - Wisdom       | **18** | +4
+ - Charisma     | **12** | +1
 
-
-
-
-.. block: badge tags=Pool, shape=oval style=badge
-
-Pools
- - Might      | 4 | 10   | 2
- - Speed       | 5| 13   | 12
- - Intellect   | 6 | 21   | 2
- - Other   | 6 | 21   | 2
-
-.. block: badge shape=rounded style=badge
-
-Pools
- - Might      | 4 | 10   | 2
- - Speed       | 5| 13   | 12
- - Intellect   | 6 | 21   | 2
- - Other   | 6 | 21   | 2
+.. block: key-values style=heading_red rows=3
 
 
+---------------------------------------------------------------
 
-
-
-
-
-
------------------------------------------
 
 Styles
-======
+------
 
 default
-  family=Roboto background=#eef
+  family=Baskerville size=8 align=fill
+title
+  size=40 color=darkGreen family=LoveYou
 
-badge
-    family=Gotham color=brown background=#ffc borderColor=navy
+heading
+  color=white background=black family=Helvetica
+heading_blue
+  inherit=heading background=navy
+heading_black
+  inherit=heading background=black
+heading_green
+  inherit=heading background=green
+heading_red
+  inherit=heading background=red
+heading_orange
+  inherit=heading background=orange
+
+stat_style
+  color=white family=Helvetica size=10
+
+big
+  size=20 inherit=title align=center
+
+
+blue
+  background=#eef
+black
+  background=#eee
+green
+  background=#efe
+red
+  background=#fee
+orange
+  background=#fec
+

@@ -5,6 +5,8 @@ from typing import List, Optional, Tuple
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
 
 import para
+import para as para1
+import para as para2
 from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedPathContent, PlacedRectContent
 from sheet import common
 from sheet.common import Rect
@@ -18,7 +20,7 @@ LOGGER = common.configured_logger(__name__)
 
 def _add_run(elements: [Element], row: [], pdf: PDF, align: str):
     if elements:
-        para = pdf.make_paragraph(Run(elements), align=align)
+        para = para1.make_paragraph(Run(elements), pdf, align)
         row.append(para)
 
 
@@ -30,7 +32,7 @@ def _make_cells_from_run(run: Run, pdf: PDF) -> (List[Paragraph], int):
 
     if divider_count + spacer_count == 0:
         # just a single line
-        return [pdf.make_paragraph(run)], 0
+        return [para.make_paragraph(run, pdf)], 0
 
     # Establish spacing patterns
     if spacer_count < 2:
@@ -69,13 +71,14 @@ def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
         return PlacedFlowableContent(table, bounds, pdf)
     else:
         # No spacers -- nice and simple
-        p = pdf.make_paragraph(run)
+        p = para.make_paragraph(run, pdf)
         return PlacedFlowableContent(p, bounds, pdf)
 
 
-def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
+def table_layout(block: Block, bounds: Rect, pdf: PDF, padding:int=None) -> PlacedContent:
     cells = [make_row_from_run(run, pdf, bounds.width) for run in block.content]
-    table = as_table(cells, bounds.width, pdf, block.padding)
+    padding = int(padding) if padding is not None else block.padding
+    table = as_table(cells, bounds.width, pdf, padding)
     return PlacedFlowableContent(table, bounds, pdf)
 
 
@@ -148,7 +151,8 @@ def stats_runs(run: [Element], pdf: PDF) -> List[Paragraph]:
             else:
                 multiplier = 1.0
             if items[start:i]:
-                row.append(pdf.make_paragraph(Run(items[start:i]), align='center', size_factor=multiplier))
+                run1 = Run(items[start:i])
+                row.append(para1.make_paragraph(run1, pdf, 'center', multiplier))
             if e.which == ElementType.SPACER:
                 spacer_idx += 1
             start = i + 1
@@ -158,7 +162,8 @@ def stats_runs(run: [Element], pdf: PDF) -> List[Paragraph]:
     else:
         multiplier = 1.0
     if items[start:]:
-        para = pdf.make_paragraph(Run(items[start:]), align='center', size_factor=multiplier)
+        run2 = Run(items[start:])
+        para = para2.make_paragraph(run2, pdf, 'center', multiplier)
         row.append(para)
     return row
 
@@ -183,13 +188,15 @@ def _col_width(cells: [[Paragraph]], col: int, pdf: PDF) -> float:
 
 
 def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: int) -> PlacedContent:
-    items = [stats_runs(run, pdf) for run in block.content]
+    box_style = pdf.style(style)
+    text_style = pdf.style(block.base_style())
+    overrides = [Style(align='center'), Style(align='center', size=text_style.size * 1.5), Style(align='center')]
+
+    items = [para.split_into_paragraphs(run, pdf, overrides) for run in block.content]
 
     padding = block.padding
 
     nRows = int(rows)
-    box_style = pdf.style(style)
-    text_style = pdf.style(block.base_style())
     text_style_1 = copy(text_style)
     text_style_1.size = text_style_1.size * 3 // 2
     H1 = text_style.size + 2 * padding
@@ -215,6 +222,9 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
         if contents and i % nRows == 0:
             top = bounds.top
             left += W1 + W2 + W3 + 2 * padding
+
+
+
         r2 = Rect(left=left, top=top, height=H2, width=W2)
         r1 = Rect(left=r2.right, top=top + (H2 - H1) / 2, width=W1 + W3, height=H1)
 
@@ -223,15 +233,15 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
         contents.append(PlacedRectContent(box, box_style, pdf, True, False, rounded=rounded))
         contents.append(PlacedRectContent(r2, box_style, pdf, True, False, rounded=rounded))
 
-        placed0 = para.place_within(cell[0], r1.resize(width=r1.width - W3), pdf)
-        placed1 = para.place_within(cell[1], r2, pdf)
+        placed0 = para.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf)
+        placed1 = para.align_vertically_within(cell[1], r2, pdf)
 
         contents.append(placed0)
         contents.append(placed1)
 
         if W3:
             r3 = Rect(top=r1.top, bottom=r1.bottom, width=W3, right=r1.right)
-            placed2 = para.place_within(cell[2], r3, pdf)
+            placed2 = para.align_vertically_within(cell[2], r3, pdf)
             contents.append(placed2)
 
         top = r2.bottom + 2 * padding
@@ -246,6 +256,8 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
     height = y[6]
     r = y[1]
     b = Rect(left=0, right=width, top=0, bottom=height)
+
+    shape = shape or 'oval'
 
     if shape.startswith('oval'):
         path = pdf.beginPath()
@@ -283,12 +295,12 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
     group = [outer_shape, inner_shape]
 
     # tags
-    if len(tags)> 0 and tags[0]:
+    if len(tags) > 0 and tags[0]:
         p = para.from_text(tags[0], tag_style, pdf)
         r = Rect(left=0, right=width, top=y[4], bottom=y[5])
         tag = para.align_vertically_within(p, r, pdf, posY=-1)
         group.append(tag)
-    if len(tags)> 1 and tags[1]:
+    if len(tags) > 1 and tags[1]:
         p = para.from_text(tags[1], tag_style, pdf)
         r = Rect(left=0, right=width, top=y[1], bottom=y[2])
         tag = para.align_vertically_within(p, r, pdf, posY=1)
@@ -302,7 +314,7 @@ def badge_vertical_layout(width: int, tags: List[str], style: Style, tag_style: 
     extreme = max(width / 2, style.size * 1.2)
     tag = tag_style.size * 1.2
     title = style.size * 1.2
-    main = max(width-title, style.size * 2 * 1.2)
+    main = max(width - title, style.size * 2 * 1.2)
 
     upper_tag_ht = bool(len(tags) > 1 and tags[1]) * tag
     lower_tag_ht = bool(len(tags) > 0 and tags[0]) * tag
@@ -310,7 +322,8 @@ def badge_vertical_layout(width: int, tags: List[str], style: Style, tag_style: 
     height = main + title + 2 * extreme + upper_tag_ht + lower_tag_ht
 
     # Vertical dividing positions for the shape, rounded to integers
-    y = (0, extreme, extreme + upper_tag_ht, extreme+upper_tag_ht + title, height - extreme - lower_tag_ht, height - extreme, height)
+    y = (0, extreme, extreme + upper_tag_ht, extreme + upper_tag_ht + title, height - extreme - lower_tag_ht,
+         height - extreme, height)
     return tuple(round(x) for x in y)
 
 
@@ -318,48 +331,53 @@ def add_stamp_values(stamp: PlacedGroupContent, y: Tuple[int], run: Run, pdf: PD
     contents = stamp.group
     width = stamp.requested.width
 
-    style = pdf.style(run.base_style())
-    styles = [style.modify(align='center'),
-              style.modify(size=style.size * 2, align='center'),
-              style.modify(size=round(style.size * 1.5), align='center'),
-              style.modify(size=round(style.size * 1.5), align='center')]
-    row = para.split_into_paragraphs(pdf, run, styles=styles)
+    style = pdf.style(run.style())
+    styles = [Style(align='center'),
+              Style(size=style.size * 2, align='center'),
+              Style(size=round(style.size * 1.25), align='center'),
+              Style(size=round(style.size * 1.25), align='center')]
+    row = para.split_into_paragraphs(run, pdf, styles=styles)
 
     if len(row) > 0 and row[0]:
         r = Rect(left=0, right=width, top=y[2], bottom=y[3])
-        p = para.align_vertically_within(row[0], r, pdf, posY=0)
+        p = para.align_vertically_within(row[0], r, pdf, metrics_adjust=0)
         contents.append(p)
     if len(row) > 1 and row[1]:
         r = Rect(left=0, right=width, top=y[3], bottom=y[4])
-        p = para.align_vertically_within(row[1], r, pdf, posY=0, metrics_adjust=0.75)
+        p = para.align_vertically_within(row[1], r, pdf, metrics_adjust=0.75)
         contents.append(p)
     if len(row) > 2 and row[2]:
         r = Rect(left=0, right=width, top=y[5], bottom=y[6])
-        contents.append(PlacedFlowableContent(row[2], r, pdf))
+        p = para.align_vertically_within(row[2], r, pdf)
+        contents.append(p)
     if len(row) > 3 and row[3]:
         r = Rect(left=0, right=width, top=y[0], bottom=y[1])
-        contents.append(PlacedFlowableContent(row[3], r, pdf))
+        p = para.align_vertically_within(row[3], r, pdf, metrics_adjust=1)
+        contents.append(p)
 
     return PlacedGroupContent(contents, stamp.requested)
 
 
-def badges_layout(block: Block, bounds: Rect, pdf: PDF, tags: str = None, shape: str = None,
-                  style=None, padding=None) -> PlacedContent:
+def badges_layout(block: Block, bounds: Rect, pdf: PDF, padding:int=None, tags: str = None, shape: str = None,
+                  style:str=None) -> PlacedContent:
     n = len(block.content)
 
     tags = tags.split(',') if tags else []
 
     if padding is None:
         padding = block.padding
+    else:
+        padding = int(padding)
 
     content_style = pdf.style(block.base_style())
-    tag_height = content_style.size * 2 / 3
-    tag_style = content_style.modify(size=tag_height, align='center')
+    shape_style = pdf.style(style) if style else content_style
+    tag_height = shape_style.size * 2 / 3
+
+    tag_style = shape_style.modify(size=tag_height, align='center')
     width = (bounds.width - padding * (n - 1)) // n
 
     ypos = badge_vertical_layout(width, tags, content_style, tag_style)
 
-    shape_style = pdf.style(style) if style else content_style
     stamp = badge_template(width, ypos, shape, tags, shape_style, tag_style, pdf)
 
     # Adjust for round off error in amiking the widths all integers

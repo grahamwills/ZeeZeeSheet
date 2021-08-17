@@ -1,15 +1,14 @@
 import io
+from collections import defaultdict
 from pathlib import Path
-from typing import Optional
 
 import reportlab.lib.colors
 from colour import Color
-from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.pdfgen.pathobject import PDFPathObject
-from reportlab.platypus import Flowable, Paragraph
+from reportlab.platypus import Flowable
 
 from sheet import common
 from sheet.model import Element, ElementType, Run
@@ -19,6 +18,8 @@ LOGGER = common.configured_logger(__name__)
 
 _CHECKED_BOX = '../data/system/images/checked.png'
 _UNCHECKED_BOX = '../data/system/images/unchecked.png'
+
+_LEADING_MAP = defaultdict(lambda: 1.2)
 
 
 class PDF(canvas.Canvas):
@@ -105,43 +106,31 @@ class PDF(canvas.Canvas):
             self.drawPath(path, fill=0, stroke=1)
 
     def draw_flowable(self, flowable: Flowable, bounds):
-        if self.debug:
-            self.stroke_rect(bounds, Style(borderColor=Color('red'), borderWidth=0.5))
         try:
             flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
         except:
             LOGGER.error("Error trying to draw %s into %s", flowable.__class__.__name__, bounds)
 
-    def make_paragraph(self, run: Run, align=None, size_factor=1.0) -> Optional[Paragraph]:
-        if not len(run.items):
-            return None
+    def paragraph_style_for(self, run: Run) -> (Style, float):
+        styles = [self.style(e.style) for e in run.items]
+        style = styles[0]
+        max_size = max(s.size for s in styles)
+        max_leading = max(self.leading_for(s) for s in styles)
+        if max_size != style.size:
+            style = style.modify(size=max_size)
+        return style, max_leading
 
-        style = self.style(run.base_style())
+    def descender(self, style) -> float:
+        try:
+            return -pdfmetrics.getDescent(style.font, style.size)
+        except:
+            return -pdfmetrics.getDescent(style.fontName, style.fontSize)
 
-        align = align or style.align
-
-        alignment = {'left': 0, 'center': 1, 'right': 2, 'fill': 4, 'justify': 4}[align]
-
-        size = round(style.size * size_factor)
-        opacity = float(style.opacity) if style.opacity is not None else 1.0
-        color = reportlab.lib.colors.Color(*style.color.rgb, alpha=opacity)
-        pStyle = ParagraphStyle(name='tmp',
-                                fontName=style.font, fontSize=size, leading=size * 1.2,
-                                allowWidows=0, embeddedHyphenation=1, alignment=alignment,
-                                hyphenationMinWordLength=1,
-                                textColor=color)
-
-        # Add spaces between check boxes and other items
-        items = []
-        for e in run.items:
-            # Strangely, anon-breaking space allows breaks to happen between images, whereas simple spaces do not
-            if e is not run.items[0] and not e.value[0] in ":;-=":
-                items.append('<font size=0>&nbsp;</font> ')
-            items.append(_element_to_html(e, self, style))
-        return Paragraph("".join(items), pStyle)
-
-    def descender(self, style: Style) -> float:
-        return -pdfmetrics.getDescent(style.font, style.size)
+    def leading_for(self, item) -> float:
+        try:
+            return _LEADING_MAP[item.font.lower()] * item.size
+        except AttributeError:
+            return _LEADING_MAP[item.fontName.lower()] * item.fontSize
 
 
 def _element_to_html(e: Element, pdf: PDF, base_style: Style):
@@ -191,23 +180,24 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
 
 def install_fonts() -> [str]:
     user_fonts = []
-    install_font('Symbola', 'Symbola', user_fonts)
-    install_font('Baskerville', 'Baskerville', user_fonts)
-    install_font('Droid', 'DroidSerif', user_fonts)
-    install_font('Parisienne', 'Parisienne', user_fonts)
-    install_font('PostNoBills', 'PostNoBills', user_fonts)
-    install_font('Roboto', 'Roboto', user_fonts)
-    install_font('Western', 'Carnevalee Freakshow', user_fonts)
-    install_font('LoveYou', 'I Love What You Do', user_fonts)
-    install_font('Typewriter', 'SpecialElite', user_fonts)
-    install_font('StarJedi', 'Starjedi', user_fonts)
-    install_font('28DaysLater', '28 Days Later', user_fonts)
-    install_font('CaviarDreams', 'CaviarDreams', user_fonts)
-    install_font('MotionPicture', 'MotionPicture', user_fonts)
-    install_font('Adventure', 'Adventure', user_fonts)
-    install_font('MrsMonster', 'mrsmonster', user_fonts)
-    install_font('BackIssues', 'back-issues-bb', user_fonts)
     install_font('Gotham', 'Gotham', user_fonts)
+    install_font('Baskerville', 'Baskerville', user_fonts)
+
+    install_font('Adventure', 'Adventure', user_fonts, 1.0)
+    install_font('Steampunk', 'Steamwreck', user_fonts, 0.9)
+    install_font('Steamship', 'Starship', user_fonts, 1.15)
+    install_font('LoveYou', 'I Love What You Do', user_fonts, 1.2)
+    install_font('Comics', 'back-issues-bb', user_fonts)
+    install_font('Jedi', 'Starjedi', user_fonts)
+    install_font('Western', 'Carnevalee Freakshow', user_fonts, 1.0)
+    install_font('ArtDeco', 'CaviarDreams', user_fonts, 1.1)
+    install_font('Radioactive', '28 Days Later', user_fonts, 1.0)
+    install_font('Typewriter', 'SpecialElite', user_fonts)
+    install_font('Monster', 'mrsmonster', user_fonts, 1.0)
+    install_font('Script', 'Parisienne', user_fonts, 1.1)
+
+    install_font('MotionPicture', 'MotionPicture', user_fonts, 1.0)
+    install_font('Symbola', 'Symbola', user_fonts)
     return sorted(base_fonts() + user_fonts)
 
 
@@ -222,14 +212,15 @@ def base_fonts():
 def create_single_font(name, resource_name, default_font_name, user_fonts):
     loc = Path(__file__).parent.parent.joinpath('data/system/fonts/', resource_name + ".ttf")
     if loc.exists():
-        pdfmetrics.registerFont(TTFont(name, loc))
+        font = TTFont(name, loc)
+        pdfmetrics.registerFont(font)
         user_fonts.append(name)
         return name
     else:
         return default_font_name
 
 
-def install_font(name, resource_name, user_fonts):
+def install_font(name, resource_name, user_fonts, leading:float=None):
     try:
         pdfmetrics.getFont(name)
     except:
@@ -238,3 +229,5 @@ def install_font(name, resource_name, user_fonts):
         italic = create_single_font(name + "-Italic", resource_name + "-Italic", regular, user_fonts)
         bold_italic = create_single_font(name + "-BoldItalic", resource_name + "-BoldItalic", bold, user_fonts)
         pdfmetrics.registerFontFamily(name, normal=name, bold=bold, italic=italic, boldItalic=bold_italic)
+        if leading:
+            _LEADING_MAP[name.lower()] = leading

@@ -1,3 +1,4 @@
+.. page: padding=20
 .. section: stack columns=2
 .. title: hidden
 .. style: title
@@ -24,7 +25,7 @@ Picture
 ---------------------------------------------------------
 
 
-.. section: stack columns=2
+.. section: stack columns=2 padding=20
 .. title: hidden
 .. style: title
 
@@ -99,9 +100,9 @@ Styles
 default
   family=Gotham color=#004 size=10 align=fill
 title
-  size=32 color=#008 family=BackIssues align=left color=black
+  size=32 color=#008 family=Comics align=left color=black
 big
-  size=16 family=BackIssues align=left
+  size=16 family=Comics align=left
 
 heading1
   background=#449 color=white align=left
