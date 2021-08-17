@@ -8,15 +8,16 @@ from reportlab.platypus import Paragraph, Table, TableStyle
 
 import zeesheet
 from sheet.common import Rect
-from sheet.model import Run, Style
+from sheet.model import Run
 from sheet.pdf import PDF
 from placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, \
     calculate_unused_width_for_group, line_info
+from style import Style, Stylesheet
 
 
 @pytest.fixture
 def pdf() -> PDF:
-    return PDF("/tmp/killme.pdf", dict(), (500, 1000), True)
+    return PDF(Path("/tmp/killme.pdf"), Stylesheet(), (500, 1000), True)
 
 
 @pytest.fixture
@@ -225,7 +226,7 @@ def test_table_with_terrible_wraps(table, pdf):
 
 def test_line_info():
     style = Style(align='left', font='Gotham', size=10, color=Color('black'))
-    pdf = PDF(Path("/tmp/killme.pdf"), {'default': style}, (500, 1000), True)
+    pdf = PDF(Path("/tmp/killme.pdf"), Stylesheet(), (500, 1000), True)
 
     run = Run().add("basic test", 'default')
 
@@ -238,7 +239,7 @@ def test_line_info():
 
 def test_line_info_for_boxes():
     style = Style(align='left', font='Gotham', size=10, color=Color('black'))
-    pdf = PDF(Path("/tmp/killme.pdf"), {'default': style}, (500, 1000), True)
+    pdf = PDF(Path("/tmp/killme.pdf"),  Stylesheet(), (500, 1000), True)
 
     run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 

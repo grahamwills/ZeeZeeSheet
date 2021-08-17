@@ -118,17 +118,17 @@ class ImagePlacement(Optimizer):
         width = int(im_info['width']) if 'width' in im_info else None
         height = int(im_info['height']) if 'height' in im_info else None
         if width and height:
-            im = Image(file, width=width, height=height)
+            im = Image(file, width=width, height=height, lazy=0)
         else:
-            im = Image(file)
+            im = Image(file, lazy=0)
             w, h = im.imageWidth, im.imageHeight
             if width:
-                im = Image(file, width=width, height=h * width / w)
+                im = Image(file, width=width, height=h * width / w, lazy=0)
             elif height:
-                im = Image(file, height=height, width=w * height / h)
+                im = Image(file, height=height, width=w * height / h, lazy=0)
             elif w > bounds.width:
                 # Fit to the column's width
-                im = Image(file, width=bounds.width, height=h * bounds.width / w)
+                im = Image(file, width=bounds.width, height=h * bounds.width / w, lazy=0)
         return im
 
 

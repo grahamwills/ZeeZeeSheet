@@ -1,19 +1,22 @@
+from pathlib import Path
+
 from colour import Color
 
+import common
 import table
-import zeesheet
 from conftest import debug_placed_content
-from sheet.common import Rect
 from layoutblock import layout_block
-from sheet.model import Block, Run, Style
-from sheet.pdf import PDF
 from placed import PlacedFlowableContent
+from sheet.common import Rect
+from sheet.model import Block, Run
+from sheet.pdf import PDF
+from style import Stylesheet
 
 
 def test_table_creation():
-    zeesheet.install()
-    style = Style(align='left', font='Gotham', size=10, color=Color('black'))
-    pdf = PDF("/tmp/killme.pdf", {'default': style}, (500, 1000), True)
+    stylesheet = Stylesheet()
+    stylesheet.define('default', font='Gotham', size=10)
+    pdf = PDF(Path("/tmp/killme.pdf"), stylesheet, (500, 1000), True)
     bounds = Rect(left=0, top=0, right=120, bottom=100)
 
     r1 = Run().add("Kung Fu Points:", 'default')
@@ -30,7 +33,6 @@ def test_table_creation():
     content = PlacedFlowableContent(t, bounds, pdf)
     debug_placed_content(content, pdf)
 
-
     assert content.actual == Rect(left=0, top=0, right=120, bottom=106)
     assert content.unused_width == 8
     assert content.bad_breaks == 0
@@ -38,14 +40,15 @@ def test_table_creation():
 
 
 def test_block_table_creation():
-    zeesheet.install()
-    style = Style(align='left', font='Gotham', size=10, color=Color('black'))
-    banner = Style(color=Color('white'), background=Color('navy'), borderWidth=1, align='left', size=10, font='Gotham')
-    pdf = PDF("/tmp/killme.pdf", {'default': style, 'banner':banner}, (500, 1000), True)
+    stylesheet = Stylesheet()
+    stylesheet.define('default', color=Color('white'), background=Color('navy'), borderWidth=1, align='left', size=10,
+                      font='Gotham')
+    stylesheet.define('banner', font='Gotham', size=10)
+    pdf = PDF(Path("/tmp/killme.pdf"), stylesheet, (500, 1000), True)
     bounds = Rect(left=0, top=0, right=120, bottom=100)
 
     block = Block()
-    # block.title_method = common.Command = common.parse_directive('banner style=banner')
+    block.title_method = common.parse_directive('banner style=banner')
     block.title = Run().add("Status", 'default')
     block.content = [
         Run().add("Kung Fu Points: | [ ][ ][ ][ ][ ][ ][ ][ ]", 'default'),
@@ -54,7 +57,6 @@ def test_block_table_creation():
 
     content = layout_block(block, bounds, pdf)
 
-
-    assert content.unused_width == 1
+    assert content.unused_width == 0
     assert content.bad_breaks == 0
-    assert content.ok_breaks == 3
+    assert content.ok_breaks == 5

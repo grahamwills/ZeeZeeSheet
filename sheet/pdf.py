@@ -7,7 +7,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Paragraph
+from reportlab.platypus import Flowable, Paragraph
 
 from sheet import common
 from sheet.model import Element, ElementType, Run
@@ -70,8 +70,9 @@ class PDF(canvas.Canvas):
 
     def fill_rect(self, r: common.Rect, style: Style, rounded=0):
         if style.background:
-            self.fillColor(style.background)
+            self.fillColor(style.background, alpha=style.opacity)
             self.setLineWidth(0)
+
             if rounded > 0:
                 self.roundRect(r.left, self.page_height - r.bottom, r.width, r.height, rounded, fill=1, stroke=0)
             else:
@@ -79,14 +80,14 @@ class PDF(canvas.Canvas):
 
     def stroke_rect(self, r: common.Rect, style: Style, rounded=0):
         if style.borderColor and style.borderWidth:
-            self.strokeColor(style.borderColor)
+            self.strokeColor(style.borderColor, alpha=style.opacity)
             self.setLineWidth(style.borderWidth)
             if rounded > 0:
                 self.roundRect(r.left, self.page_height - r.bottom, r.width, r.height, rounded, fill=0, stroke=1)
             else:
                 self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=0, stroke=1)
 
-    def draw_flowable(self, flowable, bounds):
+    def draw_flowable(self, flowable: Flowable, bounds):
         if self.debug:
             self.stroke_rect(bounds, Style(borderColor=Color('red')))
         try:
@@ -102,16 +103,18 @@ class PDF(canvas.Canvas):
         alignment = {'left': 0, 'center': 1, 'right': 2, 'fill': 4, 'justify': 4}[align]
 
         size = round(style.size * size_factor)
+        opacity = float(style.opacity) if style.opacity is not None else 1.0
+        color = reportlab.lib.colors.Color(*style.color.rgb, alpha=opacity)
         pStyle = ParagraphStyle(name='tmp',
                                 fontName=style.font, fontSize=size, leading=size * 1.2,
                                 allowWidows=0, embeddedHyphenation=1, alignment=alignment,
                                 hyphenationMinWordLength=1,
-                                textColor=reportlab.lib.colors.Color(*style.color.rgb))
+                                textColor=color)
 
         # Add spaces between check boxes and other items
         items = []
         for e in run.items:
-            # Strangely, anon-breaking space allows braks to happen between images, whereas simple spaces do not
+            # Strangely, anon-breaking space allows breaks to happen between images, whereas simple spaces do not
             if e is not run.items[0] and not e.value[0] in ":;-=":
                 items.append('<font size=0>&nbsp;</font> ')
             items.append(_element_to_html(e, self, style))
@@ -133,7 +136,6 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
     if style.bold:
         txt = '<b>' + txt + '</b>'
 
-
     if style.size and style.size != base_style.size:
         size = " size='%d'" % style.size
     else:
@@ -144,8 +146,14 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
     else:
         face = ''
 
-    if style.color and style.color != base_style.color:
-        color = " color='%s'" % style.color.get_hex_l()
+    if style.color and (style.color != base_style.color or style.opacity != base_style.opacity):
+        opacity = style.opacity if style.opacity is not None else 1.0
+        color = " color='rgba(%d, %d, %d, %1.2f)'" % (
+            round(255*style.color.get_red()),
+            round(255 * style.color.get_green()),
+            round(255 * style.color.get_blue()),
+            opacity
+        )
     else:
         color = ''
 

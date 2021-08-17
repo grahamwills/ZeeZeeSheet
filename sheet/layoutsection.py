@@ -165,7 +165,10 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         return divide_space(x, self.available_width, MIN_COLUMN_WIDTH, granularity=5)
 
 
-def stack_in_columns(bounds: Rect, placeables: List, padding: int, columns=1, equal=False) -> PlacedGroupContent:
+def stack_in_columns(bounds: Rect, placeables: List, padding: int=4, columns=1, equal=False) -> PlacedGroupContent:
+    padding = int(padding)
+    columns = int(columns)
+
     # Limit column count to child count -- no empty columns
     k = min(int(columns), len(placeables))
     if k == 1:

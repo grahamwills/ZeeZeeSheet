@@ -29,7 +29,8 @@ def place_block(bounds: Rect, block: Block, pdf: PDF) -> PlacedContent:
 
 def place_section(bounds: Rect, section: Section, pdf: PDF) -> PlacedContent:
     children = [functools.partial(place_block, block=block, pdf=pdf) for block in section.content]
-    placed = stack_in_columns(bounds, children, section.padding, **section.layout_method.options)
+
+    placed = stack_in_columns(bounds, children, **section.layout_method.options)
     LOGGER.info("Placed %s", section)
     if hasattr(make_block_layout, 'cache_info'):
         LOGGER.debug("Block Layout Cache info = %s", make_block_layout.cache_info())

@@ -41,6 +41,8 @@ def parse_directive(txt: str) -> Directive:
 
 def _simplify(txt):
     txt = txt.strip()
+    if not txt:
+        return txt
     if txt[0] == '"' and txt[-1] == '"' or txt[0] == "'" and txt[-1] == "'":
         return txt[1:-1]
     else:

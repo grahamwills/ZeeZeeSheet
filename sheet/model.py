@@ -163,7 +163,6 @@ class Block:
 class Section:
     content: List[Block] = field(default_factory=list)
     layout_method: common.Directive = common.parse_directive("banner style=_banner")
-    padding: int = 4
 
     def add_block(self, block: Block):
         self.content.append(block)

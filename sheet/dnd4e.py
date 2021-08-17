@@ -410,10 +410,10 @@ class DnD4E:
 
     def to_rst(self):
         front_page = [
-            ".. section: stack columns=3\n.. style: title",
+            ".. section: stack columns=3\n.. title: hidden\n.. style: title",
             self.character_title(),
 
-            ".. block: default\n.. title: banner style=banner\n.. style: back",
+            ".. block: default\n.. title: banner style=banner\n.. style: default",
             self.hits(),
 
             ".. title: hidden\n.. block: key-values style=banner_green rows=100\n.. style: attributes",
@@ -424,7 +424,8 @@ class DnD4E:
 
             self.divider(),
 
-            ".. section: stack columns=2\n.. block: default\n.. title: banner style=banner\n.. style: default",
+            ".. section: stack columns=2\n.. block: default\n.. title: banner style=banner",
+            ".. style: default",
 
             self.skills(),
             self.character_details(),
@@ -435,7 +436,8 @@ class DnD4E:
             self.feats(),
             self.divider(),
 
-            ".. section: stack columns=3 equal=True",
+            ".. section: stack columns=3 equal=True padding=12",
+            ".. style: default emphasis=quote strong=heavy",
 
         ]
         return "\n\n\n".join(front_page) \
@@ -482,11 +484,15 @@ class DnD4E:
             ------
             
             default
-                family=Gotham size=8 align=left
+                family=Gotham size=8 align=left 
+            quote
+                family=Baskerville size=7 align=center italic color=#020 opacity=0.8
+            heavy
+                bold color=black opacity=1
             title
-                size=28
+                size=28 color=navy 
             back
-                background=#ffe borderColor=#ddc
+                background=#ffe borderColor=#ddc color=black
             
             banner
                 background=navy color=white borderColor=navy
@@ -497,12 +503,12 @@ class DnD4E:
             banner_black
                 inherit=banner background=black borderColor=#888
             banner_blue
-                inherit=banner background=navy borderColor=#88f
+                inherit=banner background=navy
             banner_orange
                 inherit=banner background=orange borderColor=#fe8
             
             back
-                size=8 family=Helvetica
+                size=8 family=Helvetica opacity=0.75
             back_blue
                 inherit=back background=#eef
             back_orange
@@ -570,7 +576,7 @@ class DnD4E:
             txt = power[rparen + 2:].strip()
             dot = txt.index('.')
             action = txt[:dot].strip().replace(' Action', '')
-            power = (action, txt[dot + 1:].replace('Trigger', '*Trigger*').replace('Effect', '*Effect*'))
+            power = (action, txt[dot + 1:])
             box = '' if usage == 'At-Will' else ' []'
             info = ACTION_TYPE[action]
             line_title = "%s **%s** -- %s/%s%s" % (info[1], name, info[2], usage, box)
@@ -605,7 +611,7 @@ class DnD4E:
         lines.append(" - *%s*" % line_flavor)
 
         if source:
-            lines.append(" - -- <font size=6 color='gray'>%s</font>" % source)
+            lines.append(" - -- <font size=6>%s</font>" % source)
 
         return '\n'.join(line for line in lines if line)
 

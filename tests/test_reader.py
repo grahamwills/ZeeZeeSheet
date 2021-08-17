@@ -30,6 +30,20 @@ def test_two_blocks():
     assert dump(sheet) == 'Section< Block["abc": one, two], Block["def": three] >'
 
 
+def test_multiple_simple_blocks():
+    sheet = build_sheet(dedent(
+            """
+                abc
+ 
+                def
+                
+                ghi
+            """
+    ))
+    assert dump(sheet) == 'Section< Block[abc], Block[def], Block[ghi] >'
+
+
+
 def test_two_sections():
     sheet = build_sheet(dedent(
             """
@@ -102,7 +116,7 @@ def test_bad():
                 minie
             """
     ))
-    assert dump(sheet) == 'Section< Block["eenie": ], Block["one": two], Block[meenie minie] >'
+    assert dump(sheet) == 'Section< Block["eenie": ], Block["one": two], Block[meenie], Block[minie] >'
 
 
 def dump(sheet: Sheet) -> str:

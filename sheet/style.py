@@ -14,6 +14,8 @@ class Style:
     inherit: str = None
 
     color: Color = None
+    opacity: float = None
+
     background: Color = None
     borderColor: Color = None
     borderWidth: float = None
@@ -79,7 +81,7 @@ class Stylesheet():
             try:
                 if key in {'color', 'background', 'borderColor'}:
                     setattr(s, key, Color(value))
-                elif key in {'size', 'borderWidth'}:
+                elif key in {'size', 'borderWidth', 'opacity'}:
                     setattr(s, key, float(value))
                 elif key in {'bold', 'italic'}:
                     setattr(s, key, bool(value))

@@ -13,7 +13,7 @@ from sheet.style import Stylesheet
 
 LOGGER = configured_logger(__name__)
 
-LOG_UNHANDLED = False
+LOG_UNHANDLED = True
 
 
 @dataclass
@@ -203,6 +203,11 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         LOGGER.debug("Departing '%s'", self.status.depart(node))
         self.status.target_nothing()
 
+    def depart_paragraph(self, node) -> None:
+        LOGGER.debug("Departing '%s'", self.status.depart(node))
+        self.status.target_nothing()
+
+
     def visit_transition(self, node: docutils.nodes.Node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         LOGGER.debug("... Finishing Current Section")
@@ -284,7 +289,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
         layout = self.section_method
         LOGGER.info("... Adding section with layout = %s", layout)
-        self.status.section = Section(layout_method=layout, padding=self.sheet.padding)
+        self.status.section = Section(layout_method=layout)
         self.sheet.content.append(self.status.section)
 
 
@@ -303,5 +308,6 @@ def build_sheet(data):
         doc.walkabout(SheetVisitor(doc, sheet))
         sheet.fixup()
         for w in warns:
-            LOGGER.warning("[%s:%s] While reading: %s" % (w.filename, w.lineno, w.message))
+            if not str(w.message).startswith('unclosed file'):
+                LOGGER.warning("[%s:%s] While reading: %s" % (w.filename, w.lineno, w.message))
         return sheet
