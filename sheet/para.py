@@ -142,7 +142,7 @@ def make_paragraph(run: Run, pdf: PDF, align=None, size_factor=None) -> Optional
     # Add spaces between check boxes and other items
     items = []
     for e in run.items:
-        # Strangely, anon-breaking space allows breaks to happen between images, whereas simple spaces do not
+        # Strangely, non-breaking space allows breaks to happen between images, whereas simple spaces do not
         if e is not run.items[0] and not e.value[0] in ":;-=":
             items.append('<font size=0>&nbsp;</font> ')
         items.append(_element_to_html(e, pdf, style))

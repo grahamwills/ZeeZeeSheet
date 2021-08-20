@@ -1,6 +1,6 @@
 .. page: padding=20
 .. section: stack columns=2
-.. title: hidden
+.. title: hidden style=default
 .. style: title
 .. block: padding=0
 

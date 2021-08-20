@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import ast
 import json
+import re
 from collections import namedtuple
 from math import ceil
 from pathlib import Path
@@ -97,7 +99,7 @@ class Power(NamedTuple):
 
         box = '' if self.usage == 'At-Will' else ' []'
 
-        act_type = ACTION_TYPE[self.action][2] if len(self.name) + len(self.action) > 36 else self.action
+        act_type = ACTION_TYPE[self.action][2] if len(self.name) + len(self.action) > 30 else self.action
         line_title = (ACTION_TYPE[self.action][1], self.name, act_type, box)
 
         atk_target = _combine(target, attack_type)
@@ -121,6 +123,7 @@ class Power(NamedTuple):
                 txt = str(txt)
                 for k, v in replacements:
                     txt = txt.replace(k, v)
+                txt = self.further_tidying(txt)
                 lines_main.append((key, txt.split('\n')[0].replace(' + ', '+')))
         lines_main += extras
 
@@ -130,8 +133,7 @@ class Power(NamedTuple):
 
         lines = [
             ".. title: banner style=banner_%s\n.. style: back_%s\n" % (color, color),
-            "%s **%s** -- %s%s" % line_title,
-            # " - %s -- %s" % line_usage if line_usage[1] else " - %s" % line_usage[0],
+            "%s **%s** -- %s%s" % line_title
         ]
 
         if not line_attack:
@@ -162,6 +164,19 @@ class Power(NamedTuple):
 
     def order(self):
         return str(USAGE_TYPE[self.usage][0] * 10 + ACTION_TYPE[self.action][0]) + '_' + self.name
+
+    def further_tidying(self, txt):
+        """ Make common phrases cleaner to read"""
+        match = re.match("(.* gain )([a-z ]+) equal to ([0-9+\\- ]+)\\.", txt)
+        if match:
+            txt = match.group(1) + ' ' + self.eval(match.group(3)) + ' ' + match.group(2)
+        match = re.match("(.* take[s]+ )([a-z ]+) equal to ([0-9+\\- ]+)\\.", txt)
+        if match:
+            txt = match.group(1) + ' ' + self.eval(match.group(3)) + ' ' + match.group(2)
+        return txt
+
+    def eval(self, txt):
+        return str(sum(int(s.strip()) for s in txt.split('+')))
 
 
 def _to_weapon(item) -> Weapon:
@@ -284,6 +299,8 @@ class DnD4E:
 
     def rule(self, rule_type: str) -> (str, str):
         targets = self.rules(rule_type)
+        if not targets:
+            return None, None
         assert len(targets) == 1
         return targets[0]
 
@@ -328,7 +345,7 @@ class DnD4E:
 
     def stat_block(self):
         stats = "Strength Constitution Dexterity Intelligence Wisdom Charisma".split()
-        tuples = [(name, "**%d**" % self.val(name), (self.val(name) - 10) // 2 + self.half_level) for name in stats]
+        tuples = [(name, "**%d**" % self.val(name), self.stat_bonus(name) + self.half_level) for name in stats]
         return 'Ability Scores\n' + "\n".join([" - %-12s | %6s | *+%s*" % p for p in tuples])
 
     def skills(self):
@@ -524,9 +541,13 @@ class DnD4E:
     def make_replacements(self, p: Power) -> List[(str, str)]:
         """ replace common text in hits, misses and effects"""
 
+        reps = []
+
+        damage_bonus = 0
+
         if p.weapons and p.weapons[0].damage:
             damage = p.weapons[0].damage
-            plus = p.weapons[0].attack_stat
+            attack_stat = p.weapons[0].attack_stat
             count = int(damage[0])
             full_damage = damage[1:]
             split = full_damage.split('+')
@@ -536,17 +557,21 @@ class DnD4E:
             else:
                 bonus = ''
 
-            reps = []
             for i in range(1, 10):
-                reps.append(("%d[W] + %s modifier" % (i, plus), "%d%s%s" % (i * count, dice, bonus)))
+                reps.append(("%d[W] + %s modifier" % (i, attack_stat), "%d%s%s" % (i * count, dice, bonus)))
                 reps.append(("%d[W]" % i, "%d%s%s" % (i * count, dice, bonus)))
-            reps.append(("your %s modifier" % plus, bonus[1:]))
-            reps.append(("%s modifier" % plus, bonus[1:]))
-            return reps
 
-        else:
-            stats = "Strength Constitution Dexterity Intelligence Wisdom Charisma".split()
-            return [(name + ' modifier', str((self.val(name) - 10) // 2)) for name in stats]
+            damage_bonus = int(bonus[1:]) - self.stat_bonus(attack_stat)
+
+        for stat in "Strength Constitution Dexterity Intelligence Wisdom Charisma".split():
+            value = str(self.stat_bonus(stat) + damage_bonus)
+            reps.append(("your %s modifier" % stat, value))
+            reps.append(("%s modifier" % stat, value))
+
+        return reps
+
+    def stat_bonus(self, attack_stat):
+        return (self.val(attack_stat) - 10) // 2
 
     def item_to_rst(self, ids: List[str]):
 
