@@ -205,6 +205,7 @@ class Sheet:
     content: List[Section] = field(default_factory=list)
     stylesheet: Stylesheet = field(default_factory=Stylesheet)
     layout_method: str = common.parse_directive('stack')
+    watermark: str = None
     pagesize: (int, int) = letter
     margin: int = 36
     padding: int = 8
@@ -216,7 +217,8 @@ class Sheet:
         for c in self.content:
             c.fixup(self)
 
-    def apply_directive(self, margin=None, padding=None, size=None):
+    def apply_directive(self, margin=None, padding=None, size=None, watermark=None):
+        self.watermark = watermark
         if margin:
             self.margin = _to_size(margin)
         if padding:

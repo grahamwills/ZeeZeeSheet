@@ -194,7 +194,6 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             node.parent.walkabout(StyleVisitor(self.document, self.sheet))
             raise docutils.nodes.StopTraversal
         else:
-            assert self.status.block is None
             self.create_block()
             self.status.block.add_title()
             self.status.target_block_title()
@@ -271,7 +270,6 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
             LOGGER.debug("Departing '%s'", txt)
 
     def create_block(self):
-        assert self.status.block is None
 
         if not self.status.section:
             self.create_section()

@@ -16,6 +16,7 @@ LOGGER = common.configured_logger(__name__)
 
 def find_file(d, ext) -> Optional[Path]:
     results = list(d.glob('*.' + ext))
+    results = [r for r in results if not r.name.startswith('_')]
     if not results:
         return None
     if len(results) > 1:

@@ -8,7 +8,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.pdfgen.pathobject import PDFPathObject
-from reportlab.platypus import Flowable
+from reportlab.platypus import Flowable, Image
 
 from sheet import common
 from sheet.model import Element, ElementType, Run
@@ -107,6 +107,8 @@ class PDF(canvas.Canvas):
 
     def draw_flowable(self, flowable: Flowable, bounds):
         try:
+            if isinstance(flowable, Image):
+                print('erere')
             flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
         except:
             LOGGER.error("Error trying to draw %s into %s", flowable.__class__.__name__, bounds)

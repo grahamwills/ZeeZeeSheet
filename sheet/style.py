@@ -49,9 +49,6 @@ class Style:
         return s
 
 
-DEFAULT = Style(inherit='<none>', color=Color('black'),
-                borderWidth=0.5, font='Gotham', size=9, align='fill')
-
 _MAPPINGS = {
     'parent':     'inherit',
     'foreground': 'color',
@@ -69,6 +66,7 @@ class Stylesheet():
 
     def __init__(self):
         super().__init__()
+        DEFAULT = Style(inherit='<none>', color=Color('black'), borderWidth=0.5, font='Gotham', size=9, align='fill')
         self.items = OrderedDict([('default', DEFAULT)])
         self.define('_banner', align='left', size=10, color='white', background='navy', border='navy')
         self.define('_emphasis', italic=True)

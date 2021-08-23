@@ -233,15 +233,15 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
         contents.append(PlacedRectContent(box, box_style, pdf, True, False, rounded=rounded))
         contents.append(PlacedRectContent(r2, box_style, pdf, True, False, rounded=rounded))
 
-        placed0 = para.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf)
-        placed1 = para.align_vertically_within(cell[1], r2, pdf)
+        placed0 = para.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf, metrics_adjust=-0.2)
+        placed1 = para.align_vertically_within(cell[1], r2, pdf, metrics_adjust=-0.2)
 
         contents.append(placed0)
         contents.append(placed1)
 
         if W3:
             r3 = Rect(top=r1.top, bottom=r1.bottom, width=W3, right=r1.right)
-            placed2 = para.align_vertically_within(cell[2], r3, pdf)
+            placed2 = para.align_vertically_within(cell[2], r3, pdf, metrics_adjust=-0.2)
             contents.append(placed2)
 
         top = r2.bottom + 2 * padding

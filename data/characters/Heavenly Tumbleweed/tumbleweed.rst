@@ -1,7 +1,8 @@
-.. page: size=5.5inx4.5in margin=0.25in
+.. page: size=5.5inx4.5in margin=0.25in watermark=bamboo.jpg
 .. section: padding=0
 .. title: hidden
 .. style: title
+
 
 Heavenly Tumbleweed
 -------------------

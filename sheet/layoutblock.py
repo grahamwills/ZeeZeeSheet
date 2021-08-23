@@ -36,7 +36,7 @@ def layout_block(block: Block, bounds: Rect, pdf: PDF):
 def _pre_content_layout(block, bounds, pdf) -> (PlacedContent, Margins):
     title = block.title_method
     title_style = title.options.get('style', 'default')
-    if title.command in {'hidden', 'none'}:
+    if title.command in {'hidden', 'none'} or not title:
         return banner_pre_layout(block, bounds, title_style, pdf, show_title=False)
     elif title.command == 'banner':
         return banner_pre_layout(block, bounds, title_style, pdf, show_title=True)

@@ -1,3 +1,4 @@
+.. page: watermark=butterflies.jpg
 .. section: stack columns=3
 .. title: banner style=title
 

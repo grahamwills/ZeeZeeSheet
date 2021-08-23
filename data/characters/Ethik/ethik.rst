@@ -1,4 +1,4 @@
-.. page: size=11inx8.5in margin=20
+.. page: size=11inx8.5in margin=20 watermark=background.jpg
 .. section: stack columns=3 equal padding=10
 .. style: huge emphasis=emph
 .. title: hidden style=empty strong=big

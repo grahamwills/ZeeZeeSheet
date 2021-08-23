@@ -132,8 +132,7 @@ class PlacedFlowableContent(PlacedContent):
             self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
 
     def _init_image(self, image: Image):
-        rect = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
-        self.actual = rect
+        self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
         self.unused_width = self._unused_requested_width()
 
     def _init_table(self, table: Table):
