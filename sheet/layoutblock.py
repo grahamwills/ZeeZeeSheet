@@ -3,6 +3,7 @@
 from __future__ import annotations, annotations
 
 import warnings
+from functools import lru_cache
 from typing import Callable, Optional, Tuple
 
 from reportlab.platypus import Image
@@ -19,6 +20,7 @@ from table import badges_layout, key_values_layout, one_line_flowable, table_lay
 LOGGER = common.configured_logger(__name__)
 
 
+@lru_cache
 def layout_block(block: Block, bounds: Rect, pdf: PDF):
     pre, insets = _pre_content_layout(block, bounds, pdf)
 

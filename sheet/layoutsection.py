@@ -4,6 +4,7 @@ import logging
 import math
 import statistics
 import time
+import warnings
 from typing import List, Optional, Tuple
 
 from placed import PlacedContent, PlacedGroupContent
@@ -120,9 +121,8 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         self.available_width = outer.width - (k - 1) * padding
 
     def make_for_known_widths(self, widths):
-        counts = [len(self.placeables) // self.k] * self.k
-        counts[0] += len(self.placeables) - sum(counts)
-        return self.place_all(widths, tuple(counts))
+        even = tuple([1 / self.k] * self.k)
+        return self.make(even)
 
     def brute_allocation(self, widths: Tuple[int]) -> (List[PlacedContent], float, List[int]):
         k = self.k
@@ -165,16 +165,18 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         return divide_space(x, self.available_width, MIN_COLUMN_WIDTH, granularity=5)
 
 
-def stack_in_columns(bounds: Rect, placeables: List, padding: int=4, columns=1, equal=False) -> PlacedGroupContent:
+def stack_together(bounds, columns, equal, padding, placeables):
     padding = int(padding)
     columns = int(columns)
-
     # Limit column count to child count -- no empty columns
-    k = min(int(columns), len(placeables))
+    k = min(columns, len(placeables))
+    if k < columns and equal:
+        # Reduce width so we columsn will eb the right size in the reduced space
+        bounds = bounds.resize(width=bounds.width * k // columns)
+
     if k == 1:
         LOGGER.info("Stacking %d items in single column: %s", len(placeables), bounds)
         return place_in_column(placeables, bounds, padding)
-
     columns_optimizer = ColumnWidthOptimizer(k, placeables, bounds, padding)
     equal = equal in {True, 'True', 'true', 'yes', 'y', '1'}
     if equal:
@@ -189,3 +191,76 @@ def stack_in_columns(bounds: Rect, placeables: List, padding: int=4, columns=1, 
         widths = columns_optimizer.vector_to_widths(div)
         LOGGER.info("Completed in %1.2fs, widths=%s, score=%1.3f", time.process_time() - start, widths, score)
         return PlacedGroupContent(columns, bounds)
+
+
+def _fits(together: PlacedContent, bounds: Rect) -> int:
+    return together.actual.bottom <= bounds.bottom
+
+
+def stack_in_columns(bounds: Rect, page: Rect, placeables: List,
+                     padding: int = 4, columns=1, equal=False) -> List[PlacedGroupContent]:
+    padding = int(padding)
+    columns = int(columns)
+
+    LOGGER.info("Placing %d blocks in %d columns for bounds=%s, page=%s", len(placeables), columns, bounds, padding)
+    k = min(int(columns), len(placeables))
+
+    # If it fits completely, we are done
+    all = stack_together(bounds, columns, equal, padding, placeables)
+    if _fits(all, bounds):
+        return [all]
+
+    # Try k items
+    one = stack_together(bounds, columns, equal, padding, placeables[:k])
+    if not _fits(one, bounds):
+        # They don't fit, so this section will not fit on the page
+        if bounds == page:
+            # This section will not fit even on a full page
+            warnings.warn("Even on an empty page, a section will not fit even one row of blocks")
+            return all
+        else:
+            # Set the bounds to a full page and try that
+            on_next_page = stack_in_columns(page, page, placeables, padding, columns, equal)
+            on_next_page[0].page_break_before = True
+            return on_next_page
+
+    # Do binary search to see what fits. We know 'lo' fits and 'hi' does not
+
+    lo = k
+    lo_bottom = one.actual.bottom
+
+    hi = len(placeables)
+    hi_bottom = all.actual.bottom
+
+    best = one
+
+    while hi > lo + 1:
+        # Find a good midpoint by linear approximation
+        a = bounds.bottom - lo_bottom
+        b = hi_bottom - bounds.bottom
+
+        # Bias downwards slightly
+        mid = int((a * hi + b * lo) / (a + b) - 0.5)
+        if mid <= lo:
+            mid = lo + 1
+        if mid >= hi:
+            mid = hi - 1
+
+        trial = stack_together(bounds, columns, equal, padding, placeables[:mid])
+        LOGGER.debug("Binary Search: Trying %d of %d items", mid, len(placeables))
+        if _fits(trial, bounds):
+            lo = mid
+            lo_bottom = trial.actual.bottom
+            best = trial
+        else:
+            hi = mid
+            hi_bottom = trial.actual.bottom
+
+    assert sum(len(c.group) for c in best.group) == lo
+
+    # Now try the rest on a new page, inserting the section we just made before it
+    all = stack_in_columns(page, page, placeables[lo:], padding, columns, equal)
+    all[0].page_break_before = True
+    all.insert(0, best)
+
+    return all

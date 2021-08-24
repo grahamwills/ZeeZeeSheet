@@ -11,7 +11,7 @@ from layoutblock import layout_block
 from layoutsection import stack_in_columns
 from placed import PlacedContent, PlacedGroupContent
 from sheet.common import Margins, Rect, configured_logger
-from sheet.model import Block, Section, Sheet
+from sheet.model import Block, Sheet
 from sheet.pdf import PDF
 
 LOGGER = configured_logger(__name__)
@@ -29,20 +29,27 @@ def place_block(bounds: Rect, block: Block, pdf: PDF) -> PlacedContent:
     return base
 
 
-def place_section(bounds: Rect, section: Section, pdf: PDF) -> PlacedContent:
-    children = [functools.partial(place_block, block=block, pdf=pdf) for block in section.content]
+def place_sheet(sheet: Sheet, outer: Rect, pdf: PDF) -> PlacedGroupContent:
+    children = []
+    bounds = outer
+    for section in sheet.content:
+        blocks = [functools.partial(place_block, block=block, pdf=pdf) for block in section.content]
 
-    placed = stack_in_columns(bounds, children, **section.layout_method.options)
-    LOGGER.info("Placed %s", section)
-    if hasattr(make_block_layout, 'cache_info'):
-        LOGGER.debug("Block Layout Cache info = %s", make_block_layout.cache_info())
-        make_block_layout.cache_clear()
-    return placed
+        placed_pages = stack_in_columns(bounds, outer, blocks, **section.layout_method.options)
 
+        # Add all children
+        children += placed_pages
 
-def place_sheet(sheet: Sheet, bounds: Rect, pdf: PDF) -> PlacedGroupContent:
-    children = [functools.partial(place_section, section=section, pdf=pdf) for section in sheet.content]
-    return stack_in_columns(bounds, children, sheet.padding)
+        # Set bounds top for the next section
+        bounds = Rect(left=bounds.left, right=bounds.right,
+                      top=placed_pages[-1].actual.bottom + sheet.padding, bottom=bounds.bottom)
+
+        LOGGER.info("Placed %s", section)
+        if hasattr(make_block_layout, 'cache_info'):
+            LOGGER.debug("Block Layout Cache info = %s", make_block_layout.cache_info())
+            make_block_layout.cache_clear()
+
+    return PlacedGroupContent(children, outer)
 
 
 def draw_watermark(sheet: Sheet, pdf: PDF):
@@ -64,21 +71,12 @@ def draw_watermark(sheet: Sheet, pdf: PDF):
 
 
 def draw_sheet(sheet: Sheet, sections: List[PlacedContent], pdf):
-    page_index = 1
-    margin = sheet.margin
-    cumulative_offset = 0
     draw_watermark(sheet, pdf)
     for section in sections:
-        section_bounds = section.actual
-        if section_bounds.bottom > cumulative_offset + sheet.pagesize[1] - margin:
+        if section.page_break_before:
             pdf.showPage()
-            page_index += 1
-            dy = section_bounds.top - margin
-            pdf.translate(dx=0, dy=dy)
-            cumulative_offset += dy
             draw_watermark(sheet, pdf)
         section.draw()
-
     pdf.showPage()
     pdf.save()
 

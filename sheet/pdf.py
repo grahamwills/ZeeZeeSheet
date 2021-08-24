@@ -107,8 +107,6 @@ class PDF(canvas.Canvas):
 
     def draw_flowable(self, flowable: Flowable, bounds):
         try:
-            if isinstance(flowable, Image):
-                print('erere')
             flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
         except:
             LOGGER.error("Error trying to draw %s into %s", flowable.__class__.__name__, bounds)
@@ -133,6 +131,9 @@ class PDF(canvas.Canvas):
             return _LEADING_MAP[item.font.lower()] * item.size
         except AttributeError:
             return _LEADING_MAP[item.fontName.lower()] * item.fontSize
+
+    def __hash__(self):
+        return id(self)
 
 
 def _element_to_html(e: Element, pdf: PDF, base_style: Style):

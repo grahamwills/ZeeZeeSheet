@@ -36,6 +36,8 @@ class PlacedContent(abc.ABC):
             Required bounds -- where we wanted to fit
         actual
             The actual bounds that we were placed into
+        page_break_before
+            Only used for top-level sections, True => page break before this
 
     """
     pdf: PDF
@@ -46,6 +48,7 @@ class PlacedContent(abc.ABC):
     ok_breaks: float
     bad_breaks: float
     internal_variance: float
+    page_break_before: bool
 
     def __init__(self, requested: Rect, actual: Rect, pdf: PDF) -> None:
         self.actual = actual
@@ -56,6 +59,7 @@ class PlacedContent(abc.ABC):
         self.bad_breaks = 0
         self.internal_variance = 0
         self.unused_width = self._unused_requested_width()
+        self.page_break_before = False
 
     def draw(self):
         """ Item placed on screen"""
@@ -236,10 +240,13 @@ class ErrorContent(PlacedRectContent):
 class PlacedGroupContent(PlacedContent):
     group: [PlacedContent]
 
-    def __init__(self, group: List[PlacedContent], requested: Rect, actual=None):
-        actual = actual or Rect.union(p.actual for p in group)
-        super().__init__(requested, actual, group[0].pdf)
-        self.group = group
+    def __init__(self, children: List[PlacedContent], requested: Rect, actual=None):
+        self.group = [p for p in children if p] if children else []
+        if not self.group:
+            return
+
+        actual = actual or Rect.union(p.actual for p in self.group)
+        super().__init__(requested, actual, self.group[0].pdf)
 
         self.ok_breaks = sum(item.ok_breaks for item in self.group)
         self.bad_breaks = sum(item.bad_breaks for item in self.group)
@@ -251,7 +258,7 @@ class PlacedGroupContent(PlacedContent):
             self.unused_width = calculate_unused_width_for_group(self.group, self.requested)
 
         # Inform children of our size
-        for c in group:
+        for c in self.group:
             c.parent_sized(self.requested)
 
     def draw(self):

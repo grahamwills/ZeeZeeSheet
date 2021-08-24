@@ -1,4 +1,4 @@
-.. page: watermark=butterflies.jpg
+.. page: watermark=butterflies.jpg padding=12
 .. section: stack columns=3
 .. title: banner style=title
 
@@ -56,7 +56,7 @@ Hits: **35**                            --  Staggered: **17**
 
 ---------------------------------------------------------------
 
-.. section: stack columns=3
+.. section: stack columns=3 padding=15
 .. title: hidden
 
 
@@ -176,10 +176,6 @@ Scout Form  -- Daily []
    relationship result of 6 with a random icon.
 
 
----------------------------------------------------------------
-
-.. section: stack columns=3 equal=true
-
 Cave, Dungeon, Underworld  -- Terrain Spells
  - **Spider Climb** -- Quick • Self -- p54
  - Climb, fight on ceilings and walls; get one attack re-roll
@@ -215,11 +211,6 @@ Swamp, Lake, river  -- Terrain Spells
  - Damage and cannot heal
 
 
-
-
----------------------------------------------------------------
-
-.. section: stack columns=4 equal=true
 .. title: banner style=heading_blue
 .. style: blue
 
@@ -310,7 +301,7 @@ title
   size=40 color=darkGreen family=LoveYou
 
 heading
-  color=white background=black family=Helvetica
+  color=white background=black family=Gotham
 heading_blue
   inherit=heading background=navy
 heading_black

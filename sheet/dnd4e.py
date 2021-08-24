@@ -520,14 +520,6 @@ class DnD4E:
         if file.exists():
             items.append(file.read_text())
 
-        EVERY = 0
-        for pages in range(2, 10):
-            EVERY = ceil(len(items) / pages)
-            if EVERY < 16:
-                break
-        for p in range(EVERY, len(items), EVERY):
-            items.insert(p, self.divider())
-
         return items
 
     def to_rst(self):
