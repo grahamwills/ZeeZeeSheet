@@ -29,6 +29,9 @@ def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[Pl
         p = place(available)
         contents.append(p)
         current = p.actual.bottom + padding
+        if current > bounds.bottom + bounds.height * 0.1:
+            # Give up -- it takes too much space
+            break
 
     return PlacedGroupContent(contents, bounds)
 
@@ -61,6 +64,11 @@ class ColumnOptimizer(Optimizer):
 
         score = max_height + breaks + fit + stddev
 
+        # If we didn't place everything, add that to the error also
+        placed_count = sum(len(c) for c in columns)
+        missed = len(self.placeables) - placed_count
+        score += 1e6 * missed
+
         LOGGER.debug("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
                      score, max_height, breaks, fit, stddev, var)
         return score
@@ -84,6 +92,7 @@ class ColumnOptimizer(Optimizer):
             b = self.outer.modify_horizontal(left=left, right=right)
             placed = place_in_column(self.placeables[first:last], b, self.padding)
             placed_columns.append(placed)
+
         return placed_columns
 
     def __hash__(self):

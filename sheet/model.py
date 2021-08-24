@@ -92,6 +92,9 @@ class Run:
     def fixup(self):
         self.items = _ensure_representable(self.items)
 
+    def __hash__(self):
+        return id(self)
+
 
 @dataclass
 class Block:

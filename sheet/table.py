@@ -1,5 +1,6 @@
 import warnings
 from copy import copy
+from functools import lru_cache
 from typing import List, Optional, Tuple
 
 from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
@@ -99,6 +100,10 @@ class TableColumnsOptimizer(Optimizer):
         except ValueError:
             LOGGER.warn("Too little space to fit table")
             return None
+        return self._make(widths)
+
+    @lru_cache
+    def _make(self, widths):
         table = Table(self.cells, style=self.style, colWidths=widths)
         return PlacedFlowableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
 
@@ -107,6 +112,9 @@ class TableColumnsOptimizer(Optimizer):
         # LOGGER.debug("Score = %1.3f (breaks=%1.3f, var=%1.3f)", s, placed.error_from_breaks(100, 10),
         #              placed.error_from_variance(1))
         return s
+
+    def __hash__(self):
+        return id(self)
 
 
 def as_table(cells, width: int, pdf: PDF, padding: int):

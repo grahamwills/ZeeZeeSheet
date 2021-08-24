@@ -298,6 +298,9 @@ class PlacedGroupContent(PlacedContent):
         else:
             return "Group(%dx%d: ...)" % (self.actual.width, self.actual.height)
 
+    def __len__(self):
+        return len(self.group)
+
     def __copy__(self):
         # Shallow except for the children, which need copying
         group = [copy(child) for child in self.group]
