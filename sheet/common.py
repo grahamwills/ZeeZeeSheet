@@ -92,7 +92,7 @@ class Extent(NamedTuple):
     y: float
 
 
-class Rect(namedtuple('Rect', 'left right top bottom width height')):
+class Rect(namedtuple('Rect', 'left right top bottom')):
 
     @classmethod
     def union(cls, *args):
@@ -103,10 +103,25 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
                      right=max(r.right, u.right), bottom=max(r.bottom, u.bottom))
         return u
 
+
+    @property
+    def width(self):
+        return self.right - self.left
+
+    @property
+    def height(self):
+        return self.bottom - self.top
+
     def __new__(cls, left=None, right=None, top=None, bottom=None, width=None, height=None):
-        left, right, width = _consistent(left, right, width, "left, right, width")
-        top, bottom, height = _consistent(top, bottom, height, "top, bottom, height")
-        return super().__new__(cls, left, right, top, bottom, width, height)
+        if right is None:
+            right = left + width
+        elif left is None:
+            left = right-width
+        if bottom is None:
+            bottom = top + height
+        elif top is None:
+            top = bottom-height
+        return super().__new__(cls, round(left), round(right), round(top), round(bottom))
 
     def center(self) -> Point:
         return Point((self.left + self.right) / 2, (self.top + self.bottom) / 2)

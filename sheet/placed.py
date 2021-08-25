@@ -99,9 +99,8 @@ class PlacedParagraphContent(PlacedContent):
         super().__init__(requested, requested, pdf)
         self.paragraph = paragraph
 
-        if hasattr(paragraph, 'height'):
-            LOGGER.debug("Redundant wrapping call for %s in %s", type(paragraph).__name__, requested)
-        paragraph.wrapOn(pdf, requested.width, requested.height)
+        if not hasattr(paragraph, 'height'):
+            paragraph.wrapOn(pdf, requested.width, requested.height)
 
         bad_breaks, ok_breaks, unused = line_info(paragraph)
         if paragraph.style.alignment == TA_JUSTIFY:
@@ -128,11 +127,7 @@ class PlacedImageContent(PlacedContent):
     def __init__(self, image: Image, requested: Rect, pdf: PDF):
         super().__init__(requested, requested, pdf)
         self.image = image
-
-        if hasattr(image, 'height'):
-            LOGGER.debug("Redundant wrapping call for %s in %s", type(image).__name__, requested)
         image.wrapOn(pdf, requested.width, requested.height)
-
         self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
         self.unused_width = self._unused_requested_width()
 
@@ -150,16 +145,15 @@ class PlacedTableContent(PlacedContent):
     table: Table
 
     def __init__(self, table: Table, requested: Rect, pdf: PDF):
-        LOGGER.info("Creating Placed Content for %s in %s", type(table).__name__, requested)
         super().__init__(requested, requested, pdf)
         self.table = table
 
-        if hasattr(table, 'height'):
+        if hasattr(table, 'offset'):
             LOGGER.debug("Redundant wrapping call for %s in %s", type(table).__name__, requested)
-        w, h = table.wrapOn(pdf, requested.width, requested.height)
+        table.wrapOn(pdf, requested.width, requested.height)
 
-        self.actual = self.requested.resize(width=w, height=h)
-        sum_bad, sum_ok, unused = table.calculate_issues(w)
+        self.actual = self.requested.resize(width=table.width, height=table.height)
+        sum_bad, sum_ok, unused = table.calculate_issues(table.width)
         self.ok_breaks = sum_ok
         self.bad_breaks = sum_bad
         self.internal_variance = round(max(unused) - min(unused))
@@ -174,9 +168,6 @@ class PlacedTableContent(PlacedContent):
 
     def __str__(self) -> str:
         return "Table(%dx%d)" % (self.actual.width, self.actual.height)
-
-    def __copy__(self):
-        return PlacedTableContent(copy(self.table), self.requested, self.pdf)
 
 
 class PlacedRectContent(PlacedContent):
@@ -316,9 +307,15 @@ class PlacedGroupContent(PlacedContent):
         return len(self.group)
 
     def __copy__(self):
-        # Shallow except for the children, which need copying
-        group = [copy(child) for child in self.group]
-        return PlacedGroupContent(group, self.requested, actual=self.actual)
+        # Create a new instance and copy the __dict__ items in
+        cls = self.__class__
+        pgc = cls.__new__(cls)
+        pgc.__dict__.update(self.__dict__)
+
+        # Deep copy the group
+        pgc.group = [copy(child) for child in self.group]
+        return pgc
+
 
 
 def _unused_horizontal_strip(group: List[PlacedContent], bounds: Rect):

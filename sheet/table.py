@@ -8,13 +8,13 @@ from reportlab.platypus import Flowable, Paragraph
 import layoutparagraph
 import layoutparagraph as para1
 import layoutparagraph as para2
+from flowable import Table
 from placed import PlacedContent, PlacedGroupContent, PlacedParagraphContent, PlacedPathContent, PlacedRectContent, \
     PlacedTableContent
-from flowable import Table
 from sheet import common
 from sheet.common import Rect
 from sheet.model import Block, Element, ElementType, Run
-from sheet.optimize import Optimizer, divide_space
+from sheet.optimize import BadParametersError, Optimizer, divide_space
 from sheet.pdf import PDF
 from sheet.style import Style
 
@@ -57,11 +57,11 @@ def _make_cells_from_run(run: Run, pdf: PDF) -> (List[Paragraph], int):
     return row, divider_count
 
 
-def make_row_from_run(run: Run, pdf: PDF, width: int) -> [Flowable]:
+def make_row_from_run(run: Run, pdf: PDF, bounds:Rect) -> [Flowable]:
     row, dividers = _make_cells_from_run(run, pdf)
     if not dividers:
         # Make a sub-table just for this line
-        return [as_table([row], width, pdf, 0)]
+        return [as_table([row], bounds, pdf, 0)]
     else:
         return row
 
@@ -69,9 +69,8 @@ def make_row_from_run(run: Run, pdf: PDF, width: int) -> [Flowable]:
 def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
     if any(e.which == ElementType.SPACER for e in run.items):
         # Make a one-row table
-        cells = [make_row_from_run(run, pdf, bounds.width)]
-        table = as_table(cells, bounds.width, pdf, padding)
-        return PlacedTableContent(table, bounds, pdf)
+        cells = [make_row_from_run(run, pdf, bounds)]
+        return as_table(cells, bounds, pdf, padding, return_as_placed=True)
     else:
         # No spacers -- nice and simple
         p = layoutparagraph.make_paragraph(run, pdf)
@@ -79,35 +78,31 @@ def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
 
 
 def table_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) -> PlacedContent:
-    cells = [make_row_from_run(run, pdf, bounds.width) for run in block.content]
+    cells = [make_row_from_run(run, pdf, bounds) for run in block.content]
     padding = int(padding) if padding is not None else block.padding
-    table = as_table(cells, bounds.width, pdf, padding)
-    return PlacedTableContent(table, bounds, pdf)
+    return as_table(cells, bounds, pdf, padding, return_as_placed=True)
 
 
-class TableColumnsOptimizer(Optimizer):
+class TableColumnsOptimizer(Optimizer[PlacedTableContent]):
 
-    def __init__(self, cells: [[]], padding: int, width: int, pdf: PDF) -> None:
+    def __init__(self, cells: [[]], padding: int, bounds:Rect, pdf: PDF) -> None:
         ncols = max(len(row) for row in cells)
         super().__init__(ncols)
         self.padding = padding
         self.cells = cells
-        self.width = width
+        self.bounds = bounds
+        self.available_width = bounds.width - (ncols-1) * padding
         self.pdf = pdf
 
     def make(self, x: [float]) -> Optional[PlacedTableContent]:
-        LOGGER.debug("Trying table with divisions = %s", x)
-        try:
-            widths = divide_space(x, self.width, 10, granularity=5)
-        except ValueError:
-            LOGGER.warn("Too little space to fit table")
-            return None
+        LOGGER.fine("Trying table with divisions = %s", x)
+        widths = divide_space(x, self.available_width, 10, granularity=5)
         return self._make(widths)
 
     @lru_cache
     def _make(self, widths):
         table = Table(self.cells, self.padding, widths, self.pdf)
-        return PlacedTableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
+        return PlacedTableContent(table, self.bounds, self.pdf)
 
     def score(self, placed: PlacedTableContent) -> float:
         return placed.error_from_breaks(100, 5) + placed.error_from_variance(0.1)
@@ -116,18 +111,25 @@ class TableColumnsOptimizer(Optimizer):
         return id(self)
 
 
-def as_table(cells, width: int, pdf: PDF, padding: int):
+def as_table(cells, bounds:Rect, pdf: PDF, padding: int, return_as_placed=False):
     ncols = max(len(row) for row in cells)
+    width = bounds.width
     if ncols * 10 >= width:
         LOGGER.debug("Cannot fit %d columns into a table of width %d", ncols, width)
-    elif ncols > 1:
-
-        optimizer = TableColumnsOptimizer(cells, padding, width, pdf)
+        raise BadParametersError("Columns too small for table", ncols*10 - width)
+    elif ncols == 1:
+        table = Table(cells, padding, [width], pdf)
+        if return_as_placed:
+            return PlacedTableContent(table, bounds, pdf)
+        else:
+            return table
+    else:
+        optimizer = TableColumnsOptimizer(cells, padding, bounds, pdf)
         placed, _ = optimizer.run(method='Nelder-Mead')
-        if placed:
+        if return_as_placed:
+            return placed
+        else:
             return placed.table
-
-    return Table(cells, padding, [width / ncols] * ncols, pdf)
 
 
 def stats_runs(run: [Element], pdf: PDF) -> List[Paragraph]:
@@ -222,7 +224,8 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
         contents.append(PlacedRectContent(box, box_style, pdf, True, False, rounded=rounded))
         contents.append(PlacedRectContent(r2, box_style, pdf, True, False, rounded=rounded))
 
-        placed0 = layoutparagraph.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf, metrics_adjust=-0.2)
+        placed0 = layoutparagraph.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf,
+                                                          metrics_adjust=-0.2)
         placed1 = layoutparagraph.align_vertically_within(cell[1], r2, pdf, metrics_adjust=-0.2)
 
         contents.append(placed0)

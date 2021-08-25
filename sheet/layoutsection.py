@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 
 from placed import PlacedContent, PlacedGroupContent
 from sheet.common import Rect, configured_logger
-from sheet.optimize import Optimizer, divide_space
+from sheet.optimize import Optimizer, divide_space, BadParametersError
 
 LOGGER = configured_logger(__name__)
 
@@ -17,9 +17,7 @@ MIN_COLUMN_WIDTH = 40
 
 
 def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[PlacedGroupContent]:
-    if bounds.width < MIN_COLUMN_WIDTH:
-        LOGGER.warn("Column of width %f was smaller than the minimum of %d", bounds.width, MIN_COLUMN_WIDTH)
-        return None
+    assert bounds.width >= MIN_COLUMN_WIDTH
 
     current = bounds.top
     contents = []
@@ -69,12 +67,12 @@ class ColumnOptimizer(Optimizer):
         missed = len(self.placeables) - placed_count
         score += 1e6 * missed
 
-        LOGGER.debug("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
+        LOGGER.fine("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
                      score, max_height, breaks, fit, stddev, var)
         return score
 
     def place_all(self, widths: Tuple[int], counts: Tuple[int]) -> List[PlacedContent]:
-        LOGGER.debug("Placing with widths=%s, alloc=%s", widths, counts)
+        LOGGER.fine("Placing with widths=%s, alloc=%s", widths, counts)
         placed_columns = []
         sum_widths = 0
         sum_counts = 0

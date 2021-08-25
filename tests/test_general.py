@@ -30,7 +30,7 @@ def test_table_creation():
         [layoutparagraph.make_paragraph(r3, pdf), layoutparagraph.make_paragraph(r4, pdf)]
     ]
 
-    t = table.as_table(cells, bounds.width, pdf, 10)
+    t = table.as_table(cells, bounds, pdf, 10)
     content = PlacedFlowableContent(t, bounds, pdf)
     debug_placed_content(content, pdf)
 

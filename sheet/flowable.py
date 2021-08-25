@@ -16,22 +16,29 @@ class Table(Flowable):
     offset: Dict[Flowable, Tuple[int, int]]
 
     def __init__(self, cells: Sequence[Sequence[Flowable]], padding: int, colWidths, pdf: PDF):
+        """ Note that the columnwidths do NOT inlcude the padding, which is extra"""
         super().__init__()
         self.pdf = pdf
-        self.colWidths = [max(10, x) for x in colWidths]
-        self.padding = padding
+        self.colWidths = colWidths
         self.cells = cells
-        self.offset = dict()
+        self.padding = padding
+        self.ncols = max(len(row) for row in cells)
+        self.total_column_width = sum(colWidths)
+        self.total_width = self.total_column_width + (self.ncols - 1) * self.padding
 
-    def _place_row(self, row, top, totalwidth, availHeight):
+        if self.total_column_width < 10 * self.ncols:
+            raise ValueError(
+                "Table too small to be created (width=%s, cols=%d)" % (self.total_column_width, self.ncols))
+
+    def _place_row(self, row, top, availHeight):
         heights = []
         x = 0
         for i, cell in enumerate(row):
-            columnWidth = self.colWidths[i] if cell != row[-1] else totalwidth - x
+            columnWidth = self.colWidths[i] if cell != row[-1] else self.total_width - x
             w, h = cell.wrapOn(self.pdf, columnWidth, availHeight)
             self.offset[cell] = (x, top)
             heights.append(h)
-            x = x + columnWidth
+            x = x + columnWidth + self.padding
 
         row_height = max(heights)
 
@@ -43,16 +50,15 @@ class Table(Flowable):
         return row_height
 
     def wrap(self, availWidth, availHeight):
-        totalwidth = sum(self.colWidths)
+        self.offset = dict()
         y = 0
         for row in reversed(self.cells):
-            row_height = self._place_row(row, y, totalwidth, availHeight - y)
+            row_height = self._place_row(row, y, availHeight - y)
             y += row_height + self.padding
 
-        return availWidth, y - self.padding
-
-    def actual_size(self):
-        return self.placed.actual.size()
+        self.width = availWidth
+        self.height = y - self.padding
+        return self.width, self.height
 
     def draw(self):
         for row in self.cells:
@@ -62,8 +68,7 @@ class Table(Flowable):
 
     def calculate_issues(self, width) -> Tuple[int, int, List[int]]:
         """ Calculate breaks and unused space """
-        ncols = max(len(row) for row in self.cells)
-        min_unused = [width] * ncols
+        min_unused = [width] * self.ncols
         sum_bad = 0
         sum_ok = 0
 
@@ -71,7 +76,7 @@ class Table(Flowable):
             for idx, cell in enumerate(row):
                 # The last cell goes to the end of the row
                 if cell == row[-1]:
-                    end = ncols
+                    end = self.ncols
                 else:
                     end = idx + 1
 
