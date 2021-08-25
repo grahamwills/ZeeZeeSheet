@@ -106,10 +106,7 @@ class PDF(canvas.Canvas):
             self.drawPath(path, fill=0, stroke=1)
 
     def draw_flowable(self, flowable: Flowable, bounds):
-        try:
-            flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
-        except:
-            LOGGER.error("Error trying to draw %s into %s", flowable.__class__.__name__, bounds)
+        flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
 
     def paragraph_style_for(self, run: Run) -> (Style, float):
         styles = [self.style(e.style) for e in run.items]

@@ -13,9 +13,8 @@ from reportlab.platypus import Flowable, Image, Paragraph
 # noinspection PyProtectedMember
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
-from pdf import PDF
 from sheet import common
-from sheet.common import Extent, Point, Rect
+from sheet.common import Rect
 from sheet.pdf import PDF
 from sheet.style import Style
 
@@ -316,8 +315,6 @@ class PlacedGroupContent(PlacedContent):
         return PlacedGroupContent(group, self.requested, actual=self.actual)
 
 
-
-
 def line_info(p):
     """ Calculate line break info for a paragraph"""
     frags = p.blPara
@@ -387,8 +384,6 @@ class Table(Flowable):
         self.cells = cells
         self.offset = dict()
 
-
-
     def _place_row(self, row, top, totalwidth, availHeight):
         placed = []
         x = 0
@@ -404,8 +399,9 @@ class Table(Flowable):
 
         # Adjust to align at the tops
         for cell, pfc in zip(row, placed):
-            x,y  = self.offset[cell]
+            x, y = self.offset[cell]
             self.offset[cell] = x, y - pfc.actual.height + row_height
+            pfc.move(dy=row_height- pfc.actual.height)
 
         return placed, row_height
 
@@ -415,7 +411,7 @@ class Table(Flowable):
         placed = []
         y = 0
         for row in reversed(self.cells):
-            row_items, row_height = self._place_row(row, y, totalwidth, availHeight-y)
+            row_items, row_height = self._place_row(row, y, totalwidth, availHeight - y)
             y += row_height + self.padding
             placed += row_items
 
@@ -426,13 +422,12 @@ class Table(Flowable):
     def actual_size(self):
         return self.placed.actual.size()
 
-
-
-    def drawOn(self, canvas, x, y, _sW=0):
+    def draw(self):
         for row in self.cells:
             for cell in row:
                 p = self.offset[cell]
-                cell.drawOn(canvas, x + p[0], y + p[1])
+                cell.drawOn(self.canv, p[0], p[1])
+
 
     def calculate_issues(self) -> Tuple[int, int, List[int]]:
         """ Calculate breaks and unused space """
@@ -465,4 +460,3 @@ class Table(Flowable):
                     min_unused[i] = min(min_unused[i], unused)
 
         return sum_bad, sum_ok, min_unused
-
