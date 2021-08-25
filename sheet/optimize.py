@@ -16,6 +16,12 @@ LOGGER = configured_logger(__name__)
 BAD_PARAMS_FACTOR = 1e12
 
 
+class BadParametersError(RuntimeError):
+    def __init__(self, message: str, badness: float) -> None:
+        super().__init__(message)
+        self.badness = badness
+
+
 class Optimizer(Generic[T]):
     """
         Solve an optimization problem
@@ -52,14 +58,11 @@ class Optimizer(Generic[T]):
     def score_params(self, p: Tuple[float]) -> (float, T):
         """ scoring function, also returns created object """
 
-        x, err = params_to_x(p)
-
-        if err:
-            return BAD_PARAMS_FACTOR * (1 + err), None
         try:
+            x = params_to_x(p)
             item = self.make(x)
-        except ValueError:
-            return BAD_PARAMS_FACTOR, None
+        except BadParametersError as err:
+            return BAD_PARAMS_FACTOR * (1 + err.badness), None
 
         f = self.score(item) if item else BAD_PARAMS_FACTOR
         LOGGER.fine("[%s] %s -> %s -> %1.3f", self.name, _pretty(x), item, f)
@@ -73,7 +76,15 @@ class Optimizer(Generic[T]):
         """
 
         x0 = (1.0 / self.k,) * (self.k - 1)
-        kwargs = {'method': 'COBYLA', 'constraints': {'type': 'ineq', 'fun': lambda p: params_to_x(p)[1]}}
+
+        def constraint_func(p):
+            try:
+                params_to_x(p)
+                return 0
+            except BadParametersError as err:
+                return err.badness
+
+        kwargs = {'method': 'COBYLA', 'constraints': {'type': 'ineq', 'fun': constraint_func}}
         LOGGER.info("[%s] Solving with %s, init=%s", self.name, method, _pretty(x0))
 
         start = time.perf_counter()
@@ -91,7 +102,7 @@ class Optimizer(Generic[T]):
                       'options': {'initial_simplex': initial_simplex}}
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
         else:
-            raise ValueError("Unknown optimize method '%s'",method)
+            raise ValueError("Unknown optimize method '%s'", method)
 
         duration = time.perf_counter() - start
 
@@ -102,7 +113,7 @@ class Optimizer(Generic[T]):
         else:
             f, item = self.score_params(tuple(solution.x))
             assert f == solution.fun
-            results = item, (f, params_to_x(solution.x)[0])
+            results = item, (f, params_to_x(solution.x))
             LOGGER.info("[%s]: Success in %1.2fs using %d evaluations: %s -> %s -> %1.3f",
                         self.name, duration, solution.nfev, _pretty(solution.x), item, f)
 
@@ -128,9 +139,10 @@ def divide_space(x: [float], total: int, minval: int, granularity=1) -> Tuple[in
     k = len(x)
 
     if minval * k > total:
-        raise ValueError("Combination of minimum (%s) and total (%s) impossible for k=%d" % (minval, total, k))
+        raise BadParametersError("Combination of minimum (%s) and total (%s) impossible for k=%d"
+                                 % (minval, total, k), minval * k - total)
     if any(v < 0 for v in x):
-        raise ValueError("Input data contained a negative value")
+        raise BadParametersError("Input data contained a negative value", -min(x))
 
     wt_total = sum(x)
 
@@ -161,10 +173,10 @@ def _pretty(x: [float]) -> str:
     return '[' + ", ".join(["%1.3f" % v for v in x]) + ']'
 
 
-def params_to_x(params: Iterable[float]) -> (Tuple[float], float):
+def params_to_x(params: Iterable[float]) -> Tuple[float]:
     total = sum(params)
     err = max(0.0, total - 1.0) + sum(max(0.0, -v) ** 2 for v in params)
     if err > 0:
-        return None, err
-
-    return tuple([1.0 - total] + list(params)), 0
+        raise BadParametersError("parameter values lies outside bounds", err)
+    else:
+        return tuple([1.0 - total] + list(params))

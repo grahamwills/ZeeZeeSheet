@@ -8,7 +8,7 @@ from typing import Callable, Optional, Tuple
 
 from reportlab.platypus import Image
 
-import para
+import layoutparagraph
 from placed import ErrorContent, PlacedContent, PlacedGroupContent, PlacedImageContent, PlacedParagraphContent, \
     PlacedRectContent
 from sheet import common
@@ -177,7 +177,7 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF, padding: int=None) ->
     # Move up by the excess leading
     b = bounds.move(dy=-(style.size * 0.2))
     for item in block.content:
-        p = para.make_paragraph(item, pdf)
+        p = layoutparagraph.make_paragraph(item, pdf)
         placed = PlacedParagraphContent(p, b, pdf)
         results.append(placed)
         b = Rect(top=placed.actual.bottom + padding, left=b.left, right=b.right, bottom=b.bottom)

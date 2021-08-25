@@ -4,16 +4,15 @@ from __future__ import annotations
 import abc
 import math
 from copy import copy
-from typing import Dict, List, Sequence, Tuple
+from typing import List
 
 from colour import Color
 from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.pdfgen.pathobject import PDFPathObject
-from reportlab.platypus import Flowable, Image, Paragraph
+from reportlab.platypus import Image
 # noinspection PyProtectedMember
-from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
-from my_para import MyParagraph
+from sheet.flowable import Paragraph, Table, line_info
 from sheet import common
 from sheet.common import Rect
 from sheet.pdf import PDF
@@ -94,9 +93,9 @@ class PlacedContent(abc.ABC):
 
 
 class PlacedParagraphContent(PlacedContent):
-    paragraph: MyParagraph
+    paragraph: Paragraph
 
-    def __init__(self, paragraph: MyParagraph, requested: Rect, pdf: PDF):
+    def __init__(self, paragraph: Paragraph, requested: Rect, pdf: PDF):
         super().__init__(requested, requested, pdf)
         self.paragraph = paragraph
 
@@ -143,7 +142,6 @@ class PlacedImageContent(PlacedContent):
     def parent_sized(self, bounds: Rect):
         self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
 
-
     def __str__(self) -> str:
         return "Image(%dx%d)" % (self.actual.width, self.actual.height)
 
@@ -158,10 +156,10 @@ class PlacedTableContent(PlacedContent):
 
         if hasattr(table, 'height'):
             LOGGER.debug("Redundant wrapping call for %s in %s", type(table).__name__, requested)
-        table.wrapOn(pdf, requested.width, requested.height)
+        w, h = table.wrapOn(pdf, requested.width, requested.height)
 
-        self.actual = self.requested.resize(width=table.actual_size()[0], height=table.actual_size()[1])
-        sum_bad, sum_ok, unused = table.calculate_issues()
+        self.actual = self.requested.resize(width=w, height=h)
+        sum_bad, sum_ok, unused = table.calculate_issues(w)
         self.ok_breaks = sum_ok
         self.bad_breaks = sum_bad
         self.internal_variance = round(max(unused) - min(unused))
@@ -172,11 +170,13 @@ class PlacedTableContent(PlacedContent):
 
     def move(self, dx=0, dy=0) -> PlacedTableContent:
         super().move(dx, dy)
-        self.table.move(dx, dy)
         return self
 
     def __str__(self) -> str:
         return "Table(%dx%d)" % (self.actual.width, self.actual.height)
+
+    def __copy__(self):
+        return PlacedTableContent(copy(self.table), self.requested, self.pdf)
 
 
 class PlacedRectContent(PlacedContent):
@@ -321,26 +321,6 @@ class PlacedGroupContent(PlacedContent):
         return PlacedGroupContent(group, self.requested, actual=self.actual)
 
 
-def line_info(p):
-    """ Calculate line break info for a paragraph"""
-    frags = p.blPara
-    if frags.kind == 0:
-        unused = min(entry[0] for entry in frags.lines)
-        bad_breaks = sum(type(c) == _SplitWord for entry in frags.lines for c in entry[1])
-        ok_breaks = len(frags.lines) - 1 - bad_breaks
-        LOGGER.fine("Fragments = " + " | ".join(str(c) + ":" + type(c).__name__
-                                                for entry in frags.lines for c in entry[1]))
-    elif frags.kind == 1:
-        unused = min(entry.extraSpace for entry in frags.lines)
-        bad_breaks = sum(type(frag) == _SplitFrag for frag in p.frags)
-        specified_breaks = sum(item.lineBreak for item in frags.lines)
-        ok_breaks = len(frags.lines) - 1 - bad_breaks - specified_breaks
-        LOGGER.fine("Fragments = " + " | ".join((c[1][1] + ":" + type(c).__name__) for c in p.frags))
-    else:
-        raise NotImplementedError()
-    return bad_breaks, ok_breaks, unused
-
-
 def _unused_horizontal_strip(group: List[PlacedContent], bounds: Rect):
     """ Unused space, assuming items horizontally laid out, more or less"""
     ox = bounds.left
@@ -377,100 +357,3 @@ def calculate_unused_width_for_group(group: List[PlacedContent], bounds: Rect) -
     return unused
 
 
-class Table(Flowable):
-    cells: Sequence[Sequence[Flowable]]
-    offset: Dict[Flowable, Tuple[int, int]]
-    placed: PlacedGroupContent
-
-    def __init__(self, cells: Sequence[Sequence[Flowable]], padding: int, colWidths, pdf: PDF):
-        super().__init__()
-        self.pdf = pdf
-        self.colWidths = [max(10, x) for x in colWidths]
-        self.padding = padding
-        self.cells = cells
-        self.offset = dict()
-
-    def _place_row(self, row, top, totalwidth, availHeight):
-        placed = []
-        x = 0
-        for i, cell in enumerate(row):
-            columnWidth = self.colWidths[i] if cell != row[-1] else totalwidth - x
-            cell_bounds = Rect(left=x, top=top, width=columnWidth, bottom=availHeight)
-
-            if hasattr(cell, 'cells'):
-                pfc = PlacedTableContent(cell, cell_bounds, self.pdf)
-            elif hasattr(cell, 'image'):
-                pfc = PlacedImageContent(cell, cell_bounds, self.pdf)
-            else:
-                pfc = PlacedParagraphContent(cell, cell_bounds, self.pdf)
-            placed.append(pfc)
-            self.offset[cell] = (x, top)
-            x = x + columnWidth
-
-        row_height = max(pfc.actual.height for pfc in placed)
-
-        # Adjust to align at the tops
-        for cell, pfc in zip(row, placed):
-            x, y = self.offset[cell]
-            self.offset[cell] = x, y - pfc.actual.height + row_height
-            pfc.move(dy=row_height - pfc.actual.height)
-
-        return placed, row_height
-
-    def wrap(self, availWidth, availHeight):
-        totalwidth = sum(self.colWidths)
-
-        placed = []
-        y = 0
-        for row in reversed(self.cells):
-            row_items, row_height = self._place_row(row, y, totalwidth, availHeight - y)
-            y += row_height + self.padding
-            placed += row_items
-
-        self.placed = PlacedGroupContent(placed, Rect(top=0, left=0, width=availWidth, height=availHeight))
-
-        return self.placed.actual.size()
-
-    def actual_size(self):
-        return self.placed.actual.size()
-
-    def draw(self):
-        for row in self.cells:
-            for cell in row:
-                p = self.offset[cell]
-                cell.drawOn(self.canv, p[0], p[1])
-
-    def calculate_issues(self) -> Tuple[int, int, List[int]]:
-        """ Calculate breaks and unused space """
-        ncols = max(len(row) for row in self.cells)
-        min_unused = [self.placed.actual.width] * ncols
-        sum_bad = 0
-        sum_ok = 0
-
-        for row in self.cells:
-            for idx, cell in enumerate(row):
-                # The last cell goes to the end of the row
-                if cell == row[-1]:
-                    end = ncols
-                else:
-                    end = idx + 1
-
-                try:
-                    tbad, tok, tunused = cell.calculate_issues()
-                    sum_bad += tbad
-                    sum_ok += tok
-                    unused = sum(tunused)
-                except:
-                    bad_breaks, ok_breaks, unused = line_info(cell)
-                    sum_bad += bad_breaks
-                    sum_ok += ok_breaks
-
-                # Divide unused up evenly across columns
-                unused /= end - idx
-                for i in range(idx, end):
-                    min_unused[i] = min(min_unused[i], unused)
-
-        return sum_bad, sum_ok, min_unused
-
-    def move(self, dx, dy):
-        pass

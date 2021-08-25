@@ -5,7 +5,7 @@ import reportlab.lib.colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Flowable, Paragraph
 
-from my_para import MyParagraph
+from flowable import Paragraph
 from placed import PlacedParagraphContent
 from sheet.common import Rect
 from sheet.model import Element, ElementType, Run
@@ -42,7 +42,7 @@ def place_within(p: Flowable, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=
     return pfc
 
 
-def align_vertically_within(p: MyParagraph, r: Rect, pdf: PDF, posY=0, metrics_adjust=0) -> PlacedParagraphContent:
+def align_vertically_within(p: Paragraph, r: Rect, pdf: PDF, posY=0, metrics_adjust=0) -> PlacedParagraphContent:
     """
         Create a placed paragraph within a set of bounds
         :param Paragraph p: place this
@@ -133,4 +133,4 @@ def make_paragraph(run: Run, pdf: PDF, align=None, size_factor=None) -> Optional
         if e is not run.items[0] and not e.value[0] in ":;-=":
             items.append('<font size=0>&nbsp;</font> ')
         items.append(_element_to_html(e, pdf, style))
-    return MyParagraph("".join(items), pStyle, pdf)
+    return Paragraph("".join(items), pStyle, pdf)

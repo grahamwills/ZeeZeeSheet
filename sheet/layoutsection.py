@@ -151,11 +151,7 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         return best
 
     def make(self, x: Tuple[float]) -> Optional[List[PlacedContent]]:
-        try:
-            widths = self.vector_to_widths(x)
-        except ValueError:
-            LOGGER.error("Not enough space for columns", exc_info=True)
-            return None
+        widths = self.vector_to_widths(x)
 
         if len(self.placeables) < 10:
             result, score, div = self.brute_allocation(widths)

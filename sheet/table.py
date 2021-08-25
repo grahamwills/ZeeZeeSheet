@@ -5,11 +5,12 @@ from typing import List, Optional, Tuple
 
 from reportlab.platypus import Flowable, Paragraph
 
-import para
-import para as para1
-import para as para2
+import layoutparagraph
+import layoutparagraph as para1
+import layoutparagraph as para2
 from placed import PlacedContent, PlacedGroupContent, PlacedParagraphContent, PlacedPathContent, PlacedRectContent, \
-    PlacedTableContent, Table
+    PlacedTableContent
+from flowable import Table
 from sheet import common
 from sheet.common import Rect
 from sheet.model import Block, Element, ElementType, Run
@@ -34,7 +35,7 @@ def _make_cells_from_run(run: Run, pdf: PDF) -> (List[Paragraph], int):
 
     if divider_count + spacer_count == 0:
         # just a single line
-        return [para.make_paragraph(run, pdf)], 0
+        return [layoutparagraph.make_paragraph(run, pdf)], 0
 
     # Establish spacing patterns
     if spacer_count < 2:
@@ -73,7 +74,7 @@ def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
         return PlacedTableContent(table, bounds, pdf)
     else:
         # No spacers -- nice and simple
-        p = para.make_paragraph(run, pdf)
+        p = layoutparagraph.make_paragraph(run, pdf)
         return PlacedParagraphContent(p, bounds, pdf)
 
 
@@ -182,7 +183,7 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
     text_style = pdf.style(block.base_style())
     overrides = [Style(align='center'), Style(align='center', size=text_style.size * 1.5), Style(align='center')]
 
-    items = [para.split_into_paragraphs(run, pdf, overrides) for run in block.content]
+    items = [layoutparagraph.split_into_paragraphs(run, pdf, overrides) for run in block.content]
 
     padding = block.padding
 
@@ -221,15 +222,15 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
         contents.append(PlacedRectContent(box, box_style, pdf, True, False, rounded=rounded))
         contents.append(PlacedRectContent(r2, box_style, pdf, True, False, rounded=rounded))
 
-        placed0 = para.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf, metrics_adjust=-0.2)
-        placed1 = para.align_vertically_within(cell[1], r2, pdf, metrics_adjust=-0.2)
+        placed0 = layoutparagraph.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf, metrics_adjust=-0.2)
+        placed1 = layoutparagraph.align_vertically_within(cell[1], r2, pdf, metrics_adjust=-0.2)
 
         contents.append(placed0)
         contents.append(placed1)
 
         if W3:
             r3 = Rect(top=r1.top, bottom=r1.bottom, width=W3, right=r1.right)
-            placed2 = para.align_vertically_within(cell[2], r3, pdf, metrics_adjust=-0.2)
+            placed2 = layoutparagraph.align_vertically_within(cell[2], r3, pdf, metrics_adjust=-0.2)
             contents.append(placed2)
 
         top = r2.bottom + 2 * padding
@@ -284,14 +285,14 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
 
     # tags
     if len(tags) > 0 and tags[0]:
-        p = para.from_text(tags[0], tag_style, pdf)
+        p = layoutparagraph.from_text(tags[0], tag_style, pdf)
         r = Rect(left=0, right=width, top=y[4], bottom=y[5])
-        tag = para.align_vertically_within(p, r, pdf, posY=-1)
+        tag = layoutparagraph.align_vertically_within(p, r, pdf, posY=-1)
         group.append(tag)
     if len(tags) > 1 and tags[1]:
-        p = para.from_text(tags[1], tag_style, pdf)
+        p = layoutparagraph.from_text(tags[1], tag_style, pdf)
         r = Rect(left=0, right=width, top=y[1], bottom=y[2])
-        tag = para.align_vertically_within(p, r, pdf, posY=1)
+        tag = layoutparagraph.align_vertically_within(p, r, pdf, posY=1)
         group.append(tag)
 
     return PlacedGroupContent(group, b)
@@ -324,23 +325,23 @@ def add_stamp_values(stamp: PlacedGroupContent, y: Tuple[int], run: Run, pdf: PD
               Style(size=style.size * 2, align='center'),
               Style(size=round(style.size * 1.25), align='center'),
               Style(size=round(style.size * 1.25), align='center')]
-    row = para.split_into_paragraphs(run, pdf, styles=styles)
+    row = layoutparagraph.split_into_paragraphs(run, pdf, styles=styles)
 
     if len(row) > 0 and row[0]:
         r = Rect(left=0, right=width, top=y[2], bottom=y[3])
-        p = para.align_vertically_within(row[0], r, pdf, metrics_adjust=0)
+        p = layoutparagraph.align_vertically_within(row[0], r, pdf, metrics_adjust=0)
         contents.append(p)
     if len(row) > 1 and row[1]:
         r = Rect(left=0, right=width, top=y[3], bottom=y[4])
-        p = para.align_vertically_within(row[1], r, pdf, metrics_adjust=0.75)
+        p = layoutparagraph.align_vertically_within(row[1], r, pdf, metrics_adjust=0.75)
         contents.append(p)
     if len(row) > 2 and row[2]:
         r = Rect(left=0, right=width, top=y[5], bottom=y[6])
-        p = para.align_vertically_within(row[2], r, pdf)
+        p = layoutparagraph.align_vertically_within(row[2], r, pdf)
         contents.append(p)
     if len(row) > 3 and row[3]:
         r = Rect(left=0, right=width, top=y[0], bottom=y[1])
-        p = para.align_vertically_within(row[3], r, pdf, metrics_adjust=1)
+        p = layoutparagraph.align_vertically_within(row[3], r, pdf, metrics_adjust=1)
         contents.append(p)
 
     return PlacedGroupContent(contents, stamp.requested)

@@ -5,9 +5,10 @@ import pytest
 from colour import Color
 from reportlab.platypus import Paragraph
 
-import para
+import layoutparagraph
 from placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, \
-    Table, calculate_unused_width_for_group, line_info
+    calculate_unused_width_for_group
+from flowable import Table, line_info
 from sheet.common import Rect
 from sheet.model import Run
 from sheet.pdf import PDF
@@ -221,7 +222,7 @@ def test_line_info():
 
     run = Run().add("basic test", 'default')
 
-    p = para.make_paragraph(run, pdf)
+    p = layoutparagraph.make_paragraph(run, pdf)
     p.wrapOn(pdf, 10, 100)
     bad_breaks, ok_breaks, unused = line_info(p)
     assert bad_breaks == 4
@@ -234,7 +235,7 @@ def test_line_info_for_boxes():
 
     run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
-    p = para.make_paragraph(run, pdf)
+    p = layoutparagraph.make_paragraph(run, pdf)
     p.wrapOn(pdf, 20, 100)
     bad_breaks, ok_breaks, unused = line_info(p)
     assert bad_breaks == 0
