@@ -5,28 +5,15 @@ import reportlab.lib.colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Flowable, Paragraph
 
+from my_para import MyParagraph
+from placed import PlacedParagraphContent
 from sheet.common import Rect
 from sheet.model import Element, ElementType, Run
 from sheet.pdf import PDF, _element_to_html
-from sheet.placed import PlacedFlowableContent
 from sheet.style import Style
 
 
-class MyParagraph(Paragraph):
-    def __init__(self, items, style:ParagraphStyle, pdf:PDF):
-        super().__init__(items, style)
-        leading = pdf.leading_for(style)
-        descent = pdf.descender(style)
-        self.v_offset = style.fontSize*1.2 - leading + descent/2
-        self._showBoundary = pdf.debug
-
-    def drawOn(self, pdf:PDF, x, y, _sW=0):
-        pdf.translate(0, self.v_offset)
-        super().drawOn(pdf, x, y, _sW)
-        pdf.translate(0, -self.v_offset)
-
-
-def place_within(p: Flowable, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedFlowableContent:
+def place_within(p: Flowable, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedParagraphContent:
     """
         Create a placed paragraph within a set of bounds
         :param Paragraph p: place this
@@ -35,7 +22,7 @@ def place_within(p: Flowable, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=
         :param int posY:  <0 means at the top, 0 centered, > 0 at the right
     """
 
-    pfc = PlacedFlowableContent(p, r, pdf)
+    pfc = PlacedParagraphContent(p, r, pdf)
     a = pfc.actual
     if posX < 0:
         dx = r.left - a.left
@@ -55,7 +42,7 @@ def place_within(p: Flowable, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=
     return pfc
 
 
-def align_vertically_within(p: Flowable, r: Rect, pdf: PDF, posY=0, metrics_adjust=0) -> PlacedFlowableContent:
+def align_vertically_within(p: MyParagraph, r: Rect, pdf: PDF, posY=0, metrics_adjust=0) -> PlacedParagraphContent:
     """
         Create a placed paragraph within a set of bounds
         :param Paragraph p: place this
@@ -63,7 +50,7 @@ def align_vertically_within(p: Flowable, r: Rect, pdf: PDF, posY=0, metrics_adju
         :param int posY:  <0 means at the top, 0 centered, > 0 at the right
     """
 
-    pfc = PlacedFlowableContent(p, r, pdf)
+    pfc = PlacedParagraphContent(p, r, pdf)
     a = pfc.actual
     if posY < 0:
         dy = r.top - a.top - leading_extra(p) * metrics_adjust

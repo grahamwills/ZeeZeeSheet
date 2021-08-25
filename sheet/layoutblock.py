@@ -9,7 +9,8 @@ from typing import Callable, Optional, Tuple
 from reportlab.platypus import Image
 
 import para
-from placed import ErrorContent, PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedRectContent
+from placed import ErrorContent, PlacedContent, PlacedGroupContent, PlacedImageContent, PlacedParagraphContent, \
+    PlacedRectContent
 from sheet import common
 from sheet.common import Margins, Rect
 from sheet.model import Block, Run
@@ -120,7 +121,7 @@ class ImagePlacement(Optimizer):
 
     def place_image(self, bounds: Rect):
         im = self.make_image(bounds)
-        return PlacedFlowableContent(im, bounds, self.pdf)
+        return PlacedImageContent(im, bounds, self.pdf)
 
     def make_image(self, bounds) -> Image:
         im_info = self.block.image
@@ -177,7 +178,7 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF, padding: int=None) ->
     b = bounds.move(dy=-(style.size * 0.2))
     for item in block.content:
         p = para.make_paragraph(item, pdf)
-        placed = PlacedFlowableContent(p, b, pdf)
+        placed = PlacedParagraphContent(p, b, pdf)
         results.append(placed)
         b = Rect(top=placed.actual.bottom + padding, left=b.left, right=b.right, bottom=b.bottom)
     if not results:

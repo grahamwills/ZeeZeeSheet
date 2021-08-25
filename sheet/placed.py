@@ -13,6 +13,7 @@ from reportlab.platypus import Flowable, Image, Paragraph
 # noinspection PyProtectedMember
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
+from my_para import MyParagraph
 from sheet import common
 from sheet.common import Rect
 from sheet.pdf import PDF
@@ -92,85 +93,90 @@ class PlacedContent(abc.ABC):
         return self.requested.width - self.actual.width
 
 
-class PlacedFlowableContent(PlacedContent):
-    """
-        Abstract class for something that has been laid out on the page
+class PlacedParagraphContent(PlacedContent):
+    paragraph: MyParagraph
 
-        Fields
-        ------
-
-        flowable
-            The placed flowable item
-        required
-            Required bounds -- where we wanted to fit
-        bounds
-            The actual bounds that we were placed into
-
-    """
-
-    flowable: Flowable
-
-    def __init__(self, flowable: Flowable, requested: Rect, pdf: PDF):
-        LOGGER.info("Creating Placed Content for %s in %s", type(flowable).__name__, requested)
+    def __init__(self, paragraph: MyParagraph, requested: Rect, pdf: PDF):
         super().__init__(requested, requested, pdf)
-        self.flowable = flowable
+        self.paragraph = paragraph
 
-        if hasattr(flowable, 'height'):
-            LOGGER.debug("Redundant wrapping call for %s in %s", type(flowable).__name__, requested)
-        flowable.wrapOn(pdf, requested.width, requested.height)
+        if hasattr(paragraph, 'height'):
+            LOGGER.debug("Redundant wrapping call for %s in %s", type(paragraph).__name__, requested)
+        paragraph.wrapOn(pdf, requested.width, requested.height)
 
-        if isinstance(flowable, Paragraph):
-            self._init_paragraph(flowable)
-        elif isinstance(flowable, Image):
-            self._init_image(flowable)
-        elif isinstance(flowable, Table):
-            self._init_table(flowable)
-        else:
-            raise ValueError("Cannot handle flowable of type '%s'" % type(flowable).__name__)
-
-    def draw(self):
-        self.pdf.draw_flowable(self.flowable, self.actual)
-
-    def parent_sized(self, bounds: Rect):
-        if isinstance(self.flowable, Image):
-            self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
-
-    def _init_image(self, image: Image):
-        self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
-        self.unused_width = self._unused_requested_width()
-
-    def _init_table(self, table: Table):
-        sum_bad, sum_ok, unused = table.calculate_issues()
-        rect = self.requested.resize(width=table.actual_size()[0], height=table.actual_size()[1])
-        self.actual = rect
-        self.ok_breaks = sum_ok
-        self.bad_breaks = sum_bad
-        self.internal_variance = round(max(unused) - min(unused))
-        self.unused_width = max(int(sum(unused)), self._unused_requested_width())
-
-    def _init_paragraph(self, p: Paragraph):
-        bad_breaks, ok_breaks, unused = line_info(p)
-        if p.style.alignment == TA_JUSTIFY:
-            rect = self.requested.resize(width=math.ceil(self.requested.width), height=math.ceil(p.height))
+        bad_breaks, ok_breaks, unused = line_info(paragraph)
+        if paragraph.style.alignment == TA_JUSTIFY:
+            rect = self.requested.resize(width=math.ceil(self.requested.width), height=math.ceil(paragraph.height))
             self.actual = rect
         else:
             rect1 = self.requested.resize(width=math.ceil(self.requested.width - unused),
-                                          height=math.ceil(p.height))
+                                          height=math.ceil(paragraph.height))
             self.actual = rect1
         self.ok_breaks = ok_breaks
         self.bad_breaks = bad_breaks
         self.unused_width = self._unused_requested_width()
 
-    def move(self, dx=0, dy=0) -> PlacedContent:
+    def draw(self):
+        self.pdf.draw_flowable(self.paragraph, self.actual)
+
+    def __str__(self) -> str:
+        return "Paragraph(%dx%d)" % (self.actual.width, self.actual.height)
+
+
+class PlacedImageContent(PlacedContent):
+    image: Image
+
+    def __init__(self, image: Image, requested: Rect, pdf: PDF):
+        super().__init__(requested, requested, pdf)
+        self.image = image
+
+        if hasattr(image, 'height'):
+            LOGGER.debug("Redundant wrapping call for %s in %s", type(image).__name__, requested)
+        image.wrapOn(pdf, requested.width, requested.height)
+
+        self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
+        self.unused_width = self._unused_requested_width()
+
+    def draw(self):
+        self.pdf.draw_flowable(self.image, self.actual)
+
+    def parent_sized(self, bounds: Rect):
+        self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
+
+
+    def __str__(self) -> str:
+        return "Image(%dx%d)" % (self.actual.width, self.actual.height)
+
+
+class PlacedTableContent(PlacedContent):
+    table: Table
+
+    def __init__(self, table: Table, requested: Rect, pdf: PDF):
+        LOGGER.info("Creating Placed Content for %s in %s", type(table).__name__, requested)
+        super().__init__(requested, requested, pdf)
+        self.table = table
+
+        if hasattr(table, 'height'):
+            LOGGER.debug("Redundant wrapping call for %s in %s", type(table).__name__, requested)
+        table.wrapOn(pdf, requested.width, requested.height)
+
+        self.actual = self.requested.resize(width=table.actual_size()[0], height=table.actual_size()[1])
+        sum_bad, sum_ok, unused = table.calculate_issues()
+        self.ok_breaks = sum_ok
+        self.bad_breaks = sum_bad
+        self.internal_variance = round(max(unused) - min(unused))
+        self.unused_width = max(int(sum(unused)), self._unused_requested_width())
+
+    def draw(self):
+        self.pdf.draw_flowable(self.table, self.actual)
+
+    def move(self, dx=0, dy=0) -> PlacedTableContent:
         super().move(dx, dy)
-        try:
-            self.flowable.move(dx, dy)
-        except:
-            pass
+        self.table.move(dx, dy)
         return self
 
     def __str__(self) -> str:
-        return "Flow(%s:%dx%d)" % (self.flowable.__class__.__name__, self.actual.width, self.actual.height)
+        return "Table(%dx%d)" % (self.actual.width, self.actual.height)
 
 
 class PlacedRectContent(PlacedContent):
@@ -390,7 +396,13 @@ class Table(Flowable):
         for i, cell in enumerate(row):
             columnWidth = self.colWidths[i] if cell != row[-1] else totalwidth - x
             cell_bounds = Rect(left=x, top=top, width=columnWidth, bottom=availHeight)
-            pfc = PlacedFlowableContent(cell, cell_bounds, self.pdf)
+
+            if hasattr(cell, 'cells'):
+                pfc = PlacedTableContent(cell, cell_bounds, self.pdf)
+            elif hasattr(cell, 'image'):
+                pfc = PlacedImageContent(cell, cell_bounds, self.pdf)
+            else:
+                pfc = PlacedParagraphContent(cell, cell_bounds, self.pdf)
             placed.append(pfc)
             self.offset[cell] = (x, top)
             x = x + columnWidth
@@ -401,7 +413,7 @@ class Table(Flowable):
         for cell, pfc in zip(row, placed):
             x, y = self.offset[cell]
             self.offset[cell] = x, y - pfc.actual.height + row_height
-            pfc.move(dy=row_height- pfc.actual.height)
+            pfc.move(dy=row_height - pfc.actual.height)
 
         return placed, row_height
 
@@ -427,7 +439,6 @@ class Table(Flowable):
             for cell in row:
                 p = self.offset[cell]
                 cell.drawOn(self.canv, p[0], p[1])
-
 
     def calculate_issues(self) -> Tuple[int, int, List[int]]:
         """ Calculate breaks and unused space """
@@ -460,3 +471,6 @@ class Table(Flowable):
                     min_unused[i] = min(min_unused[i], unused)
 
         return sum_bad, sum_ok, min_unused
+
+    def move(self, dx, dy):
+        pass

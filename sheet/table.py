@@ -3,12 +3,13 @@ from copy import copy
 from functools import lru_cache
 from typing import List, Optional, Tuple
 
-from reportlab.platypus import Flowable, Paragraph, TableStyle
+from reportlab.platypus import Flowable, Paragraph
 
 import para
 import para as para1
 import para as para2
-from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedPathContent, PlacedRectContent, Table
+from placed import PlacedContent, PlacedGroupContent, PlacedParagraphContent, PlacedPathContent, PlacedRectContent, \
+    PlacedTableContent, Table
 from sheet import common
 from sheet.common import Rect
 from sheet.model import Block, Element, ElementType, Run
@@ -69,18 +70,18 @@ def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
         # Make a one-row table
         cells = [make_row_from_run(run, pdf, bounds.width)]
         table = as_table(cells, bounds.width, pdf, padding)
-        return PlacedFlowableContent(table, bounds, pdf)
+        return PlacedTableContent(table, bounds, pdf)
     else:
         # No spacers -- nice and simple
         p = para.make_paragraph(run, pdf)
-        return PlacedFlowableContent(p, bounds, pdf)
+        return PlacedParagraphContent(p, bounds, pdf)
 
 
 def table_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) -> PlacedContent:
     cells = [make_row_from_run(run, pdf, bounds.width) for run in block.content]
     padding = int(padding) if padding is not None else block.padding
     table = as_table(cells, bounds.width, pdf, padding)
-    return PlacedFlowableContent(table, bounds, pdf)
+    return PlacedTableContent(table, bounds, pdf)
 
 
 class TableColumnsOptimizer(Optimizer):
@@ -93,7 +94,7 @@ class TableColumnsOptimizer(Optimizer):
         self.width = width
         self.pdf = pdf
 
-    def make(self, x: [float]) -> Optional[PlacedFlowableContent]:
+    def make(self, x: [float]) -> Optional[PlacedTableContent]:
         LOGGER.debug("Trying table with divisions = %s", x)
         try:
             widths = divide_space(x, self.width, 10, granularity=5)
@@ -105,13 +106,10 @@ class TableColumnsOptimizer(Optimizer):
     @lru_cache
     def _make(self, widths):
         table = Table(self.cells, self.padding, widths, self.pdf)
-        return PlacedFlowableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
+        return PlacedTableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
 
-    def score(self, placed: PlacedFlowableContent) -> float:
-        s = placed.error_from_breaks(100, 5) + placed.error_from_variance(0.1)
-        # LOGGER.debug("Score = %1.3f (breaks=%1.3f, var=%1.3f)", s, placed.error_from_breaks(100, 10),
-        #              placed.error_from_variance(1))
-        return s
+    def score(self, placed: PlacedTableContent) -> float:
+        return placed.error_from_breaks(100, 5) + placed.error_from_variance(0.1)
 
     def __hash__(self):
         return id(self)
@@ -126,7 +124,7 @@ def as_table(cells, width: int, pdf: PDF, padding: int):
         optimizer = TableColumnsOptimizer(cells, padding, width, pdf)
         placed, _ = optimizer.run(method='Nelder-Mead')
         if placed:
-            return placed.flowable
+            return placed.table
 
     return Table(cells, padding, [width / ncols] * ncols, pdf)
 
