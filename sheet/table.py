@@ -3,18 +3,18 @@ from copy import copy
 from functools import lru_cache
 from typing import List, Optional, Tuple
 
-from reportlab.platypus import Flowable, Paragraph, Table, TableStyle
+from reportlab.platypus import Flowable, Paragraph, TableStyle
 
 import para
 import para as para1
 import para as para2
-from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedPathContent, PlacedRectContent
+from placed import PlacedContent, PlacedFlowableContent, PlacedGroupContent, PlacedPathContent, PlacedRectContent, Table
 from sheet import common
 from sheet.common import Rect
 from sheet.model import Block, Element, ElementType, Run
 from sheet.optimize import Optimizer, divide_space
 from sheet.pdf import PDF
-from style import Style
+from sheet.style import Style
 
 LOGGER = common.configured_logger(__name__)
 
@@ -76,7 +76,7 @@ def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
         return PlacedFlowableContent(p, bounds, pdf)
 
 
-def table_layout(block: Block, bounds: Rect, pdf: PDF, padding:int=None) -> PlacedContent:
+def table_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) -> PlacedContent:
     cells = [make_row_from_run(run, pdf, bounds.width) for run in block.content]
     padding = int(padding) if padding is not None else block.padding
     table = as_table(cells, bounds.width, pdf, padding)
@@ -85,11 +85,11 @@ def table_layout(block: Block, bounds: Rect, pdf: PDF, padding:int=None) -> Plac
 
 class TableColumnsOptimizer(Optimizer):
 
-    def __init__(self, cells: [[]], style: TableStyle, width: int, pdf: PDF) -> None:
+    def __init__(self, cells: [[]], padding: int, width: int, pdf: PDF) -> None:
         ncols = max(len(row) for row in cells)
         super().__init__(ncols)
+        self.padding = padding
         self.cells = cells
-        self.style = style
         self.width = width
         self.pdf = pdf
 
@@ -104,7 +104,7 @@ class TableColumnsOptimizer(Optimizer):
 
     @lru_cache
     def _make(self, widths):
-        table = Table(self.cells, style=self.style, colWidths=widths)
+        table = Table(self.cells, self.padding, widths, self.pdf)
         return PlacedFlowableContent(table, Rect(left=0, top=0, width=self.width, height=1000), self.pdf)
 
     def score(self, placed: PlacedFlowableContent) -> float:
@@ -118,33 +118,17 @@ class TableColumnsOptimizer(Optimizer):
 
 
 def as_table(cells, width: int, pdf: PDF, padding: int):
-    commands = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (0, -1), 0),
-        ('TOPPADDING', (0, 0), (-1, 0), 0),
-        ('LEFTPADDING', (1, 0), (-1, -1), padding),
-        ('TOPPADDING', (0, 1), (-1, -1), padding),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]
-
     ncols = max(len(row) for row in cells)
     if ncols * 10 >= width:
         LOGGER.debug("Cannot fit %d columns into a table of width %d", ncols, width)
     elif ncols > 1:
-        # Pad short rows and add spans for them
-        for i, row in enumerate(cells):
-            n = len(row)
-            if n < ncols:
-                row.extend([' '] * (ncols - n))
-                commands.append(('SPAN', (n - 1, i), (-1, i)))
 
-        optimizer = TableColumnsOptimizer(cells, TableStyle(commands), width, pdf)
+        optimizer = TableColumnsOptimizer(cells, padding, width, pdf)
         placed, _ = optimizer.run(method='Nelder-Mead')
         if placed:
             return placed.flowable
 
-    return Table(cells, style=(TableStyle(commands)))
+    return Table(cells, padding, [width / ncols] * ncols, pdf)
 
 
 def stats_runs(run: [Element], pdf: PDF) -> List[Paragraph]:
@@ -230,8 +214,6 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
         if contents and i % nRows == 0:
             top = bounds.top
             left += W1 + W2 + W3 + 2 * padding
-
-
 
         r2 = Rect(left=left, top=top, height=H2, width=W2)
         r1 = Rect(left=r2.right, top=top + (H2 - H1) / 2, width=W1 + W3, height=H1)
@@ -366,8 +348,8 @@ def add_stamp_values(stamp: PlacedGroupContent, y: Tuple[int], run: Run, pdf: PD
     return PlacedGroupContent(contents, stamp.requested)
 
 
-def badges_layout(block: Block, bounds: Rect, pdf: PDF, padding:int=None, tags: str = None, shape: str = None,
-                  style:str=None) -> PlacedContent:
+def badges_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None, tags: str = None, shape: str = None,
+                  style: str = None) -> PlacedContent:
     n = len(block.content)
 
     tags = tags.split(',') if tags else []

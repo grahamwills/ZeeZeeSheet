@@ -226,7 +226,7 @@ def stack_in_columns(bounds: Rect, page: Rect, placeables: List,
         if bounds == page:
             # This section will not fit even on a full page
             warnings.warn("Even on an empty page, a section will not fit even one row of blocks")
-            return all
+            return [all]
         else:
             # Set the bounds to a full page and try that
             on_next_page = stack_in_columns(page, page, placeables, padding, columns, equal)

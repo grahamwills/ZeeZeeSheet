@@ -87,6 +87,10 @@ class Point(NamedTuple):
     x: float
     y: float
 
+class Extent(NamedTuple):
+    x: float
+    y: float
+
 
 class Rect(namedtuple('Rect', 'left right top bottom width height')):
 
@@ -106,6 +110,10 @@ class Rect(namedtuple('Rect', 'left right top bottom width height')):
 
     def center(self) -> Point:
         return Point((self.left + self.right) / 2, (self.top + self.bottom) / 2)
+
+    def size(self) -> Extent:
+        return Extent(self.width, self.height)
+
 
     def __add__(self, off: Margins) -> Rect:
         return Rect(left=self.left - off.left,

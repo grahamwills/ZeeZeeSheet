@@ -3,17 +3,15 @@ from pathlib import Path
 
 import pytest
 from colour import Color
-from reportlab.lib import colors
-from reportlab.platypus import Paragraph, Table, TableStyle
+from reportlab.platypus import Paragraph
 
 import para
-import zeesheet
+from placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, \
+    Table, calculate_unused_width_for_group, line_info
 from sheet.common import Rect
 from sheet.model import Run
 from sheet.pdf import PDF
-from placed import PlacedFlowableContent, PlacedGroupContent, PlacedRectContent, \
-    calculate_unused_width_for_group, line_info
-from style import Style, Stylesheet
+from sheet.style import Style, Stylesheet
 
 
 @pytest.fixture
@@ -38,16 +36,8 @@ def table(simple, styled) -> Table:
         [Paragraph('Just a long piece of text that will need wrapping in most situations')],
     ]
 
-    commands = [
-        ('GRID', (0, 0), (-1, -1), 1, colors.green),
-        ('SPAN', (0, 1), (-1, 1)),
-        ('LEFTPADDING', (0, 0), (-1, -1), 5),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-    ]
 
-    return Table(cells, style=TableStyle(commands))
+    return Table(cells, padding=5)
 
 
 def test_paragraph_on_one_line(simple, pdf):
@@ -240,7 +230,7 @@ def test_line_info():
 
 def test_line_info_for_boxes():
     style = Style(align='left', font='Gotham', size=10, color=Color('black'))
-    pdf = PDF(Path("/tmp/killme.pdf"),  Stylesheet(), (500, 1000), True)
+    pdf = PDF(Path("/tmp/killme.pdf"), Stylesheet(), (500, 1000), True)
 
     run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
@@ -250,19 +240,20 @@ def test_line_info_for_boxes():
     assert bad_breaks == 0
     assert ok_breaks == 7
 
+
 MockContent = namedtuple('MockContent', 'requested unused_width')
 
+
 def test_unused_group_of_horizontal():
-    bounds = Rect(left = 100, top=100, right=200, bottom=200)
+    bounds = Rect(left=100, top=100, right=200, bottom=200)
 
     a = MockContent(Rect(left=130, top=100, right=170, bottom=200), 17)
     b = MockContent(Rect(left=180, top=100, right=190, bottom=200), 2)
     c = MockContent(Rect(left=100, top=100, right=190, bottom=200), 2)
 
     assert calculate_unused_width_for_group([a], bounds) == 30 + 30 + 17
-    assert calculate_unused_width_for_group([a,b], bounds) == 30 + 10 + 10 + 17 + 2
+    assert calculate_unused_width_for_group([a, b], bounds) == 30 + 10 + 10 + 17 + 2
     assert calculate_unused_width_for_group([c], bounds) == 10 + 2
-    assert calculate_unused_width_for_group([a,c], bounds) == 10 + 2
-    assert calculate_unused_width_for_group([b,c], bounds) == 10 + 2
-    assert calculate_unused_width_for_group([a,b, c], bounds) == 10 + 2
-
+    assert calculate_unused_width_for_group([a, c], bounds) == 10 + 2
+    assert calculate_unused_width_for_group([b, c], bounds) == 10 + 2
+    assert calculate_unused_width_for_group([a, b, c], bounds) == 10 + 2
