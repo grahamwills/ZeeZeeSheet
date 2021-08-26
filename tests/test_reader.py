@@ -43,7 +43,6 @@ def test_multiple_simple_blocks():
     assert dump(sheet) == 'Section< Block[abc], Block[def], Block[ghi] >'
 
 
-
 def test_two_sections():
     sheet = build_sheet(dedent(
             """
@@ -72,6 +71,7 @@ def test_titled():
             """
     ))
     assert dump(sheet) == 'Section< Block["eenie": one], Block[meenie minie] >'
+
 
 def test_images():
     sheet = build_sheet(dedent(
@@ -102,7 +102,9 @@ def test_images():
 
             """
     ))
-    assert dump(sheet) == 'Section< Block["Picture": <im1.jpg>abc, def], Block["Second": <im2.jpg>], Block["Third": A-B-C], Block[<im3.jpg>], Block[Fourth] >'
+    assert dump(
+        sheet) == 'Section< Block["Picture": <im1.jpg>abc, def], Block["Second": <im2.jpg>], Block["Third": A-B-C], ' \
+                  'Block[<im3.jpg>], Block[Fourth] >'
 
 
 def test_bad():

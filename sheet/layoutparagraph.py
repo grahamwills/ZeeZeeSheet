@@ -1,8 +1,5 @@
 from typing import List, Optional
 
-import reportlab
-import reportlab.lib.colors
-from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Flowable, Paragraph
 
 from flowable import Paragraph
@@ -118,5 +115,3 @@ def make_paragraph(run: Run, pdf: PDF, align=None, size_factor=None) -> Optional
         style = style.modify(size=style.size * size_factor)
 
     return Paragraph(run, style, pdf)
-
-

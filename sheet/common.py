@@ -87,6 +87,7 @@ class Point(NamedTuple):
     x: float
     y: float
 
+
 class Extent(NamedTuple):
     x: float
     y: float
@@ -103,7 +104,6 @@ class Rect(namedtuple('Rect', 'left right top bottom')):
                      right=max(r.right, u.right), bottom=max(r.bottom, u.bottom))
         return u
 
-
     @property
     def width(self):
         return self.right - self.left
@@ -116,11 +116,11 @@ class Rect(namedtuple('Rect', 'left right top bottom')):
         if right is None:
             right = left + width
         elif left is None:
-            left = right-width
+            left = right - width
         if bottom is None:
             bottom = top + height
         elif top is None:
-            top = bottom-height
+            top = bottom - height
         return super().__new__(cls, round(left), round(right), round(top), round(bottom))
 
     def center(self) -> Point:
@@ -128,7 +128,6 @@ class Rect(namedtuple('Rect', 'left right top bottom')):
 
     def size(self) -> Extent:
         return Extent(self.width, self.height)
-
 
     def __add__(self, off: Margins) -> Rect:
         return Rect(left=self.left - off.left,

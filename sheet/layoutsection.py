@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 
 from placed import PlacedContent, PlacedGroupContent
 from sheet.common import Rect, configured_logger
-from sheet.optimize import Optimizer, divide_space, BadParametersError
+from sheet.optimize import Optimizer, divide_space
 
 LOGGER = configured_logger(__name__)
 
@@ -68,7 +68,7 @@ class ColumnOptimizer(Optimizer):
         score += 1e6 * missed
 
         LOGGER.fine("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
-                     score, max_height, breaks, fit, stddev, var)
+                    score, max_height, breaks, fit, stddev, var)
         return score
 
     def place_all(self, widths: Tuple[int], counts: Tuple[int]) -> List[PlacedContent]:
@@ -127,7 +127,7 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         super().__init__(k, placeables, outer, padding)
         self.available_width = outer.width - (k - 1) * padding
 
-    def make_for_known_widths(self, widths):
+    def make_for_known_widths(self):
         even = tuple([1 / self.k] * self.k)
         return self.make(even)
 
@@ -185,7 +185,7 @@ def stack_together(bounds, columns, equal, padding, placeables):
     if equal:
         LOGGER.info("Allocating %d items in %d equal columns: %s", len(placeables), k, bounds)
         widths = divide_space([1] * k, columns_optimizer.available_width, MIN_COLUMN_WIDTH, granularity=5)
-        columns = columns_optimizer.make_for_known_widths(widths)
+        columns = columns_optimizer.make_for_known_widths()
         return PlacedGroupContent(columns, bounds)
     else:
         LOGGER.info("Allocating %d items in %d unequal columns: %s", len(placeables), k, bounds)

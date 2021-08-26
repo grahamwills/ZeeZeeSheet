@@ -1,8 +1,6 @@
-import math
-
 import pytest
 
-from sheet.optimize import Optimizer, divide_space
+from sheet.optimize import BadParametersError, divide_space
 
 
 @pytest.mark.parametrize("input,total,min,output", [
@@ -21,10 +19,10 @@ def test_divide_space(input, total, min, output):
 
 
 def test_divide_space_errors():
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(BadParametersError) as excinfo:
         divide_space([1, 1, 1], 10, 4)
     assert "Combination of minimum" in str(excinfo.value)
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(BadParametersError) as excinfo:
         divide_space([1, -1, 1], 10, 0)
-    assert "negative value" in str(excinfo.value)
+    assert "contained a negative value" in str(excinfo.value)

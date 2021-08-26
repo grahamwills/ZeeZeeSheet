@@ -1,6 +1,5 @@
 import warnings
 from copy import copy
-from functools import lru_cache
 from typing import List, Optional, Tuple
 
 from reportlab.platypus import Flowable, Paragraph
@@ -57,7 +56,7 @@ def _make_cells_from_run(run: Run, pdf: PDF) -> (List[Paragraph], int):
     return row, divider_count
 
 
-def make_row_from_run(run: Run, pdf: PDF, bounds:Rect) -> [Flowable]:
+def make_row_from_run(run: Run, pdf: PDF, bounds: Rect) -> [Flowable]:
     row, dividers = _make_cells_from_run(run, pdf)
     if not dividers:
         # Make a sub-table just for this line
@@ -85,13 +84,13 @@ def table_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) -> P
 
 class TableColumnsOptimizer(Optimizer[PlacedTableContent]):
 
-    def __init__(self, cells: [[]], padding: int, bounds:Rect, pdf: PDF) -> None:
+    def __init__(self, cells: [[]], padding: int, bounds: Rect, pdf: PDF) -> None:
         ncols = max(len(row) for row in cells)
         super().__init__(ncols)
         self.padding = padding
         self.cells = cells
         self.bounds = bounds
-        self.available_width = bounds.width - (ncols-1) * padding
+        self.available_width = bounds.width - (ncols - 1) * padding
         self.pdf = pdf
 
     def make(self, x: [float]) -> Optional[PlacedTableContent]:
@@ -110,12 +109,12 @@ class TableColumnsOptimizer(Optimizer[PlacedTableContent]):
         return id(self)
 
 
-def as_table(cells, bounds:Rect, pdf: PDF, padding: int, return_as_placed=False):
+def as_table(cells, bounds: Rect, pdf: PDF, padding: int, return_as_placed=False):
     ncols = max(len(row) for row in cells)
     width = bounds.width
     if ncols * 10 >= width:
         LOGGER.debug("Cannot fit %d columns into a table of width %d", ncols, width)
-        raise BadParametersError("Columns too small for table", ncols*10 - width)
+        raise BadParametersError("Columns too small for table", ncols * 10 - width)
     elif ncols == 1:
         table = Table(cells, padding, [width], pdf)
         if return_as_placed:
@@ -220,8 +219,8 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
 
         # Extend under the other rectangle to hide joins of 'round edges'
         box = r1.move(dx=-H1).resize(width=r1.width + H1)
-        contents.append(PlacedRectContent(box, box_style, pdf, True, False, rounded=rounded))
-        contents.append(PlacedRectContent(r2, box_style, pdf, True, False, rounded=rounded))
+        contents.append(PlacedRectContent(box, box_style, PDF.FILL, pdf, rounded=rounded))
+        contents.append(PlacedRectContent(r2, box_style, PDF.FILL, pdf, rounded=rounded))
 
         placed0 = layoutparagraph.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf,
                                                           metrics_adjust=-0.2)
@@ -257,7 +256,7 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
         path.lineTo(width, height - r)
         path.arcTo(0, height - 2 * r, width, height, startAng=0, extent=180)
         path.close()
-        outer_shape = PlacedPathContent(path, b, shape_style, pdf=pdf, fill=True, stroke=True)
+        outer_shape = PlacedPathContent(path, b, shape_style, PDF.BOTH, pdf)
     elif shape.startswith('hex'):
         path = pdf.beginPath()
         path.moveTo(width / 2, 0)
@@ -267,13 +266,13 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
         path.lineTo(0, height - r)
         path.lineTo(0, 0 + r)
         path.close()
-        outer_shape = PlacedPathContent(path, b, shape_style, pdf=pdf, fill=True, stroke=True)
+        outer_shape = PlacedPathContent(path, b, shape_style, PDF.BOTH, pdf)
     elif shape.startswith('round'):
-        outer_shape = PlacedRectContent(b, shape_style, pdf=pdf, fill=True, stroke=True, rounded=r // 2)
+        outer_shape = PlacedRectContent(b, shape_style, PDF.BOTH, pdf, rounded=r // 2)
     else:
         if not shape.startswith('rect'):
             warnings.warn("Unknown shape '%s' for badge layout; using rectangle" % shape)
-        outer_shape = PlacedRectContent(b, shape_style, pdf=pdf, fill=True, stroke=True)
+        outer_shape = PlacedRectContent(b, shape_style, PDF.BOTH, pdf)
 
     # Dividing lines
     path = pdf.beginPath()
@@ -282,7 +281,7 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
     path.moveTo(0, y[4])
     path.lineTo(width, y[4])
 
-    inner_shape = PlacedPathContent(path, b, shape_style, pdf=pdf, fill=False, stroke=True)
+    inner_shape = PlacedPathContent(path, b, shape_style, PDF.FILL, pdf)
     group = [outer_shape, inner_shape]
 
     # tags

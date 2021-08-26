@@ -105,7 +105,8 @@ class Optimizer(Generic[T]):
         duration = time.perf_counter() - start
 
         if hasattr(solution, 'success') and not solution.success:
-            LOGGER.info("[%s]: Failed using %s in %1.2fs after %d evaluations: %s", self.name, method, duration, solution.nfev,
+            LOGGER.info("[%s]: Failed using %s in %1.2fs after %d evaluations: %s", self.name, method, duration,
+                        solution.nfev,
                         solution.message)
             results = None, (math.inf, None)
         else:

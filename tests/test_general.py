@@ -5,9 +5,8 @@ from colour import Color
 import common
 import layoutparagraph
 import table
-from conftest import debug_placed_content
 from layoutblock import layout_block
-from placed import PlacedFlowableContent
+from placed import PlacedTableContent
 from sheet.common import Rect
 from sheet.model import Block, Run
 from sheet.pdf import PDF
@@ -31,8 +30,7 @@ def test_table_creation():
     ]
 
     t = table.as_table(cells, bounds, pdf, 10)
-    content = PlacedFlowableContent(t, bounds, pdf)
-    debug_placed_content(content, pdf)
+    content = PlacedTableContent(t, bounds, pdf)
 
     assert content.actual == Rect(left=0, top=0, right=120, bottom=106)
     assert content.unused_width == 8
@@ -60,4 +58,4 @@ def test_block_table_creation():
 
     assert content.unused_width == 0
     assert content.bad_breaks == 0
-    assert content.ok_breaks == 5
+    assert content.ok_breaks == 6

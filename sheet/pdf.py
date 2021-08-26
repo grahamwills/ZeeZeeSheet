@@ -1,34 +1,31 @@
 import io
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from pathlib import Path
 
 import reportlab.lib.colors
-from colour import Color
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.pdfgen.pathobject import PDFPathObject
-from reportlab.platypus import Flowable, Image
+from reportlab.platypus import Flowable
 
-from sheet import common
+from sheet.common import Rect, configured_logger
 from sheet.model import Element, ElementType, Run
 from style import Style, Stylesheet
 
-LOGGER = common.configured_logger(__name__)
+LOGGER = configured_logger(__name__)
 
 _CHECKED_BOX = '../data/system/images/checked.png'
 _UNCHECKED_BOX = '../data/system/images/unchecked.png'
-
 _LEADING_MAP = defaultdict(lambda: 1.2)
+
+DrawMethod = namedtuple('DrawMethod', 'fill stroke')
 
 
 class PDF(canvas.Canvas):
-    working_dir: Path
-    page_height: int
-    _stylesheet: Stylesheet
-    debug: bool
-
-    _name_index: int
+    FILL = DrawMethod(True, False)
+    STROKE = DrawMethod(False, True)
+    BOTH = DrawMethod(True, True)
 
     def __init__(self, output_file: Path, styles: Stylesheet, pagesize: (int, int), debug: bool = False) -> None:
         super().__init__(str(output_file.absolute()), pagesize=pagesize)
@@ -36,7 +33,7 @@ class PDF(canvas.Canvas):
         LOGGER.info("Installed fonts = %s", fonts)
         self.working_dir = output_file.parent
         self.page_height = int(pagesize[1])
-        self._stylesheet = styles
+        self.stylesheet = styles
 
         self.debug = debug
         self._name_index = 0
@@ -66,44 +63,34 @@ class PDF(canvas.Canvas):
         if isinstance(style, Style):
             return style
         else:
-            return self._stylesheet[style]
+            return self.stylesheet[style]
 
-    def fillColor(self, color: Color, alpha=None):
-        self.setFillColorRGB(*color.rgb, alpha=alpha)
+    def draw_rect(self, r: Rect, style: Style, method: DrawMethod, rounded=0):
+        method = self._set_drawing_styles(method, style)
+        if rounded > 0:
+            self.roundRect(r.left, self.page_height - r.bottom, r.width, r.height, rounded,
+                           fill=method.fill, stroke=method.stroke)
+        else:
+            self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=method.fill, stroke=method.stroke)
 
-    def strokeColor(self, color: Color, alpha=None):
-        self.setStrokeColorRGB(*color.rgb, alpha=alpha)
+    def draw_path(self, path: PDFPathObject, style: Style, method: DrawMethod):
+        method = self._set_drawing_styles(method, style)
+        self.drawPath(path, fill=method.fill, stroke=method.stroke)
 
-    def fill_rect(self, r: common.Rect, style: Style, rounded=0):
-        if style.background:
-            self.fillColor(style.background, alpha=style.opacity)
+    def _set_drawing_styles(self, method: DrawMethod, style: Style) -> DrawMethod:
+        if method.fill and style.background:
+            self.setFillColorRGB(*style.background.rgb, alpha=style.opacity)
             self.setLineWidth(0)
-
-            if rounded > 0:
-                self.roundRect(r.left, self.page_height - r.bottom, r.width, r.height, rounded, fill=1, stroke=0)
-            else:
-                self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=1, stroke=0)
-
-    def stroke_rect(self, r: common.Rect, style: Style, rounded=0):
-        if style.borderColor and style.borderWidth:
-            self.strokeColor(style.borderColor, alpha=style.opacity)
+            fill = True
+        else:
+            fill = False
+        if method.stroke and style.borderColor and style.borderWidth:
+            self.setStrokeColorRGB(*style.borderColor.rgb, alpha=style.opacity)
             self.setLineWidth(style.borderWidth)
-            if rounded > 0:
-                self.roundRect(r.left, self.page_height - r.bottom, r.width, r.height, rounded, fill=0, stroke=1)
-            else:
-                self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=0, stroke=1)
-
-    def fill_path(self, path: PDFPathObject, style: Style):
-        if style.background:
-            self.fillColor(style.background, alpha=style.opacity)
-            self.setLineWidth(0)
-            self.drawPath(path, fill=1, stroke=0)
-
-    def stroke_path(self, path: PDFPathObject, style: Style):
-        if style.borderColor and style.borderWidth:
-            self.strokeColor(style.borderColor, alpha=style.opacity)
-            self.setLineWidth(style.borderWidth)
-            self.drawPath(path, fill=0, stroke=1)
+            stroke = True
+        else:
+            stroke = False
+        return DrawMethod(fill, stroke)
 
     def draw_flowable(self, flowable: Flowable, bounds):
         flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
@@ -224,7 +211,7 @@ def create_single_font(name, resource_name, default_font_name, user_fonts):
         return default_font_name
 
 
-def install_font(name, resource_name, user_fonts, leading:float=None):
+def install_font(name, resource_name, user_fonts, leading: float = None):
     try:
         pdfmetrics.getFont(name)
     except:

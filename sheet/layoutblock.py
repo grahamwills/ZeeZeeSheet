@@ -52,7 +52,7 @@ def _post_content_layout(block: Block, inner, pdf):
     title_style = title.options.get('style', 'default')
     style = pdf.style(block.base_style())
     if style and style.background:
-        back = PlacedRectContent(inner, style, pdf, fill=True, stroke=False)
+        back = PlacedRectContent(inner, style, PDF.FILL, pdf)
     else:
         back = None
     post = outline_post_layout(inner, title_style, pdf)
@@ -165,7 +165,7 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
         return placer.place_image(bounds)
 
 
-def paragraph_layout(block: Block, bounds: Rect, pdf: PDF, padding: int=None) -> Optional[PlacedContent]:
+def paragraph_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) -> Optional[PlacedContent]:
     if not block.content:
         return None
 
@@ -216,10 +216,10 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
         title = one_line_flowable(title_mod, title_bounds, margin, pdf)
         extraLines = title.ok_breaks + title.bad_breaks
         if extraLines:
-            plaque = plaque.resize(height=plaque.height + extraLines*pdf.style(style_name).size)
+            plaque = plaque.resize(height=plaque.height + extraLines * pdf.style(style_name).size)
 
         if style.background:
-            placed.append(PlacedRectContent(plaque, style, pdf, fill=True, stroke=False))
+            placed.append(PlacedRectContent(plaque, style, PDF.FILL, pdf))
 
         # Move the title up a little to account for the descender
         title.move(dy=-pdf.descender(style))
@@ -237,7 +237,7 @@ def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, sho
 def outline_post_layout(bounds: Rect, style_name: str, pdf: PDF) -> Optional[PlacedContent]:
     style = pdf.style(style_name)
     if style.has_border():
-        return PlacedRectContent(bounds, style, pdf, fill=False, stroke=True)
+        return PlacedRectContent(bounds, style, PDF.STROKE, pdf)
     else:
         return None
 

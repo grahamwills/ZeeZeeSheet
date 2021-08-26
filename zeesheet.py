@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Optional
 
 import dnd4e
-from sheet.common import DATA_DIR
-from sheet import common, pdf, reader
 from layoutsheet import layout_sheet
+from sheet import common, pdf, reader
+from sheet.common import DATA_DIR
 
 LOGGER = common.configured_logger(__name__)
 
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     for i, d in enumerate(target_directories):
         t = time.time()
-        print("[%d/%d]: Making sheet for '%s'" % (i+1, len(target_directories), d.name))
+        print("[%d/%d]: Making sheet for '%s'" % (i + 1, len(target_directories), d.name))
 
         file_4e = find_file(d, 'dnd4e')
         if file_4e:

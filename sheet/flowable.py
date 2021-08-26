@@ -2,6 +2,7 @@ from functools import lru_cache
 from typing import Dict, List, Sequence, Tuple
 
 import reportlab
+from colour import Color
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Flowable
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
@@ -69,9 +70,9 @@ class Table(Flowable):
                 p = self.offset[cell]
                 cell.drawOn(self.canv, p[0], p[1])
 
-    def calculate_issues(self, width) -> Tuple[int, int, List[int]]:
+    def calculate_issues(self) -> Tuple[int, int, List[int]]:
         """ Calculate breaks and unused space """
-        min_unused = [width] * self.ncols
+        min_unused = [self.width] * self.ncols
         sum_bad = 0
         sum_ok = 0
 
@@ -84,7 +85,7 @@ class Table(Flowable):
                     end = idx + 1
 
                 try:
-                    tbad, tok, tunused = cell.calculate_issues(width)
+                    tbad, tok, tunused = cell.calculate_issues()
                     sum_bad += tbad
                     sum_ok += tok
                     unused = sum(tunused)
@@ -104,7 +105,7 @@ class Table(Flowable):
         contents = " | ".join([str(c) for row in self.cells for c in row][:4])
         if self.ncols * len(self.cells) > 4:
             contents += '| \u2026'
-        return "T(%dx%x • %s • %s)" %(self.ncols, len(self.cells), self.colWidths, contents)
+        return "T(%dx%x • %s • %s)" % (self.ncols, len(self.cells), self.colWidths, contents)
 
 
 @lru_cache
@@ -139,9 +140,12 @@ class Paragraph(reportlab.platypus.Paragraph):
         leading = pdf.leading_for(style)
         descent = pdf.descender(style)
         self.v_offset = style.size * 1.2 - leading + descent / 2
-        self._showBoundary = pdf.debug
 
     def drawOn(self, pdf: PDF, x, y, _sW=0):
+        if pdf.debug:
+            pdf.setStrokeColor(Color('gray'))
+            pdf.rect(0, 0, self.width, self.height)
+
         pdf.translate(0, self.v_offset)
         super().drawOn(pdf, x, y, _sW)
         pdf.translate(0, -self.v_offset)

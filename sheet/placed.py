@@ -10,17 +10,14 @@ from colour import Color
 from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Image
-# noinspection PyProtectedMember
 
-from sheet.flowable import Paragraph, Table, line_info
 from sheet import common
 from sheet.common import Rect
-from sheet.pdf import PDF
+from sheet.flowable import Paragraph, Table, line_info
+from sheet.pdf import DrawMethod, PDF
 from sheet.style import Style
 
 LOGGER = common.configured_logger(__name__)
-
-_DEBUG_RECT_STYLE = Style(background=Color('lightGray'))
 
 
 class PlacedContent(abc.ABC):
@@ -153,7 +150,7 @@ class PlacedTableContent(PlacedContent):
         table.wrapOn(pdf, requested.width, requested.height)
 
         self.actual = self.requested.resize(width=table.width, height=table.height)
-        sum_bad, sum_ok, unused = table.calculate_issues(table.width)
+        sum_bad, sum_ok, unused = table.calculate_issues()
         self.ok_breaks = sum_ok
         self.bad_breaks = sum_bad
         self.internal_variance = round(max(unused) - min(unused))
@@ -171,54 +168,33 @@ class PlacedTableContent(PlacedContent):
 
 
 class PlacedRectContent(PlacedContent):
-    style: Style
-    stroke: bool
-    fill: bool
-    rounded: int
 
-    def __init__(self, bounds: Rect, style: Style, pdf: PDF, fill: bool = False, stroke: bool = True, rounded=0):
+    def __init__(self, bounds: Rect, style: Style, method: DrawMethod, pdf: PDF, rounded=0):
         super().__init__(bounds, bounds, pdf)
+        self.method = method
         self.style = style
-        self.stroke = stroke
-        self.fill = fill
         self.rounded = rounded
 
     def draw(self):
-        if self.fill:
-            self.pdf.fill_rect(self.actual, self.style, self.rounded)
-
-        if self.stroke:
-            self.pdf.stroke_rect(self.actual, self.style, self.rounded)
+        self.pdf.draw_rect(self.actual, self.style, self.method, rounded=self.rounded)
 
     def __str__(self) -> str:
         return "Rect(%s)" % str(self.actual)
 
 
 class PlacedPathContent(PlacedContent):
-    style: Style
-    stroke: bool
-    fill: bool
-    path: PDFPathObject
-    offset: (int, int)
 
-    def __init__(self, path: PDFPathObject, bounds: Rect, style: Style, pdf: PDF, fill: bool = False,
-                 stroke: bool = True):
+    def __init__(self, path: PDFPathObject, bounds: Rect, style: Style, method: DrawMethod, pdf: PDF):
         super().__init__(bounds, bounds, pdf)
+        self.method = method
         self.style = style
-        self.stroke = stroke
-        self.fill = fill
         self.path = path
         self.offset = (0, 0)
 
     def draw(self):
         self.pdf.saveState()
         self.pdf.transform(1, 0, 0, -1, self.offset[0], self.pdf.page_height - self.offset[1])
-        if self.fill:
-            self.pdf.fill_path(self.path, self.style)
-
-        if self.stroke:
-            self.pdf.stroke_path(self.path, self.style)
-
+        self.pdf.draw_path(self.path, self.style, self.method)
         self.pdf.restoreState()
 
     def __str__(self) -> str:
@@ -233,7 +209,7 @@ class PlacedPathContent(PlacedContent):
 class ErrorContent(PlacedRectContent):
 
     def __init__(self, bounds: Rect, pdf: PDF):
-        super().__init__(bounds, Style(background=Color('red')), pdf, True, True, 0)
+        super().__init__(bounds, Style(background=Color('red')), PDF.BOTH, pdf, 0)
 
     def draw(self):
         super().draw()
@@ -317,7 +293,6 @@ class PlacedGroupContent(PlacedContent):
         return pgc
 
 
-
 def _unused_horizontal_strip(group: List[PlacedContent], bounds: Rect):
     """ Unused space, assuming items horizontally laid out, more or less"""
     ox = bounds.left
@@ -352,5 +327,3 @@ def calculate_unused_width_for_group(group: List[PlacedContent], bounds: Rect) -
         unused = min(unused, _unused_horizontal_strip(items, bounds))
 
     return unused
-
-

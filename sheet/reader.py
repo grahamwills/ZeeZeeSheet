@@ -206,7 +206,6 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         LOGGER.debug("Departing '%s'", self.status.depart(node))
         self.status.target_nothing()
 
-
     def visit_transition(self, node: docutils.nodes.Node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         LOGGER.debug("... Finishing Current Section")
@@ -298,7 +297,6 @@ def read_sheet(file) -> Sheet:
 
 
 def build_sheet(data):
-
     with warnings.catch_warnings(record=True) as warns:
         warnings.simplefilter("always")
         doc = parse_rst(data)
