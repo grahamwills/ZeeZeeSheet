@@ -65,7 +65,7 @@ class Optimizer(Generic[T]):
             return BAD_PARAMS_FACTOR * (1 + err.badness), None
 
         f = self.score(item) if item else BAD_PARAMS_FACTOR
-        LOGGER.debug("[%s] %s -> %s -> %1.3f", self.name, _pretty(x), item, f)
+        LOGGER.fine("[%s] %s -> %s -> %1.3f", self.name, _pretty(x), item, f)
         return f, item
 
     def run(self, method='COBYLA') -> (T, (float, [float])):
@@ -85,12 +85,10 @@ class Optimizer(Generic[T]):
                 return err.badness
 
         kwargs = {'method': 'COBYLA', 'constraints': {'type': 'ineq', 'fun': constraint_func}}
-        LOGGER.info("[%s] Solving with %s, init=%s", self.name, method, _pretty(x0))
 
         start = time.perf_counter()
 
         if method == 'basinhopping':
-            LOGGER.info("[%s] Solving with basinhopping, init=%s", self.name, _pretty(x0))
             solution = scipy.optimize.basinhopping(lambda x: _score(tuple(x), self), x0=x0, seed=13,
                                                    stepsize=1, niter=10)
         elif method == 'COBYLA':
@@ -107,18 +105,18 @@ class Optimizer(Generic[T]):
         duration = time.perf_counter() - start
 
         if hasattr(solution, 'success') and not solution.success:
-            LOGGER.info("[%s]: Failed in %1.2fs after %d evaluations: %s", self.name, duration, solution.nfev,
+            LOGGER.info("[%s]: Failed using %s in %1.2fs after %d evaluations: %s", self.name, method, duration, solution.nfev,
                         solution.message)
             results = None, (math.inf, None)
         else:
             f, item = self.score_params(tuple(solution.x))
             assert f == solution.fun
             results = item, (f, params_to_x(solution.x))
-            LOGGER.info("[%s]: Success in %1.2fs using %d evaluations: %s -> %s -> %1.3f",
-                        self.name, duration, solution.nfev, _pretty(solution.x), item, f)
+            LOGGER.info("[%s]: Solved using %s in %1.2fs with %d evaluations: %s -> %s -> %1.3f",
+                        self.name, method, duration, solution.nfev, _pretty(solution.x), item, f)
 
         if hasattr(_score, 'cache_info'):
-            LOGGER.debug("Optimizer cache info = %s", str(_score.cache_info()).replace('CacheInfo', ''))
+            LOGGER.fine("Optimizer cache info = %s", str(_score.cache_info()).replace('CacheInfo', ''))
             _score.cache_clear()
 
         return results

@@ -99,7 +99,6 @@ class TableColumnsOptimizer(Optimizer[PlacedTableContent]):
         widths = divide_space(x, self.available_width, 10, granularity=5)
         return self._make(widths)
 
-    @lru_cache
     def _make(self, widths):
         table = Table(self.cells, self.padding, widths, self.pdf)
         return PlacedTableContent(table, self.bounds, self.pdf)
