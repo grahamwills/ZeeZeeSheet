@@ -4,6 +4,7 @@ from typing import Dict, List, Sequence, Tuple
 import reportlab
 from colour import Color
 from reportlab.lib.styles import ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
 from reportlab.platypus import Flowable
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
@@ -13,6 +14,14 @@ from sheet.pdf import PDF, _element_to_html
 from style import Style
 
 LOGGER = common.configured_logger(__name__)
+
+# Patch with more efficient versions
+
+@lru_cache
+def stringWidth(text, fontName, fontSize, encoding='utf8'):
+    return pdfmetrics.getFont(fontName).stringWidth(text, fontSize, encoding=encoding)
+
+pdfmetrics.stringWidth = stringWidth
 
 
 class Table(Flowable):
@@ -78,11 +87,6 @@ class Table(Flowable):
 
         for row in self.cells:
             for idx, cell in enumerate(row):
-                # The last cell goes to the end of the row
-                if cell == row[-1]:
-                    end = self.ncols
-                else:
-                    end = idx + 1
 
                 try:
                     tbad, tok, tunused = cell.calculate_issues()
@@ -95,9 +99,13 @@ class Table(Flowable):
                     sum_ok += ok_breaks
 
                 # Divide unused up evenly across columns
-                unused /= end - idx
-                for i in range(idx, end):
-                    min_unused[i] = min(min_unused[i], unused)
+                if idx < self.ncols - 1 and cell == row[-1]:
+                    # The last cell goes to the end of the row
+                    unused /= self.ncols - idx
+                    for i in range(idx, self.ncols):
+                        min_unused[i] = min(min_unused[i], unused)
+                else:
+                    min_unused[idx] = min(min_unused[idx], unused)
 
         return sum_bad, sum_ok, min_unused
 

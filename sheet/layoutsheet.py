@@ -17,7 +17,7 @@ from sheet.pdf import PDF
 LOGGER = configured_logger(__name__)
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=1024)
 def make_block_layout(target: Block, width: int, pdf: PDF) -> PlacedContent:
     rect = Rect.make(left=0, top=0, width=width, height=1000)
     return layout_block(target, rect, pdf)

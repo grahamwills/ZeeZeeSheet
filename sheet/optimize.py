@@ -75,8 +75,6 @@ class Optimizer(Generic[T]):
             :return: the optimal score, created item, and parameters
         """
 
-        x0 = (1.0 / self.k,) * (self.k - 1)
-
         def constraint_func(p):
             try:
                 params_to_x(p)
@@ -84,21 +82,24 @@ class Optimizer(Generic[T]):
             except BadParametersError as err:
                 return err.badness
 
-        kwargs = {'method': 'COBYLA', 'constraints': {'type': 'ineq', 'fun': constraint_func}}
+        x0 = np.asarray((1.0 / self.k,) * (self.k - 1))
 
         start = time.perf_counter()
 
-        if method == 'basinhopping':
-            solution = scipy.optimize.basinhopping(lambda x: _score(tuple(x), self), x0=x0, seed=13,
-                                                   stepsize=1, niter=10)
-        elif method == 'COBYLA':
-            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
+        if method == 'COBYLA':
+            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=x0, method='COBYLA',
+                                               constraints={'type': 'ineq', 'fun': constraint_func})
         elif method.lower() == 'nelder-mead':
-            lo = 1 / 1.2 / self.k
-            initial_simplex = [[2 / 3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
-            kwargs = {'method':  'Nelder-Mead', 'bounds': [(0, 1)] * (self.k - 1),
-                      'options': {'initial_simplex': initial_simplex}}
-            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
+            if self.k == 2:
+                initial_simplex = [[0.4], [0.6]]
+            elif self.k == 3:
+                initial_simplex = [[0.3, 0.3], [0.4, 0.3], [0.3, 0.4]]
+            else:
+                lo = 1 / 1.2 / self.k
+                initial_simplex = [[2 / 3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
+            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), method='Nelder-Mead', x0=x0,
+                                               bounds=[(0, 1)] * (self.k - 1),
+                                               options={'initial_simplex': initial_simplex})
         else:
             raise ValueError("Unknown optimize method '%s'", method)
 
