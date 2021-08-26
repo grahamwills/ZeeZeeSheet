@@ -1,5 +1,6 @@
 import warnings
 from copy import copy
+from functools import lru_cache
 from typing import List, Optional, Tuple
 
 from reportlab.platypus import Flowable, Paragraph
@@ -55,7 +56,7 @@ def _make_cells_from_run(run: Run, pdf: PDF) -> (List[Paragraph], int):
     _add_run(items[start:], row, pdf, alignments[spacer_idx])
     return row, divider_count
 
-
+@lru_cache(maxsize=2048)
 def make_row_from_run(run: Run, pdf: PDF, bounds: Rect) -> [Flowable]:
     row, dividers = _make_cells_from_run(run, pdf)
     if not dividers:
@@ -214,8 +215,8 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
             top = bounds.top
             left += W1 + W2 + W3 + 2 * padding
 
-        r2 = Rect(left=left, top=top, height=H2, width=W2)
-        r1 = Rect(left=r2.right, top=top + (H2 - H1) / 2, width=W1 + W3, height=H1)
+        r2 = Rect.make(left=left, top=top, height=H2, width=W2)
+        r1 = Rect.make(left=r2.right, top=top + (H2 - H1) / 2, width=W1 + W3, height=H1)
 
         # Extend under the other rectangle to hide joins of 'round edges'
         box = r1.move(dx=-H1).resize(width=r1.width + H1)
@@ -230,7 +231,7 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
         contents.append(placed1)
 
         if W3:
-            r3 = Rect(top=r1.top, bottom=r1.bottom, width=W3, right=r1.right)
+            r3 = Rect.make(top=r1.top, bottom=r1.bottom, width=W3, right=r1.right)
             placed2 = layoutparagraph.align_vertically_within(cell[2], r3, pdf, metrics_adjust=-0.2)
             contents.append(placed2)
 
@@ -245,7 +246,7 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
                    shape_style: Style, tag_style: Style, pdf: PDF) -> (PlacedGroupContent, Tuple[int]):
     height = y[6]
     r = y[1]
-    b = Rect(left=0, right=width, top=0, bottom=height)
+    b = Rect.make(left=0, right=width, top=0, bottom=height)
 
     shape = shape or 'oval'
 
@@ -281,18 +282,18 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
     path.moveTo(0, y[4])
     path.lineTo(width, y[4])
 
-    inner_shape = PlacedPathContent(path, b, shape_style, PDF.FILL, pdf)
+    inner_shape = PlacedPathContent(path, b, shape_style, PDF.STROKE, pdf)
     group = [outer_shape, inner_shape]
 
     # tags
     if len(tags) > 0 and tags[0]:
         p = layoutparagraph.from_text(tags[0], tag_style, pdf)
-        r = Rect(left=0, right=width, top=y[4], bottom=y[5])
+        r = Rect.make(left=0, right=width, top=y[4], bottom=y[5])
         tag = layoutparagraph.align_vertically_within(p, r, pdf, posY=-1)
         group.append(tag)
     if len(tags) > 1 and tags[1]:
         p = layoutparagraph.from_text(tags[1], tag_style, pdf)
-        r = Rect(left=0, right=width, top=y[1], bottom=y[2])
+        r = Rect.make(left=0, right=width, top=y[1], bottom=y[2])
         tag = layoutparagraph.align_vertically_within(p, r, pdf, posY=1)
         group.append(tag)
 
@@ -329,19 +330,19 @@ def add_stamp_values(stamp: PlacedGroupContent, y: Tuple[int], run: Run, pdf: PD
     row = layoutparagraph.split_into_paragraphs(run, pdf, styles=styles)
 
     if len(row) > 0 and row[0]:
-        r = Rect(left=0, right=width, top=y[2], bottom=y[3])
+        r = Rect.make(left=0, right=width, top=y[2], bottom=y[3])
         p = layoutparagraph.align_vertically_within(row[0], r, pdf, metrics_adjust=0)
         contents.append(p)
     if len(row) > 1 and row[1]:
-        r = Rect(left=0, right=width, top=y[3], bottom=y[4])
+        r = Rect.make(left=0, right=width, top=y[3], bottom=y[4])
         p = layoutparagraph.align_vertically_within(row[1], r, pdf, metrics_adjust=0.75)
         contents.append(p)
     if len(row) > 2 and row[2]:
-        r = Rect(left=0, right=width, top=y[5], bottom=y[6])
+        r = Rect.make(left=0, right=width, top=y[5], bottom=y[6])
         p = layoutparagraph.align_vertically_within(row[2], r, pdf)
         contents.append(p)
     if len(row) > 3 and row[3]:
-        r = Rect(left=0, right=width, top=y[0], bottom=y[1])
+        r = Rect.make(left=0, right=width, top=y[0], bottom=y[1])
         p = layoutparagraph.align_vertically_within(row[3], r, pdf, metrics_adjust=1)
         contents.append(p)
 

@@ -96,12 +96,24 @@ class Extent(NamedTuple):
 class Rect(namedtuple('Rect', 'left right top bottom')):
 
     @classmethod
+    def make(cls, left=None, right=None, top=None, bottom=None, width=None, height=None):
+        if right is None:
+            right = left + width
+        elif left is None:
+            left = right - width
+        if bottom is None:
+            bottom = top + height
+        elif top is None:
+            top = bottom - height
+        return cls(round(left), round(right), round(top), round(bottom))
+
+    @classmethod
     def union(cls, *args):
         all = list(args[0]) if len(args) == 1 else list(args)
         u = all[0]
         for r in all[1:]:
-            u = Rect(left=min(r.left, u.left), top=min(r.top, u.top),
-                     right=max(r.right, u.right), bottom=max(r.bottom, u.bottom))
+            u = Rect.make(left=min(r.left, u.left), top=min(r.top, u.top),
+                          right=max(r.right, u.right), bottom=max(r.bottom, u.bottom))
         return u
 
     @property
@@ -112,52 +124,38 @@ class Rect(namedtuple('Rect', 'left right top bottom')):
     def height(self):
         return self.bottom - self.top
 
-    def __new__(cls, left=None, right=None, top=None, bottom=None, width=None, height=None):
-        if right is None:
-            right = left + width
-        elif left is None:
-            left = right - width
-        if bottom is None:
-            bottom = top + height
-        elif top is None:
-            top = bottom - height
-        return super().__new__(cls, round(left), round(right), round(top), round(bottom))
-
+    @property
     def center(self) -> Point:
         return Point((self.left + self.right) / 2, (self.top + self.bottom) / 2)
 
-    def size(self) -> Extent:
+    @property
+    def extent(self) -> Extent:
         return Extent(self.width, self.height)
 
     def __add__(self, off: Margins) -> Rect:
-        return Rect(left=self.left - off.left,
-                    right=self.right + off.right,
-                    top=self.top - off.top,
-                    bottom=self.bottom + off.bottom,
-                    )
+        return Rect(self.left - off.left, self.right + off.right,
+                    self.top - off.top, self.bottom + off.bottom)
 
     def __sub__(self, off: Margins) -> Rect:
-        return Rect(left=self.left + off.left,
-                    right=self.right - off.right,
-                    top=self.top + off.top,
-                    bottom=self.bottom - off.bottom)
+        return Rect(self.left + off.left, self.right - off.right,
+                    self.top + off.top, self.bottom - off.bottom)
 
     def __str__(self):
         return "[l=%d r=%d t=%d b=%d]" % (self.left, self.right, self.top, self.bottom)
 
-    def valid(self) -> bool:
-        return self.left <= self.right and self.top <= self.bottom
-
-    def move(self, *, dx=0, dy=0) -> Rect:
-        return Rect(left=self.left + dx, top=self.top + dy, width=self.width, height=self.height)
+    def move(self, *, dx: int = 0, dy: int = 0) -> Rect:
+        return Rect(self.left + dx, self.right + dx, self.top + dy, self.bottom + dy)
 
     def resize(self, *, width=None, height=None) -> Rect:
-        return Rect(left=self.left, top=self.top,
-                    width=self.width if width is None else width,
-                    height=self.height if height is None else height)
+        return Rect(self.left, self.right if width is None else self.left + width,
+                    self.top, self.bottom if height is None else self.top + height)
 
-    def modify_horizontal(self, *, width=None, left=None, right=None) -> Rect:
-        return Rect(top=self.top, bottom=self.bottom, left=left, right=right, width=width)
+    def make_column(self, *, width: int = None, left: int = None, right: int = None) -> Rect:
+        if not width:
+            return Rect(left, right, self.top, self.bottom)
+        if not left:
+            return Rect(right - width, right, self.top, self.bottom)
+        return Rect(left, left + width, self.top, self.bottom)
 
 
 def _consistent(low, high, size, description):

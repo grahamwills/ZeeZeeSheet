@@ -10,7 +10,7 @@ from sheet.pdf import PDF
 from sheet.style import Style
 
 
-def place_within(p: Flowable, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedParagraphContent:
+def place_within(p: Paragraph, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedParagraphContent:
     """
         Create a placed paragraph within a set of bounds
         :param Paragraph p: place this
@@ -26,14 +26,14 @@ def place_within(p: Flowable, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=
     elif posX > 0:
         dx = r.right - a.right
     else:
-        dx = r.center().x - a.center().x
+        dx = r.center.x - a.center.x
 
     if posY < 0:
         dy = r.top - a.top
     elif posY > 0:
         dy = r.bottom - a.bottom
     else:
-        dy = r.center().y - a.center().y
+        dy = r.center.y - a.center.y
 
     pfc.move(dx=dx, dy=dy + descent_of(p) * descent_adjust)
     return pfc
@@ -54,7 +54,7 @@ def align_vertically_within(p: Paragraph, r: Rect, pdf: PDF, posY=0, metrics_adj
     elif posY > 0:
         dy = r.bottom - a.bottom + descent_of(p) * metrics_adjust
     else:
-        dy = r.center().y - a.center().y + descent_of(p) * metrics_adjust
+        dy = r.center.y - a.center.y + descent_of(p) * metrics_adjust
 
     pfc.move(dy=dy)
     return pfc

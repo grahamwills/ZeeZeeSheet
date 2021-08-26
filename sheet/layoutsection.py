@@ -23,7 +23,7 @@ def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[Pl
     contents = []
 
     for place in placeables:
-        available = Rect(top=current, left=bounds.left, right=bounds.right, bottom=bounds.bottom)
+        available = Rect.make(top=current, left=bounds.left, right=bounds.right, bottom=bounds.bottom)
         p = place(available)
         contents.append(p)
         current = p.actual.bottom + padding
@@ -87,7 +87,7 @@ class ColumnOptimizer(Optimizer):
             sum_counts += count
             last = sum_counts
 
-            b = self.outer.modify_horizontal(left=left, right=right)
+            b = self.outer.make_column(left=left, right=right)
             placed = place_in_column(self.placeables[first:last], b, self.padding)
             placed_columns.append(placed)
 

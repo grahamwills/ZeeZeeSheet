@@ -27,8 +27,8 @@ def layout_block(block: Block, bounds: Rect, pdf: PDF):
 
     content = _content_layout(block, bounds - insets, pdf)
 
-    inner = Rect(left=bounds.left, right=bounds.right, top=bounds.top,
-                 bottom=content.actual.bottom + insets.bottom)
+    inner = Rect.make(left=bounds.left, right=bounds.right, top=bounds.top,
+                      bottom=content.actual.bottom + insets.bottom)
 
     back, post = _post_content_layout(block, inner, pdf)
 
@@ -97,11 +97,11 @@ class ImagePlacement(Optimizer):
         LOGGER.fine("Allocating %d to image, %d to other", widths[0], widths[1])
 
         if self.on_right():
-            b_image = outer.modify_horizontal(right=outer.right, width=widths[0])
-            b_other = outer.modify_horizontal(left=outer.left, width=widths[1])
+            b_image = outer.make_column(right=outer.right, width=widths[0])
+            b_other = outer.make_column(left=outer.left, width=widths[1])
         else:
-            b_image = outer.modify_horizontal(left=outer.left, width=widths[0])
-            b_other = outer.modify_horizontal(right=outer.right, width=widths[1])
+            b_image = outer.make_column(left=outer.left, width=widths[0])
+            b_other = outer.make_column(right=outer.right, width=widths[1])
 
         other = self.other_layout(self.block, b_other, self.pdf)
         b_image = b_image.resize(height=min(b_image.height, other.requested.height))
@@ -151,9 +151,9 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
             image = placer.place_image(bounds)
             if placer.on_right():
                 image.move(dx=bounds.right - image.actual.right)
-                obounds = bounds.modify_horizontal(left=bounds.left, right=image.actual.left - block.padding)
+                obounds = bounds.make_column(left=bounds.left, right=image.actual.left - block.padding)
             else:
-                obounds = bounds.modify_horizontal(left=image.actual.right + block.padding, right=bounds.right)
+                obounds = bounds.make_column(left=image.actual.right + block.padding, right=bounds.right)
             other = other_layout(block, obounds, pdf)
             return PlacedGroupContent([image, other], bounds)
         else:
@@ -180,7 +180,7 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) 
         p = layoutparagraph.make_paragraph(item, pdf)
         placed = PlacedParagraphContent(p, b, pdf)
         results.append(placed)
-        b = Rect(top=placed.actual.bottom + padding, left=b.left, right=b.right, bottom=b.bottom)
+        b = Rect.make(top=placed.actual.bottom + padding, left=b.left, right=b.right, bottom=b.bottom)
     if not results:
         return None
     elif len(results) == 1:

@@ -17,7 +17,7 @@ def test_table_creation():
     stylesheet = Stylesheet()
     stylesheet.define('default', font='Gotham', size=10)
     pdf = PDF(Path("/tmp/killme.pdf"), stylesheet, (500, 1000), True)
-    bounds = Rect(left=0, top=0, right=120, bottom=100)
+    bounds = Rect.make(left=0, top=0, right=120, bottom=100)
 
     r1 = Run().add("Kung Fu Points:", 'default')
     r2 = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
@@ -32,7 +32,7 @@ def test_table_creation():
     t = table.as_table(cells, bounds, pdf, 10)
     content = PlacedTableContent(t, bounds, pdf)
 
-    assert content.actual == Rect(left=0, top=0, right=120, bottom=106)
+    assert content.actual == Rect.make(left=0, top=0, right=120, bottom=106)
     assert content.unused_width == 8
     assert content.bad_breaks == 0
     assert content.ok_breaks == 6
@@ -44,7 +44,7 @@ def test_block_table_creation():
                       font='Gotham')
     stylesheet.define('banner', font='Gotham', size=10)
     pdf = PDF(Path("/tmp/killme.pdf"), stylesheet, (500, 1000), True)
-    bounds = Rect(left=0, top=0, right=120, bottom=100)
+    bounds = Rect.make(left=0, top=0, right=120, bottom=100)
 
     block = Block()
     block.title_method = common.parse_directive('banner style=banner')

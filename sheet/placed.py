@@ -12,7 +12,7 @@ from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Image
 
 from sheet import common
-from sheet.common import Rect
+from sheet.common import Rect, Rect
 from sheet.flowable import Paragraph, Table, line_info
 from sheet.pdf import DrawMethod, PDF
 from sheet.style import Style
@@ -302,7 +302,7 @@ def _unused_horizontal_strip(group: List[PlacedContent], bounds: Rect):
         d = g.unused_width
         left = g.requested.left + d // 2
         right = g.requested.right - d + d // 2
-        for i in range(left - ox, right - ox):
+        for i in range(int(left - ox), int(right - ox)):
             used[i] = 1
     return bounds.width - sum(used)
 

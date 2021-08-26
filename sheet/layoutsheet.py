@@ -19,7 +19,7 @@ LOGGER = configured_logger(__name__)
 
 @functools.lru_cache
 def make_block_layout(target: Block, width: int, pdf: PDF) -> PlacedContent:
-    rect = Rect(left=0, top=0, width=width, height=1000)
+    rect = Rect.make(left=0, top=0, width=width, height=1000)
     return layout_block(target, rect, pdf)
 
 
@@ -41,8 +41,8 @@ def place_sheet(sheet: Sheet, outer: Rect, pdf: PDF) -> PlacedGroupContent:
         children += placed_pages
 
         # Set bounds top for the next section
-        bounds = Rect(left=bounds.left, right=bounds.right,
-                      top=placed_pages[-1].actual.bottom + sheet.padding, bottom=bounds.bottom)
+        bounds = Rect.make(left=bounds.left, right=bounds.right,
+                           top=placed_pages[-1].actual.bottom + sheet.padding, bottom=bounds.bottom)
 
         LOGGER.info("Placed %s", section)
         if hasattr(make_block_layout, 'cache_info'):
@@ -82,7 +82,7 @@ def draw_sheet(sheet: Sheet, sections: List[PlacedContent], pdf):
 
 
 def layout_sheet(sheet: Sheet, pdf: PDF):
-    outer = Rect(left=0, top=0, right=sheet.pagesize[0], bottom=sheet.pagesize[1]) - Margins.all_equal(sheet.margin)
+    outer = Rect.make(left=0, top=0, right=sheet.pagesize[0], bottom=sheet.pagesize[1]) - Margins.all_equal(sheet.margin)
     with warnings.catch_warnings(record=True) as warns:
         top = place_sheet(sheet, outer, pdf)
         for w in warns:

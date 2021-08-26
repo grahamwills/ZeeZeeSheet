@@ -75,5 +75,5 @@ loggers:
 
 
 root:
-  level: NOTSET
+  level: DEBUG
   handlers: [ important, file ]
