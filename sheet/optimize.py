@@ -65,7 +65,7 @@ class Optimizer(Generic[T]):
             return BAD_PARAMS_FACTOR * (1 + err.badness), None
 
         f = self.score(item) if item else BAD_PARAMS_FACTOR
-        LOGGER.fine("[%s] %s -> %s -> %1.3f", self.name, _pretty(x), item, f)
+        LOGGER.debug("[%s] %s -> %s -> %1.3f", self.name, _pretty(x), item, f)
         return f, item
 
     def run(self, method='COBYLA') -> (T, (float, [float])):
@@ -96,7 +96,7 @@ class Optimizer(Generic[T]):
         elif method == 'COBYLA':
             solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=np.asarray(x0), **kwargs)
         elif method.lower() == 'nelder-mead':
-            lo = 1 / 3 / self.k
+            lo = 1 / 1.2 / self.k
             initial_simplex = [[2 / 3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
             kwargs = {'method':  'Nelder-Mead', 'bounds': [(0, 1)] * (self.k - 1),
                       'options': {'initial_simplex': initial_simplex}}

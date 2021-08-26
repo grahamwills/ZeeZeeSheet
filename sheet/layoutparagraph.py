@@ -9,7 +9,7 @@ from flowable import Paragraph
 from placed import PlacedParagraphContent
 from sheet.common import Rect
 from sheet.model import Element, ElementType, Run
-from sheet.pdf import PDF, _element_to_html
+from sheet.pdf import PDF
 from sheet.style import Style
 
 
@@ -111,26 +111,12 @@ def make_paragraph(run: Run, pdf: PDF, align=None, size_factor=None) -> Optional
     if not len(run.items):
         return None
 
-    style, leading = pdf.paragraph_style_for(run)
+    style = pdf.paragraph_style_for(run)
     if align:
         style = style.modify(align=align)
     if size_factor:
         style = style.modify(size=style.size * size_factor)
 
-    alignment = {'left': 0, 'center': 1, 'right': 2, 'fill': 4, 'justify': 4}[style.align]
-    opacity = float(style.opacity) if style.opacity is not None else 1.0
-    color = reportlab.lib.colors.Color(*style.color.rgb, alpha=opacity)
-    pStyle = ParagraphStyle(name='tmp', spaceShrinkage=0.1,
-                            fontName=style.font, fontSize=style.size, leading=leading,
-                            allowWidows=0, embeddedHyphenation=1, alignment=alignment,
-                            hyphenationMinWordLength=1,
-                            textColor=color)
+    return Paragraph(run, style, pdf)
 
-    # Add spaces between check boxes and other items
-    items = []
-    for e in run.items:
-        # Strangely, non-breaking space allows breaks to happen between images, whereas simple spaces do not
-        if e is not run.items[0] and not e.value[0] in ":;-=":
-            items.append('<font size=0>&nbsp;</font> ')
-        items.append(_element_to_html(e, pdf, style))
-    return Paragraph("".join(items), pStyle, pdf)
+

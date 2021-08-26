@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict, List, Sequence, Tuple
 
 import reportlab
@@ -5,8 +6,10 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Flowable
 from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
+from model import Run
 from sheet import common
-from sheet.pdf import PDF
+from sheet.pdf import PDF, _element_to_html
+from style import Style
 
 LOGGER = common.configured_logger(__name__)
 
@@ -28,7 +31,7 @@ class Table(Flowable):
 
         if self.total_column_width < 10 * self.ncols:
             raise ValueError(
-                "Table too small to be created (width=%s, cols=%d)" % (self.total_column_width, self.ncols))
+                    "Table too small to be created (width=%s, cols=%d)" % (self.total_column_width, self.ncols))
 
     def _place_row(self, row, top, availHeight):
         heights = []
@@ -97,19 +100,57 @@ class Table(Flowable):
 
         return sum_bad, sum_ok, min_unused
 
+    def __str__(self):
+        contents = " | ".join([str(c) for row in self.cells for c in row][:4])
+        if self.ncols * len(self.cells) > 4:
+            contents += '| \u2026'
+        return "T(%dx%x • %s • %s)" %(self.ncols, len(self.cells), self.colWidths, contents)
+
+
+@lru_cache
+def _make_paragraph_style(align, font, size, leading, opacity, rgb):
+    alignment = {'left': 0, 'center': 1, 'right': 2, 'fill': 4, 'justify': 4}[align]
+    opacity = float(opacity) if opacity is not None else 1.0
+    color = reportlab.lib.colors.Color(*rgb, alpha=opacity)
+    return ParagraphStyle(name='tmp', spaceShrinkage=0.1,
+                          fontName=font, fontSize=size, leading=leading,
+                          allowWidows=0, embeddedHyphenation=1, alignment=alignment,
+                          hyphenationMinWordLength=1,
+                          textColor=color)
+
 
 class Paragraph(reportlab.platypus.Paragraph):
-    def __init__(self, items, style: ParagraphStyle, pdf: PDF):
-        super().__init__(items, style)
+
+    def __init__(self, run: Run, style: Style, pdf: PDF):
+        self.run = run
+        self.pdf = PDF
+        leading = pdf.paragraph_leading_for(run)
+        pStyle = _make_paragraph_style(style.align, style.font, style.size, leading, style.opacity, style.color.rgb)
+
+        # Add spaces between check boxes and other items
+        items = []
+        for e in run.items:
+            # Strangely, non-breaking space allows breaks to happen between images, whereas simple spaces do not
+            if e is not run.items[0] and not e.value[0] in ":;-=":
+                items.append('<font size=0>&nbsp;</font> ')
+            items.append(_element_to_html(e, pdf, style))
+
+        super().__init__("".join(items), pStyle)
         leading = pdf.leading_for(style)
         descent = pdf.descender(style)
-        self.v_offset = style.fontSize * 1.2 - leading + descent / 2
+        self.v_offset = style.size * 1.2 - leading + descent / 2
         self._showBoundary = pdf.debug
 
     def drawOn(self, pdf: PDF, x, y, _sW=0):
         pdf.translate(0, self.v_offset)
         super().drawOn(pdf, x, y, _sW)
         pdf.translate(0, -self.v_offset)
+
+    def __str__(self):
+        txt = str(self.run)
+        if len(txt) > 25:
+            txt = txt[:24] + '\u2026'
+        return "P({0})".format(txt)
 
 
 def line_info(p):

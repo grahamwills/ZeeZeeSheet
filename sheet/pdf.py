@@ -108,14 +108,18 @@ class PDF(canvas.Canvas):
     def draw_flowable(self, flowable: Flowable, bounds):
         flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
 
-    def paragraph_style_for(self, run: Run) -> (Style, float):
+    def paragraph_style_for(self, run: Run) -> Style:
         styles = [self.style(e.style) for e in run.items]
         style = styles[0]
         max_size = max(s.size for s in styles)
-        max_leading = max(self.leading_for(s) for s in styles)
         if max_size != style.size:
             style = style.modify(size=max_size)
-        return style, max_leading
+        return style
+
+    def paragraph_leading_for(self, run: Run) -> float:
+        styles = (self.style(e.style) for e in run.items)
+        max_leading = max(self.leading_for(s) for s in styles)
+        return max_leading
 
     def descender(self, style) -> float:
         try:

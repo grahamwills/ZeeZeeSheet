@@ -44,13 +44,7 @@ class Element:
             return '●'
         if self.which == ElementType.SPACER:
             return '⋯'
-
-        has_style = self.style and self.style != 'default'
-
-        if has_style:
-            return "<%s|%s>" % (self.value, self.style)
-        else:
-            return self.value
+        return self.value
 
     def replace_style(self, style: str):
         return Element(which=self.which, value=self.value, style=style)
