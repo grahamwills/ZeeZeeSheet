@@ -67,9 +67,6 @@ class PlacedContent(abc.ABC):
         self.requested = self.requested.move(dx=dx, dy=dy)
         return self
 
-    def parent_sized(self, bounds: Rect):
-        pass
-
     def error_from_variance(self, multiplier: float):
         """ Internal variance in free space"""
         return multiplier * self.internal_variance
@@ -135,10 +132,6 @@ class PlacedImageContent(PlacedContent):
 
     def draw(self):
         self.pdf.draw_flowable(self.image, self.actual)
-
-    def parent_sized(self, bounds: Rect):
-        pass
-        # self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
 
     def __str__(self) -> str:
         return "Image(%dx%d)" % (self.actual.width, self.actual.height)
@@ -244,9 +237,6 @@ class PlacedGroupContent(PlacedContent):
         else:
             self.unused_width = calculate_unused_width_for_group(self.group, self.requested)
 
-        # Inform children of our size
-        for c in self.group:
-            c.parent_sized(self.requested)
 
     def draw(self):
         if self.pdf.debug:
@@ -265,14 +255,6 @@ class PlacedGroupContent(PlacedContent):
         for p in self.group:
             p.move(dx, dy)
         return self
-
-    def parent_sized(self, bounds: Rect):
-        for c in self.group:
-            # If just one child, should fill the parent of this
-            if len(self.group) > 1:
-                c.parent_sized(self.requested)
-            else:
-                c.parent_sized(bounds)
 
     def __getitem__(self, item):
         return self.group[item]
