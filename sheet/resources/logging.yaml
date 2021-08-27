@@ -48,7 +48,7 @@ loggers:
     handlers: [ important, file ]
     propagate: no
 
-  layoutsection:
+  sheet.layoutsection:
     level: DEBUG
     handlers: [ important, file ]
     propagate: no
@@ -64,7 +64,7 @@ loggers:
     propagate: no
 
   sheet.reader:
-    level: DEBUG
+    level: INFO
     handlers: [ important, file ]
     propagate: no
 

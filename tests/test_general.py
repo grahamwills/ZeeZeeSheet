@@ -43,7 +43,7 @@ def test_block_table_creation():
     stylesheet.define('default', color=Color('white'), background=Color('navy'), borderWidth=1, align='left', size=10,
                       font='Gotham')
     stylesheet.define('banner', font='Gotham', size=10)
-    pdf = PDF(Path("/tmp/killme.pdf"), stylesheet, (500, 1000), True)
+    pdf = PDF(Path("/tmp/killme.pdf"), (500, 1000), True)
     bounds = Rect.make(left=0, top=0, right=120, bottom=100)
 
     block = Block()

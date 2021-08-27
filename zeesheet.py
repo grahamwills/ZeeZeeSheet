@@ -51,7 +51,7 @@ if __name__ == '__main__':
         if file_rst:
             sheet = reader.read_sheet(file_rst)
             out = file_rst.parent.joinpath(file_rst.stem + '.pdf')
-            context = pdf.PDF(out, sheet.stylesheet, sheet.pagesize, debug=DEBUG)
+            context = pdf.PDF(out, sheet.pagesize, debug=DEBUG)
             layout_sheet(sheet, context)
             subprocess.run(['open', out], check=True)
         else:

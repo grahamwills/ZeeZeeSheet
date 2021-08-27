@@ -155,7 +155,7 @@ class Power(NamedTuple):
         line_title = (components['action_icon'], components['name'], act_type, box)
         color = USAGE_TYPE[components['usage']][1]
         lines = [
-            ".. title: banner style=banner_%s\n.. style: back_%s\n" % (color, color),
+            ".. title:: banner style=banner_%s\n.. block:: style=back_%s\n" % (color, color),
             "%s **%s** -- %s%s" % line_title
         ]
         if 'wpn_bonus' in components and 'atk_target' in components:
@@ -335,7 +335,7 @@ def _to_rule_tuple(t):
             descr = _find('Flavor', t) or _find('Short Description', t)
         except:
             descr = ''
-    return t['@name'], re.sub('[\n\t ]{2,}',' ', descr)
+    return t['@name'], re.sub('[\n\t ]{2,}', ' ', descr)
 
 
 def _format_tuple_3_as_line(p):
@@ -389,7 +389,9 @@ class DnD4E:
         return [_to_rule_tuple(t) for t in items if t['@type'] == rule_type]
 
     def character_title(self) -> str:
-        return ".. style: title\n\n" + _titled('**' + self.character['Details']['name'] + '** -- ' + str(self.level))
+        name = self.character['Details']['name']
+        return ".. block:: style=title\n\n" + _titled(name) \
+               + '\n - **' + name + '** -- ' + str(self.level)
 
     def character_details(self) -> str:
         base = self.character['Details']
@@ -497,8 +499,8 @@ class DnD4E:
         return "Combat Information\n" \
                + " - Action Points -- [][][][][]\n" \
                + " - Max HP: **%d** -- *bloodied*: %d\n" % (hits, hits // 2) \
-               + " - `_________________________________________________`\n" \
-               + " - `_________________________________________________`\n" \
+               + " - `_______________________________________________________`\n" \
+               + " - `_______________________________________________________`\n" \
                + " - Surges: " + '[ ]' * 5 + ' ' + '[ ]' * (surges - 5) + " -- value: %d\n" % (hits // 4) \
                + " - Deaths Saving Throws: " + '[]' * saves + ' --  bonus: **+%d**' % save_bonus
 
@@ -536,23 +538,24 @@ class DnD4E:
             portrait = None
 
         front_page = [
-            ".. page: stack%s" % watermark,
-            ".. section: stack columns=3 padding=12\n.. title: hidden\n.. style: title",
+            ".. page:: stack%s" % watermark,
+            ".. section:: stack stack:columns=3 padding=8\n.. title:: hidden\n",
             self.character_title(),
 
-            ".. block: default\n.. title: banner style=banner\n.. style: default",
+            ".. block:: default style=default",
             self.hits(),
 
-            ".. title: hidden\n.. block: key-values style=banner_green rows=100\n.. style: attributes",
+            ".. title:: hidden\n.. block:: thermometer thermometer:style=banner_green thermometer:rows=100 "
+            "style=attributes",
             self.stat_block(),
 
-            ".. block: key-values style=banner_red rows=100",
+            ".. block:: thermometer thermometer:style=banner_red thermometer:rows=100",
             self.defenses(),
 
             self.divider(),
 
-            ".. section: stack padding=12 columns=2\n.. block: default\n.. title: banner style=banner",
-            ".. style: default",
+            ".. section:: stack padding=12 stack:columns=2\n.. block:: default\n.. title:: banner style=banner",
+            ".. block:: style=default",
 
             portrait,
             self.skills(),
@@ -564,8 +567,8 @@ class DnD4E:
             self.feats(),
             self.divider(),
 
-            ".. section: stack columns=3 equal=True padding=12",
-            ".. style: default emphasis=quote strong=heavy",
+            ".. section:: stack stack:columns=3 stack:equal padding=12",
+            ".. block:: style=default emphasis=quote strong=heavy",
 
         ]
         return "\n\n\n".join(x for x in front_page if x) \
@@ -732,7 +735,7 @@ class DnD4E:
         color = USAGE_TYPE['Item'][1]
 
         lines = [
-            ".. title: banner style=banner_%s\n.. style: back_%s\n" % (color, color),
+            ".. title:: banner style=banner_%s\n.. block:: style=back_%s\n" % (color, color),
             line_title,
             " - %s • %sgp -- %s" % line_info,
         ]

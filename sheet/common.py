@@ -5,38 +5,12 @@ import logging
 import logging.config
 import os
 from collections import namedtuple
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, NamedTuple, Optional
+from typing import Dict, NamedTuple
 
 import yaml
 
 DATA_DIR = Path(__file__).parent.parent.joinpath('data')
-
-
-@dataclass
-class Directive:
-    tag: Optional[str]
-    command: str
-    options: Dict
-
-
-def parse_directive(txt: str) -> Directive:
-    """ Converts a string into an optionally tagged command"""
-    colon_index = txt.find(':')
-    if colon_index < 0:
-        tag = None
-    else:
-        tag = txt[:colon_index].strip()
-        txt = txt[colon_index + 1:]
-    items = txt.strip().split()
-
-    if '=' in items[0]:
-        command = None
-    else:
-        command = items[0]
-        items = items[1:]
-    return Directive(tag, command, parse_options(items))
 
 
 def _simplify(txt):
@@ -143,7 +117,7 @@ class Rect(namedtuple('Rect', 'left right top bottom')):
     def __str__(self):
         return "[l=%d r=%d t=%d b=%d]" % (self.left, self.right, self.top, self.bottom)
 
-    def move(self, *, dx: int = 0, dy: int = 0) -> Rect:
+    def move(self, *, dx=0, dy=0) -> Rect:
         return Rect(self.left + dx, self.right + dx, self.top + dy, self.bottom + dy)
 
     def resize(self, *, width=None, height=None) -> Rect:

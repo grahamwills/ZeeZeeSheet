@@ -13,7 +13,7 @@ from placed import PlacedContent, PlacedGroupContent, PlacedParagraphContent, Pl
     PlacedTableContent
 from sheet import common
 from sheet.common import Rect
-from sheet.model import Block, Element, ElementType, Run
+from sheet.model import Block, Element, ElementType, Run, Spacing
 from sheet.optimize import BadParametersError, Optimizer, divide_space
 from sheet.pdf import PDF
 from sheet.style import Style
@@ -56,6 +56,7 @@ def _make_cells_from_run(run: Run, pdf: PDF) -> (List[Paragraph], int):
     _add_run(items[start:], row, pdf, alignments[spacer_idx])
     return row, divider_count
 
+
 @lru_cache(maxsize=2048)
 def make_row_from_run(run: Run, pdf: PDF, bounds: Rect) -> [Flowable]:
     row, dividers = _make_cells_from_run(run, pdf)
@@ -77,10 +78,9 @@ def one_line_flowable(run: Run, bounds: Rect, padding: int, pdf: PDF):
         return PlacedParagraphContent(p, bounds, pdf)
 
 
-def table_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) -> PlacedContent:
+def table_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     cells = [make_row_from_run(run, pdf, bounds) for run in block.content]
-    padding = int(padding) if padding is not None else block.padding
-    return as_table(cells, bounds, pdf, padding, return_as_placed=True)
+    return as_table(cells, bounds, pdf, block.spacing.padding, return_as_placed=True)
 
 
 class TableColumnsOptimizer(Optimizer[PlacedTableContent]):
@@ -179,22 +179,24 @@ def _col_width(cells: [[Paragraph]], col: int, pdf: PDF) -> float:
     return mx
 
 
-def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: int) -> PlacedContent:
-    box_style = pdf.style(style)
-    text_style = pdf.style(block.base_style())
-    overrides = [Style(align='center'), Style(align='center', size=text_style.size * 1.5), Style(align='center')]
+def thermometer_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
+    nRows = int(block.method.options.get('rows', 6))
+    style = block.method.options.get('style', block.style)
+
+    overrides = [
+        style.clone(align='center'),
+        style.clone(align='center', size=style.size * 1.5),
+        style.clone(align='center')
+    ]
 
     items = [layoutparagraph.split_into_paragraphs(run, pdf, overrides) for run in block.content]
 
-    padding = block.padding
+    padding = block.spacing.padding
 
-    nRows = int(rows)
-    text_style_1 = copy(text_style)
-    text_style_1.size = text_style_1.size * 3 // 2
-    H1 = text_style.size + 2 * padding
+    H1 = overrides[0].size + 2 * padding
     W1 = 2 * padding + round(_col_width(items, 0, pdf))
 
-    H2 = text_style_1.size + 2 * padding
+    H2 = overrides[1].size + 2 * padding
     W2 = 4 * padding + round(_col_width(items, 1, pdf))
 
     try:
@@ -220,8 +222,8 @@ def key_values_layout(block: Block, bounds: Rect, pdf: PDF, style: str, rows: in
 
         # Extend under the other rectangle to hide joins of 'round edges'
         box = r1.move(dx=-H1).resize(width=r1.width + H1)
-        contents.append(PlacedRectContent(box, box_style, PDF.FILL, pdf, rounded=rounded))
-        contents.append(PlacedRectContent(r2, box_style, PDF.FILL, pdf, rounded=rounded))
+        contents.append(PlacedRectContent(box, style, PDF.FILL, pdf, rounded=rounded))
+        contents.append(PlacedRectContent(r2, style, PDF.FILL, pdf, rounded=rounded))
 
         placed0 = layoutparagraph.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf,
                                                           metrics_adjust=-0.2)
@@ -322,11 +324,11 @@ def add_stamp_values(stamp: PlacedGroupContent, y: Tuple[int], run: Run, pdf: PD
     contents = stamp.group
     width = stamp.requested.width
 
-    style = pdf.style(run.style())
-    styles = [Style(align='center'),
-              Style(size=style.size * 2, align='center'),
-              Style(size=round(style.size * 1.25), align='center'),
-              Style(size=round(style.size * 1.25), align='center')]
+    style = run.style()
+    styles = [style.clone(align='center'),
+              style.clone(size=style.size * 2, align='center'),
+              style.clone(size=round(style.size * 1.25), align='center'),
+              style.clone(size=round(style.size * 1.25), align='center')]
     row = layoutparagraph.split_into_paragraphs(run, pdf, styles=styles)
 
     if len(row) > 0 and row[0]:
@@ -349,25 +351,21 @@ def add_stamp_values(stamp: PlacedGroupContent, y: Tuple[int], run: Run, pdf: PD
     return PlacedGroupContent(contents, stamp.requested)
 
 
-def badges_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None, tags: str = None, shape: str = None,
-                  style: str = None) -> PlacedContent:
+def badges_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     n = len(block.content)
 
-    tags = tags.split(',') if tags else []
+    shape = block.method.options.get('shape', 'oval')
+    tags = block.method.options.get('tags', '').split(',')
 
-    if padding is None:
-        padding = block.padding
-    else:
-        padding = int(padding)
+    padding = block.spacing.padding
 
-    content_style = pdf.style(block.base_style())
-    shape_style = pdf.style(style) if style else content_style
+    shape_style = block.method.options.get('shape-style', block.style)
     tag_height = shape_style.size * 2 / 3
 
-    tag_style = shape_style.modify(size=tag_height, align='center')
+    tag_style = shape_style.clone(size=tag_height, align='center')
     width = (bounds.width - padding * (n - 1)) // n
 
-    ypos = badge_vertical_layout(width, tags, content_style, tag_style)
+    ypos = badge_vertical_layout(width, tags, block.style, tag_style)
 
     stamp = badge_template(width, ypos, shape, tags, shape_style, tag_style, pdf)
 

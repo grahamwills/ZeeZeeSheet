@@ -1,7 +1,7 @@
-.. page: size=11inx8.5in margin=20 watermark=background.jpg
-.. section: stack columns=3 equal padding=10
-.. style: huge emphasis=emph
-.. title: hidden style=empty strong=big
+.. page:: size=11inx8.5in margin=20 watermark=background.jpg
+.. section:: stack stack:columns=3 stack:equal padding=10
+.. title:: hidden
+.. block:: style=huge
 
 **Ethik Beigleiter**
 ====================
@@ -11,31 +11,29 @@
    :align: left
    :height: 100
 
-.. style: faint strong=big
+.. block:: style=faint strong=big
 
 Description
  - is a **Chaotic Dwarven Adept**
  - who  **Crafts Unique Objects**
  - and is an **Initiate of the Inverted Pyramid**
 
-
-.. style: big strong=huge
+.. block:: style=big strong=huge
 
 Base Info
  - Tier: **3** -- Effort: **3**
 
-.. block: badge tags=Pool,Edge shape=oval padding=12 style=badge
-.. style: ornate strong=str
 
+.. block:: badge badge:shape=oval badge:tags=Pool,Edge badge:shape-style=badge
+   padding=12 style=ornate strong=str
 
 Pools
  - Might        |   | **10**    |
  - Speed        |   | **13**    |
  - Intellect    |   | **21**    | *2*
 
-.. title: banner style=banner
-.. block: default
-.. style: default
+.. title:: banner style=banner
+.. block:: default style=edged emphasis=red
 
 Recoveries -- **D6 + 4**
  - [ ] 1 action | [ ] 10 mins | [ ] 1 hour | [ ] 10 hours
@@ -112,7 +110,9 @@ Styles
 ======
 
 default
-    family=Helvetica color=#444 borderWidth=0.5 borderColor=navy align=fill
+    family=Helvetica color=#444 align=fill
+edged
+    borderWidth=0.5 borderColor=navy
 banner
     family=Steampunk size=14 color=white background=navy
 faint
@@ -124,11 +124,9 @@ ornate
 
 huge
     size=44 color=#800 font=Steamship
-emph
-    color=#800
 str
     color=#004 bold
-empty
-    borderWidth=0
+red
+    color=#800
 badge
     borderWidth=2 borderColor=#020 color=#8a8 background=#efe size=14 font=Gotham

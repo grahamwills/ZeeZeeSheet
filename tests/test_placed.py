@@ -18,7 +18,7 @@ from sheet.style import Style, Stylesheet
 
 @pytest.fixture
 def pdf() -> PDF:
-    return PDF(Path("/tmp/killme.pdf"), Stylesheet(), (500, 1000), debug=True)
+    return PDF(Path("/tmp/killme.pdf"), (500, 1000), debug=True)
 
 
 @pytest.fixture
@@ -227,7 +227,7 @@ def test_table_with_terrible_wraps(simple, styled, pdf):
 
 
 def test_line_info():
-    pdf = PDF(Path("/tmp/killme.pdf"), Stylesheet(), (500, 1000), True)
+    pdf = PDF(Path("/tmp/killme.pdf"), (500, 1000), True)
 
     run = Run().add("basic test", 'default')
 
@@ -240,7 +240,7 @@ def test_line_info():
 
 
 def test_line_info_for_boxes():
-    pdf = PDF(Path("/tmp/killme.pdf"), Stylesheet(), (500, 1000), True)
+    pdf = PDF(Path("/tmp/killme.pdf"), (500, 1000), True)
 
     run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 

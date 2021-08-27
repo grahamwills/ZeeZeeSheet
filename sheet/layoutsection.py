@@ -5,7 +5,7 @@ import math
 import statistics
 import time
 import warnings
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from placed import PlacedContent, PlacedGroupContent
 from sheet.common import Rect, configured_logger
@@ -67,7 +67,7 @@ class ColumnOptimizer(Optimizer):
         missed = len(self.placeables) - placed_count
         score += 1e6 * missed
 
-        LOGGER.fine("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
+        LOGGER.debug("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
                     score, max_height, breaks, fit, stddev, var)
         return score
 
@@ -200,10 +200,10 @@ def _fits(together: PlacedContent, bounds: Rect) -> int:
     return together.actual.bottom <= bounds.bottom
 
 
-def stack_in_columns(bounds: Rect, page: Rect, placeables: List,
-                     padding: int = 4, columns=1, equal=False) -> List[PlacedGroupContent]:
-    padding = int(padding)
-    columns = int(columns)
+def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options:dict) -> List[PlacedGroupContent]:
+
+    equal = bool(options.get('equal', False))
+    columns = int(options.get('columns', 1))
 
     LOGGER.info("Placing %d blocks in %d columns for bounds=%s, page=%s", len(placeables), columns, bounds, padding)
     k = min(int(columns), len(placeables))
@@ -223,7 +223,7 @@ def stack_in_columns(bounds: Rect, page: Rect, placeables: List,
             return [all]
         else:
             # Set the bounds to a full page and try that
-            on_next_page = stack_in_columns(page, page, placeables, padding, columns, equal)
+            on_next_page = stack_in_columns(page, page, placeables, padding, options)
             on_next_page[0].page_break_before = True
             return on_next_page
 
@@ -262,7 +262,7 @@ def stack_in_columns(bounds: Rect, page: Rect, placeables: List,
     assert sum(len(c.group) for c in best.group) == lo
 
     # Now try the rest on a new page, inserting the section we just made before it
-    all = stack_in_columns(page, page, placeables[lo:], padding, columns, equal)
+    all = stack_in_columns(page, page, placeables[lo:], padding, options)
     all[0].page_break_before = True
     all.insert(0, best)
 

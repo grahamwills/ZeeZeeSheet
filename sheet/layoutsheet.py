@@ -35,14 +35,13 @@ def place_sheet(sheet: Sheet, outer: Rect, pdf: PDF) -> PlacedGroupContent:
     for section in sheet.content:
         blocks = [functools.partial(place_block, block=block, pdf=pdf) for block in section.content]
 
-        placed_pages = stack_in_columns(bounds, outer, blocks, **section.layout_method.options)
-
-        # Add all children
+        # Add all pages creatd by stacking in columns
+        placed_pages = stack_in_columns(bounds, outer, blocks, section.spacing.padding, section.method.options)
         children += placed_pages
 
         # Set bounds top for the next section
         bounds = Rect.make(left=bounds.left, right=bounds.right,
-                           top=placed_pages[-1].actual.bottom + sheet.padding, bottom=bounds.bottom)
+                           top=placed_pages[-1].actual.bottom + sheet.spacing.padding, bottom=bounds.bottom)
 
         LOGGER.info("Placed %s", section)
         if hasattr(make_block_layout, 'cache_info'):
@@ -82,7 +81,8 @@ def draw_sheet(sheet: Sheet, sections: List[PlacedContent], pdf):
 
 
 def layout_sheet(sheet: Sheet, pdf: PDF):
-    outer = Rect.make(left=0, top=0, right=sheet.pagesize[0], bottom=sheet.pagesize[1]) - Margins.all_equal(sheet.margin)
+    margins = Margins.all_equal(sheet.spacing.margin)
+    outer = Rect.make(left=0, top=0, right=sheet.pagesize[0], bottom=sheet.pagesize[1]) - margins
     with warnings.catch_warnings(record=True) as warns:
         top = place_sheet(sheet, outer, pdf)
         for w in warns:

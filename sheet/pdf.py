@@ -27,13 +27,12 @@ class PDF(canvas.Canvas):
     STROKE = DrawMethod(False, True)
     BOTH = DrawMethod(True, True)
 
-    def __init__(self, output_file: Path, styles: Stylesheet, pagesize: (int, int), debug: bool = False) -> None:
+    def __init__(self, output_file: Path, pagesize: (int, int), debug: bool = False) -> None:
         super().__init__(str(output_file.absolute()), pagesize=pagesize)
         fonts = install_fonts()
         LOGGER.info("Installed fonts = %s", fonts)
         self.working_dir = output_file.parent
         self.page_height = int(pagesize[1])
-        self.stylesheet = styles
 
         self.debug = debug
         self._name_index = 0
@@ -58,12 +57,6 @@ class PDF(canvas.Canvas):
                                fillColor=reportlab.lib.colors.Color(1, 1, 1),
                                buttonStyle='cross', borderWidth=0.5, checked=state)
         return width, height
-
-    def style(self, style):
-        if isinstance(style, Style):
-            return style
-        else:
-            return self.stylesheet[style]
 
     def draw_rect(self, r: Rect, style: Style, method: DrawMethod, rounded=0):
         method = self._set_drawing_styles(method, style)
@@ -96,15 +89,15 @@ class PDF(canvas.Canvas):
         flowable.drawOn(self, bounds.left, self.page_height - bounds.bottom)
 
     def paragraph_style_for(self, run: Run) -> Style:
-        styles = [self.style(e.style) for e in run.items]
+        styles = [e.style for e in run.items]
         style = styles[0]
         max_size = max(s.size for s in styles)
         if max_size != style.size:
-            style = style.modify(size=max_size)
+            style = style.clone(size=max_size)
         return style
 
     def paragraph_leading_for(self, run: Run) -> float:
-        styles = (self.style(e.style) for e in run.items)
+        styles = (e.style for e in run.items)
         max_leading = max(self.leading_for(s) for s in styles)
         return max_leading
 
@@ -130,7 +123,7 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
     else:
         txt = str(e)
 
-    style = pdf.style(e.style)
+    style = e.style
 
     if style.italic:
         txt = '<i>' + txt + '</i>'

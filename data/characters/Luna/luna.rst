@@ -1,27 +1,25 @@
-.. page: watermark=butterflies.jpg padding=12
-.. section: stack columns=3
-.. title: banner style=title
+.. page:: watermark=butterflies.jpg padding=12
+.. section:: stack stack:columns=3
+.. title:: banner style=title
+.. block:: emphasis=big
 
 **Lunathien Calenmaethor**
 ==========================
 
-.. title: hidden
+.. title:: hidden
 
 .. image:: 13thAgelogo.png
    :height: 34
    :align: left
 ..
 
+
 - Race:**Wood Elf**     |   Class:**Druid** |   Gender:**Female**   |   Age:**62**
+- *My firstborn will be the next Elf Queen*
 
-.. style: big
 
-- My firstborn will be the next Elf Queen
 
-.. style: default
-
-.. block: key-values style=heading_green rows=3
-.. style: stat_style
+.. block:: thermometer thermometer:rows=3 thermometer:style=heading_green emphasis=italic
 
 Attributes
  - Strength     | **8**  | -1
@@ -31,7 +29,7 @@ Attributes
  - Wisdom       | **18** | +4
  - Charisma     | **12** | +1
 
-.. block: key-values style=heading_red rows=3
+.. block:: thermometer thermometer:rows=3 thermometer:style=heading_red
 
 Defenses
  - AC | **20**
@@ -41,10 +39,10 @@ Defenses
 
 ---------------------------------------------------------------
 
-.. title: banner style=heading_blue
-.. section: stack columns=2
-.. block: default
-.. style: default
+.. section:: stack stack:columns=2
+
+.. title:: banner style=heading_blue
+.. block:: style=default
 
 Level **2**         -- Initiative **+7**
  - [] ________________________
@@ -56,8 +54,8 @@ Hits: **35**                            --  Staggered: **17**
 
 ---------------------------------------------------------------
 
-.. section: stack columns=3 padding=15
-.. title: hidden
+.. section:: stack stack:columns=3 padding=15
+.. title:: hidden
 
 
 Picture
@@ -65,8 +63,8 @@ Picture
 .. image:: luna.jpg
 ..
 
-.. title: banner style=heading_blue
-.. style: blue
+.. title:: banner style=heading_blue
+.. block:: style=blue
 
 Icon Relationships
  - Elf Queen  | ♡ ♡
@@ -98,8 +96,8 @@ Druid Features
    or exposure. You can go longer than most people without eating or drinking,
    but only a couple days longer.
 
-.. title: banner style=heading_green
-.. style: green
+.. title:: banner style=heading_green
+.. block:: style=green
 
 Melee Basic Attack -- At-Will
  - **Standard Action**      --      **Nearby**
@@ -112,8 +110,8 @@ Ranged Basic Attack -- At-Will
  - **Hit**: 3d6+4 (bow, axe) --      **Miss**: level damage
 
 
-.. title: banner style=heading_orange
-.. style: orange
+.. title:: banner style=heading_orange
+.. block:: style=orange
 
 Elemental Pivot -- Encounter []
  - **Flexible Attack**      --      **Trigger**: Natural 18+
@@ -127,8 +125,8 @@ Shillelagh -- Encounter []
    critial hit. Otherwise, heal with a recovery and the target is stuck until
    end of next turn
 
-.. title: banner style=heading_red
-.. style: red
+.. title:: banner style=heading_red
+.. block:: style=red
 
 Ruination (3) -- Encounter []
  - **Ranged Terrain Feat Spell**            --      **Nearby**
@@ -144,8 +142,8 @@ Elven Grace -- Wood Elf
    increase the die size
 
 
-.. title: banner style=heading_black
-.. style: black
+.. title:: banner style=heading_black
+.. block:: style=black
 
 Terrain Spell -- Daily [] []
  - Various spells depending on the surrounding terrain; cannot use the same terrain twice.
@@ -211,8 +209,8 @@ Swamp, Lake, river  -- Terrain Spells
  - Damage and cannot heal
 
 
-.. title: banner style=heading_blue
-.. style: blue
+.. title:: banner style=heading_blue
+.. block:: style=blue
 
 Leather Surcoat -- +1 Magic Armor
  - Tight-fitting tooled leather armor
@@ -234,13 +232,13 @@ Feats
  - [X] Terrain spell *Ruination*
  - [X] *Shillelagh* adventurer feat
 
-.. style: default
 
 ---------------------------------------------------------------
 
 
-.. section: stack columns=1
-.. title: hidden
+.. section:: stack stack:columns=1
+.. title:: hidden
+.. block:: style=default
 
 
 .. image:: divider-roses.gif
@@ -251,18 +249,10 @@ Feats
 
 
 
-.. section: stack columns=2
-.. title: hidden
-
-
-Redfield Valley
-===============
+.. section:: stack stack:columns=2
 
 .. image:: Redfield_Valley_Map.png
 ..
-
-.. title: hidden
-
 
 Redfield Valley History
  - As the campaign started, you all got to know each other while adventuring in and around Redfield Valley, a bucolic area.  The valley featured two towns: on the west side of the valley was Appleton (where you spent more time), and on the east side was Crownhill.  At the north end of the valley was a fortress, the Vakefort, which guarded the entrance to the Vakevale, a wild area which was said to be full of monsters.
@@ -272,11 +262,13 @@ Redfield Valley History
  - The ruins of Vantage are now strewn across Redfield Valley, and many of its contents, including once-captive monsters, as well as treasures, lie in the ruins, ripe for exploration.
 
 
+
+
 ---------------------------------------------------------------
 
 
-.. section: stack columns=1
-.. title: banner style=heading_green
+.. section:: stack stack:columns=1
+.. title:: banner style=heading_green
 
 
 
@@ -317,7 +309,7 @@ stat_style
   color=white family=Helvetica size=10
 
 big
-  size=20 inherit=title align=center
+  size=20 color=darkGreen family=LoveYou align=center
 
 
 blue

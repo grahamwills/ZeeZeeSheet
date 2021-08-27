@@ -1,13 +1,14 @@
-.. page: size=5.5inx4.5in margin=0.25in watermark=bamboo.jpg
-.. section: padding=0
-.. title: hidden
-.. style: title
+.. page:: size=5.5inx4.5in margin=0.25in watermark=bamboo.jpg
+.. section:: stack stack:columns=1 padding=0
+.. title:: hidden
+.. block:: style=heading padding=0
 
 
 Heavenly Tumbleweed
 -------------------
+ - Heavenly Tumbleweed
 
-.. style: subtitle
+.. block:: style=subtitle
 
 
 Subtitle
@@ -15,8 +16,8 @@ Subtitle
 
 ---------------------------------------------------------------
 
-.. section: padding=8
-.. style: default strong=bold
+.. section:: padding=8
+.. block:: style=default strong=boldblue
 
 Basic Info
  - School: **Terrible Tiger, Eternal Phoenix** -- *Masters of Silk and Iron*
@@ -25,22 +26,19 @@ Basic Info
 
 ---------------------------------------------------------------
 
-.. section: stack columns=2 padding=8
-.. style: default
-.. title: banner
+.. section:: stack stack:columns=2 padding=8
+.. block:: style=default
 
 .. image:: Heavenly_Tumbleweed.jpg
 ..
 
-.. title: hidden style=red_border
-.. style: red
+.. block:: style=red
 
 Status
  - Kung Fu Points:  |   [ ][ ][ ][ ][ ][ ][ ][ ]
  - Impediments:     |   [ ][ ][ ][ ][ ][ ][ ][ ]
 
-.. title: hidden style=green_border
-.. style: green
+.. block:: style=green
 
 Traits
  - Unshakable: **3**                |   Cheerful: **3**
@@ -48,16 +46,15 @@ Traits
  - Leaps before he looks: **4**     |   Auspicious Rake: **3**
  - Farming background: **1**        |   Silent Pose: **0**
 
-.. title: hidden style=blue_border
-.. style: blue
+.. block:: style=blue
 
 Styles:
  - +3 | **Monkey Style**              |   d12 | *Disrespectful*
  - +3 | **Corrupt Monkey Style**      |   d12 | *Disrespectful*
  - +3 | **Snake Style**               |   d6  | *Fast*
 
-.. title: hidden style=default
-.. style: subtitle
+.. title:: hidden
+.. block:: style=subtitle
 
 Quote:
  - “Thus, though we have heard of stupid haste in war, cleverness has never been seen associated with long delays” - Sun Tzu
@@ -69,25 +66,20 @@ Quote:
 Styles
 ------
 
-bold
+default-title
+    borderWidth=0
+boldblue
     color=navy bold
 subtitle
     font=Baskerville color=gray italic
-title
+heading
     font=Adventure color=red size=32
 
 red
-    background=#fee
+    background=#fee border=red borderWidth=0.5
 green
-    background=#efe
+    background=#efe border=green
 blue
-    background=#eef
-
-red_border
-    border=red
-blue_border
-    border=blue
-green_border
-    border=green
+    background=#eef border=blue
 
 

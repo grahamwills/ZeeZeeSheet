@@ -1,16 +1,16 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from reportlab.platypus import Flowable, Paragraph
 
-from flowable import Paragraph
-from placed import PlacedParagraphContent
+from flowable import Paragraph, Table
+from placed import PlacedContent, PlacedParagraphContent, PlacedTableContent
 from sheet.common import Rect
 from sheet.model import Element, ElementType, Run
 from sheet.pdf import PDF
 from sheet.style import Style
 
 
-def place_within(p: Paragraph, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedParagraphContent:
+def place_within(p: Union[Paragraph, Table], r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedContent:
     """
         Create a placed paragraph within a set of bounds
         :param Paragraph p: place this
@@ -19,7 +19,10 @@ def place_within(p: Paragraph, r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust
         :param int posY:  <0 means at the top, 0 centered, > 0 at the right
     """
 
-    pfc = PlacedParagraphContent(p, r, pdf)
+    if isinstance(p, Paragraph):
+        pfc = PlacedParagraphContent(p, r, pdf)
+    else:
+        pfc = PlacedTableContent(p, r, pdf)
     a = pfc.actual
     if posX < 0:
         dx = r.left - a.left
@@ -99,7 +102,7 @@ def split_into_paragraphs(run, pdf, styles: List[Style] = None) -> List[Paragrap
 def _add_to_row(row, elements, pdf: PDF, styles):
     added = len(row)
     if styles and added < len(styles) and styles[added] is not None:
-        elements = [e.replace_style(pdf.style(e.style).modify_using(styles[added])) for e in elements]
+        elements = [e.replace_style(e.style.clone_using(styles[added])) for e in elements]
     run = Run(elements)
     row.append(make_paragraph(run, pdf))
 
@@ -110,8 +113,8 @@ def make_paragraph(run: Run, pdf: PDF, align=None, size_factor=None) -> Optional
 
     style = pdf.paragraph_style_for(run)
     if align:
-        style = style.modify(align=align)
+        style = style.clone(align=align)
     if size_factor:
-        style = style.modify(size=style.size * size_factor)
+        style = style.clone(size=style.size * size_factor)
 
     return Paragraph(run, style, pdf)

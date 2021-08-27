@@ -1,13 +1,13 @@
-.. page: padding=20
-.. section: stack columns=2
-.. title: hidden style=default
-.. style: title
-.. block: padding=0
+.. page:: padding=20
+.. section:: stack stack:columns=2
+.. title:: hidden
+.. block:: padding=0 style=title
 
 **Mouse**
 =========
+ - Mouse
 
-.. style: big
+.. block:: padding=0 style=big
 
 Qualities
  - If nobody notices me, no-one can hurt me
@@ -25,14 +25,15 @@ Picture
 ---------------------------------------------------------
 
 
-.. section: stack columns=2 padding=20
-.. title: hidden
-.. style: title
+.. section:: stack stack:columns=2 padding=20
+.. title:: hidden
+.. block:: style=title
 
 **Mouse**
 ==========
+ - Mouse
 
-.. style: default
+.. block:: style=default
 
 
 Qualities
@@ -40,8 +41,7 @@ Qualities
  - I know the city like the back of my hand
  - I can make it through this
 
-.. title: banner style=heading1
-.. style: default
+.. title:: banner style=heading1
 
 Team
  - Chris    | **Darien**
@@ -58,14 +58,14 @@ Specialities
  - Investigation    -- Basic
  - Athletics        -- Basic
 
-.. title: hidden style=heading2
+.. title:: hidden style=heading2
 
 Resources
  - Stamina          | [ ][ ][ ][ ][ ][ ][ ]
  - Determination    | [ ][ ][ ]
 
-.. title: banner style=heading2
-.. style: back1
+.. title:: banner style=heading2
+.. block:: style=back1
 
 Attributes
  - **Prowess**      | poor | **2**
@@ -75,8 +75,8 @@ Attributes
  - **Awareness**      | good | **5**
  - **Willpower**      | good | **5**
 
-.. title: banner style=heading1
-.. style: default
+.. title:: banner style=heading1
+.. block:: style=default
 
 
 

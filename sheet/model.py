@@ -3,21 +3,56 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, NamedTuple, Optional, Union
 
 from colour import Color
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.rl_accel import unicode2T1
-from reportlab.lib.units import cm, inch, mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import Font
 
-from sheet import common
-from style import Style, Stylesheet
+from style import Style
 
 BLACK = Color('black')
 
 HELVETICA: Font = pdfmetrics.getFont('Helvetica')
+
+"""
+    Directives
+    ----------
+
+    page: 
+        [no main info]
+        options: size(dim x xdim) watermark(file), margin(dim), padding(dim), style(style)
+
+    section: 
+        method (N columns)
+        options: margin(dim), padding(dim), style(style)
+
+    block:
+        method (default, badge, thermometer) 
+        options: margin(dim), padding(dim), style(style), emphasis(style), strong(style)
+        
+    title:
+        method (banner, hidden)
+        options: margin(dim), padding(dim), style(style), emphasis(style), strong(style)
+        
+
+    The margin from the lower level defaults to the padding from the level above
+    Styles can be defined either as a simple reference or as :option: on their own line, which defines 
+    an in-place style
+
+"""
+
+
+class Spacing(NamedTuple):
+    margin: int
+    padding: int
+
+
+class Method(NamedTuple):
+    name: str
+    options: Dict[str, Union[str, Style]]
 
 
 class ElementType(Enum):
@@ -32,7 +67,7 @@ class ElementType(Enum):
 class Element:
     which: ElementType
     value: str = None
-    style: Union[str, Style] = None
+    style: Style = None
 
     def __str__(self):
         if self.which == ElementType.CHECKBOX:
@@ -46,7 +81,7 @@ class Element:
             return '⋯'
         return self.value
 
-    def replace_style(self, style: str):
+    def replace_style(self, style: Style):
         return Element(which=self.which, value=self.value, style=style)
 
 
@@ -76,7 +111,7 @@ class Run:
     def valid(self):
         return len(self.items) > 0
 
-    def style(self) -> Optional[str]:
+    def style(self) -> Optional[Style]:
         #  Lazy, just use the first
         for item in self.items:
             if item.style:
@@ -95,10 +130,12 @@ class Block:
     title: Optional[Run] = None
     content: List[Run] = field(default_factory=list)
     image: Dict[str, str] = field(default_factory=dict)
-    block_method: common.Directive = common.parse_directive('default')
-    title_method: common.Directive = common.parse_directive('banner')
-    margin: int = 4
-    padding: int = 2
+    spacing: Spacing = Spacing(4, 2)
+
+    method: Method = field(default_factory=lambda: Method('default', dict()))
+    title_method: Method = field(default_factory=lambda: Method('banner', dict()))
+    style: Style = None
+    title_style: Style = None
 
     def add_title(self):
         self.title = Run()
@@ -107,7 +144,7 @@ class Block:
         self.content.append(Run())
 
     def print(self):
-        print("  • Block title='%s',padding=%d" % (self.title, self.padding))
+        print("  • Block title='%s',spacing=%s" % (self.title, self.spacing))
         for c in self.content:
             print("     -", c)
         if self.image:
@@ -141,7 +178,7 @@ class Block:
                 # Nothing is defined so kill this
                 parent.content.remove(self)
 
-    def base_style(self) -> Optional[str]:
+    def base_style(self) -> Optional[Style]:
         #  Lazy, just use the first
         for item in self.content:
             s = item.style()
@@ -159,7 +196,9 @@ class Block:
 @dataclass
 class Section:
     content: List[Block] = field(default_factory=list)
-    layout_method: common.Directive = common.parse_directive("banner style=_banner")
+    method: Method = field(default_factory=lambda: Method('columns', {'columns': '3'}))
+    spacing: Spacing = Spacing(4, 4)
+    style: Style = None
 
     def add_block(self, block: Block):
         self.content.append(block)
@@ -170,7 +209,7 @@ class Section:
             b.print()
 
     def __str__(self):
-        return "Section(%d blocks, layout='%s')" % (len(self.content), self.layout_method)
+        return "Section(%d blocks, layout='%s')" % (len(self.content), self.method.name)
 
     def fixup(self, parent: Sheet):
         for c in self.content:
@@ -185,44 +224,20 @@ class Section:
         return self.content[item]
 
 
-def _to_size(txt: str) -> int:
-    if txt.endswith('in'):
-        return round(float(txt[:-2]) * inch)
-    if txt.endswith('mm'):
-        return round(float(txt[:-2]) * mm)
-    if txt.endswith('cm'):
-        return round(float(txt[:-2]) * cm)
-    if txt.endswith('px') or txt.endswith('pt'):
-        return round(float(txt[:-2]))
-    return int(txt)
-
-
 @dataclass
 class Sheet:
     content: List[Section] = field(default_factory=list)
-    stylesheet: Stylesheet = field(default_factory=Stylesheet)
-    layout_method: str = common.parse_directive('stack')
     watermark: str = None
     pagesize: (int, int) = letter
-    margin: int = 36
-    padding: int = 8
+    spacing: Spacing = Spacing(36, 8)
+    style: Style = None
 
     def __str__(self):
-        return "Sheet(%d sections, %d styles)" % (len(self.content), len(self.stylesheet))
+        return "Sheet(%d sections)" % (len(self.content))
 
     def fixup(self):
         for c in self.content:
             c.fixup(self)
-
-    def apply_directive(self, margin=None, padding=None, size=None, watermark=None):
-        self.watermark = watermark
-        if margin:
-            self.margin = _to_size(margin)
-        if padding:
-            self.padding = _to_size(padding)
-        if size:
-            pair = size.split('x')
-            self.pagesize = (_to_size(pair[0]), _to_size(pair[1]))
 
     def __len__(self):
         return len(self.content)

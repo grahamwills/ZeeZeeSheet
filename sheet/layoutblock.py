@@ -16,7 +16,8 @@ from sheet.common import Margins, Rect
 from sheet.model import Block, Run
 from sheet.optimize import Optimizer, divide_space
 from sheet.pdf import PDF
-from table import badges_layout, key_values_layout, one_line_flowable, table_layout
+from style import Style
+from table import badges_layout, one_line_flowable, table_layout, thermometer_layout
 
 LOGGER = common.configured_logger(__name__)
 
@@ -37,32 +38,29 @@ def layout_block(block: Block, bounds: Rect, pdf: PDF):
 
 
 def _pre_content_layout(block, bounds, pdf) -> (PlacedContent, Margins):
-    title = block.title_method
-    title_style = title.options.get('style', 'default')
-    if title.command in {'hidden', 'none'} or not title:
-        return banner_pre_layout(block, bounds, title_style, pdf, show_title=False)
-    elif title.command == 'banner':
-        return banner_pre_layout(block, bounds, title_style, pdf, show_title=True)
+    title = block.title_method.name
+    if title in {'hidden', 'none'} or not title:
+        return banner_pre_layout(block, bounds, pdf, show_title=False)
+    elif title == 'banner':
+        return banner_pre_layout(block, bounds, pdf, show_title=True)
     else:
         raise ValueError("unknown title method '%s'" % title.command)
 
 
-def _post_content_layout(block: Block, inner, pdf):
-    title = block.title_method
-    title_style = title.options.get('style', 'default')
-    style = pdf.style(block.base_style())
+def _post_content_layout(block: Block, inner: Rect, pdf: PDF):
+    style = block.style
     if style and style.background:
         back = PlacedRectContent(inner, style, PDF.FILL, pdf)
     else:
         back = None
-    post = outline_post_layout(inner, title_style, pdf)
+    post = outline_post_layout(inner, style, pdf)
     return back, post
 
 
-def _content_layout(block, inner, pdf):
-    method = block.block_method.command
-    if method == 'key-values':
-        content_layout = key_values_layout
+def _content_layout(block, inner: Rect, pdf: PDF):
+    method = block.method.name
+    if method.startswith('therm'):
+        content_layout = thermometer_layout
     elif method == 'badge':
         content_layout = badges_layout
     else:
@@ -76,7 +74,7 @@ def _content_layout(block, inner, pdf):
     if block.image:
         return image_layout(block, inner, pdf, other_layout=content_layout)
     else:
-        return content_layout(block, inner, pdf, **block.block_method.options)
+        return content_layout(block, inner, pdf)
 
 
 class ImagePlacement(Optimizer):
@@ -151,9 +149,9 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
             image = placer.place_image(bounds)
             if placer.on_right():
                 image.move(dx=bounds.right - image.actual.right)
-                obounds = bounds.make_column(left=bounds.left, right=image.actual.left - block.padding)
+                obounds = bounds.make_column(left=bounds.left, right=image.actual.left - block.spacing.padding)
             else:
-                obounds = bounds.make_column(left=image.actual.right + block.padding, right=bounds.right)
+                obounds = bounds.make_column(left=image.actual.right + block.spacing.padding, right=bounds.right)
             other = other_layout(block, obounds, pdf)
             return PlacedGroupContent([image, other], bounds)
         else:
@@ -165,14 +163,14 @@ def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -
         return placer.place_image(bounds)
 
 
-def paragraph_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) -> Optional[PlacedContent]:
+def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> Optional[PlacedContent]:
     if not block.content:
         return None
 
     results = []
-    style = pdf.style(block.base_style())
+    style = block.style
 
-    padding = int(padding) if padding is not None else block.padding
+    padding = block.spacing.padding
 
     # Move up by the excess leading
     b = bounds.move(dy=-(style.size * 0.2))
@@ -189,53 +187,54 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF, padding: int = None) 
         return PlacedGroupContent(results, bounds)
 
 
-def banner_pre_layout(block: Block, bounds: Rect, style_name: str, pdf: PDF, show_title=True) -> (
+def banner_pre_layout(block: Block, bounds: Rect, pdf: PDF, show_title=True) -> (
         PlacedContent, Margins):
-    style = pdf.style(style_name)
-    if style.has_border():
-        line_width = int(style.borderWidth)
+    content_style = block.style
+    if content_style.has_border():
+        line_width = int(content_style.borderWidth)
     else:
         line_width = 0
 
-    if style.has_border() or style.background:
-        margin = block.margin
+    if content_style.has_border() or content_style.background:
+        margin = block.spacing.margin
     else:
         margin = 0
 
     inset = line_width + margin
-    margins = Margins.all_equal(inset)
-
-    plaque_height = round(style.size + margin * 2)
 
     if show_title and block.title:
+
+        title_margin = max(margin, block.spacing.margin + line_width)
+        title_style = block.title_style
+        plaque_height = round(title_style.size + title_margin * 2)
+
         placed = []
         plaque = bounds.resize(height=plaque_height)
 
-        title_bounds = plaque - margins
-        title_mod = Run([e.replace_style(style_name) for e in block.title.items])
+        title_bounds = plaque - Margins.all_equal(title_margin)
+        title_mod = Run([e.replace_style(title_style) for e in block.title.items])
         title = one_line_flowable(title_mod, title_bounds, margin, pdf)
         extraLines = title.ok_breaks + title.bad_breaks
         if extraLines:
-            plaque = plaque.resize(height=plaque.height + extraLines * pdf.style(style_name).size)
+            plaque = plaque.resize(height=plaque.height + extraLines * title_style.size)
 
-        if style.background:
-            placed.append(PlacedRectContent(plaque, style, PDF.FILL, pdf))
+        if title_style.background:
+            placed.append(PlacedRectContent(plaque, title_style, PDF.FILL, pdf))
 
         # Move the title up a little to account for the descender
-        title.move(dy=-pdf.descender(style))
+        title.move(dy=-pdf.descender(title_style))
         placed.append(title)
 
-        margins = Margins(left=inset, right=inset, top=inset + plaque.height, bottom=inset)
+        margins = Margins(left=inset, right=inset, top=plaque.bottom - bounds.top + block.spacing.margin, bottom=inset)
 
         group = PlacedGroupContent(placed, bounds)
         group.margins = margins
         return group, margins
     else:
-        return None, margins
+        return None, Margins.all_equal(inset)
 
 
-def outline_post_layout(bounds: Rect, style_name: str, pdf: PDF) -> Optional[PlacedContent]:
-    style = pdf.style(style_name)
+def outline_post_layout(bounds: Rect, style: Style, pdf: PDF) -> Optional[PlacedContent]:
     if style.has_border():
         return PlacedRectContent(bounds, style, PDF.STROKE, pdf)
     else:

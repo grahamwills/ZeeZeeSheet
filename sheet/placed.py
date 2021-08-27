@@ -128,11 +128,17 @@ class PlacedImageContent(PlacedContent):
         self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
         self.unused_width = self._unused_requested_width()
 
+        # Count being smaller or larger than desired by a given amount as equivalent to a wrapping break
+
+        xdiff =  abs(image.imageWidth-self.actual.width)
+        self.ok_breaks = xdiff / 10
+
     def draw(self):
         self.pdf.draw_flowable(self.image, self.actual)
 
     def parent_sized(self, bounds: Rect):
-        self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
+        pass
+        # self.ok_breaks = max(0, (bounds.height - self.actual.height) // 5)
 
     def __str__(self) -> str:
         return "Image(%dx%d)" % (self.actual.width, self.actual.height)
