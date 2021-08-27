@@ -5,7 +5,7 @@ import math
 import statistics
 import time
 import warnings
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from placed import PlacedContent, PlacedGroupContent
 from sheet.common import Rect, configured_logger
@@ -68,7 +68,7 @@ class ColumnOptimizer(Optimizer):
         score += 1e6 * missed
 
         LOGGER.debug("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
-                     score, max_height, breaks, fit, stddev, var)
+                    score, max_height, breaks, fit, stddev, var)
         return score
 
     def place_all(self, widths: Tuple[int], counts: Tuple[int]) -> List[PlacedContent]:
@@ -200,7 +200,8 @@ def _fits(together: PlacedContent, bounds: Rect) -> int:
     return together.actual.bottom <= bounds.bottom
 
 
-def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options: dict) -> List[PlacedGroupContent]:
+def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options:dict) -> List[PlacedGroupContent]:
+
     equal = bool(options.get('equal', False))
     columns = int(options.get('columns', 1))
 

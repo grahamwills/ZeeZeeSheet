@@ -181,12 +181,13 @@ def _col_width(cells: [[Paragraph]], col: int, pdf: PDF) -> float:
 
 def thermometer_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     nRows = int(block.method.options.get('rows', 6))
-    style = block.method.options.get('style', block.style)
+    text_style = block.style
+    thermo_style = block.method.options.get('style', block.style)
 
     overrides = [
-        style.clone(align='center'),
-        style.clone(align='center', size=style.size * 1.5),
-        style.clone(align='center')
+        text_style.clone(align='center'),
+        text_style.clone(align='center', size=text_style.size * 1.5),
+        text_style.clone(align='center')
     ]
 
     items = [layoutparagraph.split_into_paragraphs(run, pdf, overrides) for run in block.content]
@@ -222,8 +223,8 @@ def thermometer_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
 
         # Extend under the other rectangle to hide joins of 'round edges'
         box = r1.move(dx=-H1).resize(width=r1.width + H1)
-        contents.append(PlacedRectContent(box, style, PDF.FILL, pdf, rounded=rounded))
-        contents.append(PlacedRectContent(r2, style, PDF.FILL, pdf, rounded=rounded))
+        contents.append(PlacedRectContent(box, thermo_style, PDF.FILL, pdf, rounded=rounded))
+        contents.append(PlacedRectContent(r2, thermo_style, PDF.FILL, pdf, rounded=rounded))
 
         placed0 = layoutparagraph.align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf,
                                                           metrics_adjust=-0.2)

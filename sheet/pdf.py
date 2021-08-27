@@ -1,6 +1,8 @@
 import io
+import random
 from collections import defaultdict, namedtuple
 from pathlib import Path
+from typing import Optional
 
 import reportlab.lib.colors
 from reportlab.pdfbase import pdfmetrics
@@ -9,6 +11,7 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Flowable
 
+from roughen import Roughener
 from sheet.common import Rect, configured_logger
 from sheet.model import Element, ElementType, Run
 from style import Style
@@ -29,11 +32,12 @@ class PDF(canvas.Canvas):
 
     def __init__(self, output_file: Path, pagesize: (int, int), debug: bool = False) -> None:
         super().__init__(str(output_file.absolute()), pagesize=pagesize)
+        self.setLineJoin(1)
+        self.setLineCap(1)
         fonts = install_fonts()
         LOGGER.info("Installed fonts = %s", fonts)
         self.working_dir = output_file.parent
         self.page_height = int(pagesize[1])
-
         self.debug = debug
         self._name_index = 0
 
@@ -41,14 +45,20 @@ class PDF(canvas.Canvas):
                   anchorAtXY=False, showBoundary=False):
         fileName = image.fileName if hasattr(image, 'fileName') else str(image)
         if fileName == _UNCHECKED_BOX:
-            return self.add_checkbox(x, y, width, height, False)
+            return self._add_checkbox(x, y, width, height, False)
         elif fileName == _CHECKED_BOX:
-            return self.add_checkbox(x, y, width, height, True)
+            return self._add_checkbox(x, y, width, height, True)
         else:
-            return super().drawImage(image, x, y, width, height, mask, preserveAspectRatio, anchor, anchorAtXY,
-                                     showBoundary)
+            self.saveState()
+            # if self.roughen:
+            #     clip = self.roughen.rect_to_path(x, y, width, height, inset=True)
+            #     self.clipPath(clip, 0, 0)
+            tup = super().drawImage(image, x, y, width, height, mask, preserveAspectRatio, anchor, anchorAtXY,
+                                    showBoundary)
+            self.restoreState()
+            return tup
 
-    def add_checkbox(self, rx, ry, width, height, state) -> (int, int):
+    def _add_checkbox(self, rx, ry, width, height, state) -> (int, int):
         x, y = self.absolutePosition(rx, ry)
         self._name_index += 1
         name = "f%d" % self._name_index
@@ -60,14 +70,19 @@ class PDF(canvas.Canvas):
 
     def draw_rect(self, r: Rect, style: Style, method: DrawMethod, rounded=0):
         method = self._set_drawing_styles(method, style)
-        if rounded > 0:
-            self.roundRect(r.left, self.page_height - r.bottom, r.width, r.height, rounded,
-                           fill=method.fill, stroke=method.stroke)
+        top = self.page_height - r.bottom
+        if style.roughness > 0:
+            path = Roughener(self, style.roughness).rect_to_path(r.left, top, r.width, r.height, rounded=rounded)
+            self.drawPath(path, fill=method.fill, stroke=method.stroke)
+        elif rounded > 0:
+            self.roundRect(r.left, top, r.width, r.height, rounded, fill=method.fill, stroke=method.stroke)
         else:
-            self.rect(r.left, self.page_height - r.bottom, r.width, r.height, fill=method.fill, stroke=method.stroke)
+            self.rect(r.left, top, r.width, r.height, fill=method.fill, stroke=method.stroke)
 
     def draw_path(self, path: PDFPathObject, style: Style, method: DrawMethod):
         method = self._set_drawing_styles(method, style)
+        if style.roughness > 0:
+            path = Roughener(self, style.roughness).roughen_path(path)
         self.drawPath(path, fill=method.fill, stroke=method.stroke)
 
     def _set_drawing_styles(self, method: DrawMethod, style: Style) -> DrawMethod:

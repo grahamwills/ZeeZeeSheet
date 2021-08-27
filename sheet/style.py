@@ -26,6 +26,8 @@ class Style:
     bold: bool = None
     italic: bool = None
 
+    roughness: float = None
+
     align: str = None
 
     sub_styles: Dict[str, Style] = field(default_factory=OrderedDict)
@@ -111,7 +113,7 @@ class Stylesheet():
             try:
                 if key in {'color', 'background', 'borderColor'}:
                     setattr(s, key, Color(value))
-                elif key in {'size', 'borderWidth', 'opacity'}:
+                elif key in {'size', 'borderWidth', 'opacity', 'roughness'}:
                     setattr(s, key, float(value))
                 elif key in {'bold', 'italic'}:
                     setattr(s, key, bool(value))

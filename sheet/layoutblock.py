@@ -211,7 +211,7 @@ def banner_pre_layout(block: Block, bounds: Rect, pdf: PDF, show_title=True) -> 
         placed = []
         plaque = bounds.resize(height=plaque_height)
 
-        title_bounds = plaque - Margins.all_equal(title_margin)
+        title_bounds = plaque - Margins.balanced(title_margin)
         title_mod = Run([e.replace_style(title_style) for e in block.title.items])
         title = one_line_flowable(title_mod, title_bounds, margin, pdf)
         extraLines = title.ok_breaks + title.bad_breaks
@@ -225,13 +225,13 @@ def banner_pre_layout(block: Block, bounds: Rect, pdf: PDF, show_title=True) -> 
         title.move(dy=-pdf.descender(title_style))
         placed.append(title)
 
-        margins = Margins(left=inset, right=inset, top=plaque.bottom - bounds.top + block.spacing.margin, bottom=inset)
+        margins = Margins(left=inset, right=inset, top=plaque.bottom - bounds.top + block.spacing.padding, bottom=inset)
 
         group = PlacedGroupContent(placed, bounds)
         group.margins = margins
         return group, margins
     else:
-        return None, Margins.all_equal(inset)
+        return None, Margins.balanced(inset)
 
 
 def outline_post_layout(bounds: Rect, style: Style, pdf: PDF) -> Optional[PlacedContent]:

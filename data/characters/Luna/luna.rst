@@ -7,19 +7,21 @@
 ==========================
 
 .. title:: hidden
+.. block:: style=very_rough
 
 .. image:: 13thAgelogo.png
    :height: 34
    :align: left
 ..
 
+.. block:: style=default
 
 - Race:**Wood Elf**     |   Class:**Druid** |   Gender:**Female**   |   Age:**62**
 - *My firstborn will be the next Elf Queen*
 
 
 
-.. block:: thermometer thermometer:rows=3 thermometer:style=heading_green emphasis=italic
+.. block:: thermometer thermometer:rows=3 thermometer:style=therm_green emphasis=italic style=stat_style
 
 Attributes
  - Strength     | **8**  | -1
@@ -29,7 +31,7 @@ Attributes
  - Wisdom       | **18** | +4
  - Charisma     | **12** | +1
 
-.. block:: thermometer thermometer:rows=3 thermometer:style=heading_red
+.. block:: thermometer thermometer:rows=3 thermometer:style=therm_red style=stat_style
 
 Defenses
  - AC | **20**
@@ -288,7 +290,7 @@ Styles
 ------
 
 default
-  family=Baskerville size=8 align=fill
+  family=Baskerville size=8 align=fill roughness=1.2
 title
   size=40 color=darkGreen family=LoveYou
 
@@ -307,6 +309,15 @@ heading_orange
 
 stat_style
   color=white family=Helvetica size=10
+
+very_rough
+  roughness=3
+
+therm_green
+  inherit=heading_green roughness=0.5
+therm_red
+  inherit=heading_red roughness=0.5
+
 
 big
   size=20 color=darkGreen family=LoveYou align=center

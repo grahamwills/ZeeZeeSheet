@@ -81,7 +81,7 @@ def draw_sheet(sheet: Sheet, sections: List[PlacedContent], pdf):
 
 
 def layout_sheet(sheet: Sheet, pdf: PDF):
-    margins = Margins.all_equal(sheet.spacing.margin)
+    margins = Margins.balanced(sheet.spacing.margin)
     outer = Rect.make(left=0, top=0, right=sheet.pagesize[0], bottom=sheet.pagesize[1]) - margins
     with warnings.catch_warnings(record=True) as warns:
         top = place_sheet(sheet, outer, pdf)

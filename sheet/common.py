@@ -53,13 +53,40 @@ class Margins(NamedTuple):
         return "[l=%d, r=%d, t=%d, b=%d]" % self
 
     @classmethod
-    def all_equal(cls, size: int) -> Margins:
+    def balanced(cls, size: int) -> Margins:
         return Margins(size, size, size, size)
 
 
 class Point(NamedTuple):
     x: float
     y: float
+
+    def __add__(self, other):
+        return Point(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        return Point(self.x - other.x, self.y - other.y)
+
+    def __abs__(self):
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+    def __neg__(self):
+        return Point(-self.x, -self.y)
+
+    def __mul__(self, m):
+        return Point(m * self.x, m * self.y)
+
+    def __rmul__(self, m):
+        return Point(m * self.x, m * self.y)
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __hash__(self):
+        return hash(self.x) + 17 * hash(self.y)
+
+    def __round__(self, n=None):
+        return Point(round(self.x, n), round(self.y, n))
 
 
 class Extent(NamedTuple):
