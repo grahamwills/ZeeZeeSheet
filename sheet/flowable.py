@@ -15,11 +15,13 @@ from style import Style
 
 LOGGER = common.configured_logger(__name__)
 
+
 # Patch with more efficient versions
 
 @lru_cache
 def stringWidth(text, fontName, fontSize, encoding='utf8'):
     return pdfmetrics.getFont(fontName).stringWidth(text, fontSize, encoding=encoding)
+
 
 pdfmetrics.stringWidth = stringWidth
 

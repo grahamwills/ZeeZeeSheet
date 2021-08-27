@@ -2,7 +2,6 @@ from collections import namedtuple
 from pathlib import Path
 
 import pytest
-from colour import Color
 from reportlab.platypus import Paragraph
 
 import layoutparagraph
@@ -13,7 +12,7 @@ from placed import PlacedGroupContent, PlacedParagraphContent, PlacedRectContent
 from sheet.common import Rect
 from sheet.model import Run
 from sheet.pdf import PDF
-from sheet.style import Style, Stylesheet
+from sheet.style import Style
 
 
 @pytest.fixture

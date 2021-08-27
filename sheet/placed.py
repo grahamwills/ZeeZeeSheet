@@ -12,7 +12,7 @@ from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Image
 
 from sheet import common
-from sheet.common import Rect, Rect
+from sheet.common import Rect
 from sheet.flowable import Paragraph, Table, line_info
 from sheet.pdf import DrawMethod, PDF
 from sheet.style import Style
@@ -127,7 +127,7 @@ class PlacedImageContent(PlacedContent):
 
         # Count being smaller or larger than desired by a given amount as equivalent to a wrapping break
 
-        xdiff =  abs(image.imageWidth-self.actual.width)
+        xdiff = abs(image.imageWidth - self.actual.width)
         self.ok_breaks = xdiff / 10
 
     def draw(self):
@@ -236,7 +236,6 @@ class PlacedGroupContent(PlacedContent):
             self.unused_width = self.requested.width - self.actual.width
         else:
             self.unused_width = calculate_unused_width_for_group(self.group, self.requested)
-
 
     def draw(self):
         if self.pdf.debug:

@@ -11,7 +11,7 @@ from reportlab.platypus import Flowable
 
 from sheet.common import Rect, configured_logger
 from sheet.model import Element, ElementType, Run
-from style import Style, Stylesheet
+from style import Style
 
 LOGGER = configured_logger(__name__)
 

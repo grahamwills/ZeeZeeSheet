@@ -196,7 +196,6 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
         # Handle styles
 
-
         # Handle the rest
         for key, value in opts.items():
             if key == 'padding':
@@ -206,10 +205,9 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
                 key = 'spacing'
                 value = Spacing(padding=item.spacing.padding, margin=_to_size(value))
 
-
             if key in {'strong', 'emphasis'}:
                 # set the substyle for this style
-                style = getattr(item, prefix+'style')
+                style = getattr(item, prefix + 'style')
                 style.sub_styles[key] = self.styles.items[value]
             elif hasattr(item, key):
                 setattr(item, prefix + key, value)

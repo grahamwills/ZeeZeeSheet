@@ -13,7 +13,7 @@ from placed import PlacedContent, PlacedGroupContent, PlacedParagraphContent, Pl
     PlacedTableContent
 from sheet import common
 from sheet.common import Rect
-from sheet.model import Block, Element, ElementType, Run, Spacing
+from sheet.model import Block, Element, ElementType, Run
 from sheet.optimize import BadParametersError, Optimizer, divide_space
 from sheet.pdf import PDF
 from sheet.style import Style

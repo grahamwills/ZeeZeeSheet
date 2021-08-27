@@ -131,7 +131,6 @@ class Stylesheet():
             style = self.items['default']
         return style.clone()
 
-
     def __len__(self):
         return len(self.items)
 
