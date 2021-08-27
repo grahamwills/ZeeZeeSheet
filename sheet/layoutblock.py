@@ -79,8 +79,9 @@ def _content_layout(block, inner: Rect, pdf: PDF):
 
 class ImagePlacement(Optimizer):
 
-    def __init__(self, block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -> None:
+    def __init__(self, block: Block, bounds: Rect, pdf: PDF, other_layout: Callable, style) -> None:
         super().__init__(2)
+        self.style = style
         self.bounds = bounds
         self.block = block
         self.other_layout = other_layout
@@ -89,7 +90,7 @@ class ImagePlacement(Optimizer):
     def make(self, x: Tuple[float]) -> PlacedGroupContent:
         outer = self.bounds
 
-        padding = self.block.padding
+        padding = self.block.spacing.padding
         widths = divide_space(x, outer.width - padding, 10 + (padding + 1) // 2)
 
         LOGGER.fine("Allocating %d to image, %d to other", widths[0], widths[1])
@@ -119,11 +120,11 @@ class ImagePlacement(Optimizer):
 
     def place_image(self, bounds: Rect):
         im = self.make_image(bounds)
-        return PlacedImageContent(im, bounds, self.pdf)
+        return PlacedImageContent(im, bounds, self.style, self.pdf)
 
     def make_image(self, bounds) -> Image:
         im_info = self.block.image
-        file = self.pdf.working_dir.joinpath(im_info['uri'])
+        file = self.pdf.base_dir.joinpath(im_info['uri'])
         width = int(im_info['width']) if 'width' in im_info else None
         height = int(im_info['height']) if 'height' in im_info else None
         if width and height:
@@ -142,7 +143,7 @@ class ImagePlacement(Optimizer):
 
 
 def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -> PlacedContent:
-    placer = ImagePlacement(block, bounds, pdf, other_layout)
+    placer = ImagePlacement(block, bounds, pdf, other_layout, block.style)
     if block.content:
         if 'height' in block.image or 'width' in block.image:
             # It has a fixed size, so we can just use that
@@ -212,7 +213,7 @@ def banner_pre_layout(block: Block, bounds: Rect, pdf: PDF, show_title=True) -> 
         plaque = bounds.resize(height=plaque_height)
 
         title_bounds = plaque - Margins.balanced(title_margin)
-        title_mod = Run([e.replace_style(title_style) for e in block.title.items])
+        title_mod = Run(block.title.items).with_style(title_style)
         title = one_line_flowable(title_mod, title_bounds, margin, pdf)
         extraLines = title.ok_breaks + title.bad_breaks
         if extraLines:

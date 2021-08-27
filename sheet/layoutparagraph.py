@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Sequence, Union
 
 from reportlab.platypus import Flowable, Paragraph
 
@@ -99,10 +99,10 @@ def split_into_paragraphs(run, pdf, styles: List[Style] = None) -> List[Paragrap
     return row
 
 
-def _add_to_row(row, elements, pdf: PDF, styles):
+def _add_to_row(row, elements:Sequence[Element], pdf: PDF, styles):
     added = len(row)
     if styles and added < len(styles) and styles[added] is not None:
-        elements = [e.replace_style(e.style.clone_using(styles[added])) for e in elements]
+        elements = [e.with_style(e.style.clone_using(styles[added])) for e in elements]
     run = Run(elements)
     row.append(make_paragraph(run, pdf))
 

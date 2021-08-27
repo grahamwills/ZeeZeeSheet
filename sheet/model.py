@@ -81,7 +81,7 @@ class Element:
             return '⋯'
         return self.value
 
-    def replace_style(self, style: Style):
+    def with_style(self, style: Style):
         return Element(which=self.which, value=self.value, style=style)
 
 
@@ -123,6 +123,9 @@ class Run:
 
     def __hash__(self):
         return id(self)
+
+    def with_style(self, style: Style):
+        return Run([e.with_style(style) for e in self.items])
 
 
 @dataclass

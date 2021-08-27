@@ -1,5 +1,5 @@
+import contextlib
 import io
-import random
 from collections import defaultdict, namedtuple
 from pathlib import Path
 from typing import Optional
@@ -14,7 +14,7 @@ from reportlab.platypus import Flowable
 from roughen import Roughener
 from sheet.common import Rect, configured_logger
 from sheet.model import Element, ElementType, Run
-from style import Style
+from style import DEFAULT, Style
 
 LOGGER = configured_logger(__name__)
 
@@ -36,10 +36,18 @@ class PDF(canvas.Canvas):
         self.setLineCap(1)
         fonts = install_fonts()
         LOGGER.info("Installed fonts = %s", fonts)
-        self.working_dir = output_file.parent
+        self.base_dir = output_file.parent
         self.page_height = int(pagesize[1])
         self.debug = debug
         self._name_index = 0
+        self.style = None
+
+    @contextlib.contextmanager
+    def using_style(self, style: Style):
+        old_style = self.style
+        self.style = style
+        yield self
+        self.style = old_style
 
     def drawImage(self, image, x, y, width=None, height=None, mask=None, preserveAspectRatio=False, anchor='c',
                   anchorAtXY=False, showBoundary=False):
@@ -50,9 +58,10 @@ class PDF(canvas.Canvas):
             return self._add_checkbox(x, y, width, height, True)
         else:
             self.saveState()
-            # if self.roughen:
-            #     clip = self.roughen.rect_to_path(x, y, width, height, inset=True)
-            #     self.clipPath(clip, 0, 0)
+            roughener = self._make_roughener()
+            if roughener:
+                clip = roughener.rect_to_path(x, y, width, height, inset=True)
+                self.clipPath(clip, 0, 0)
             tup = super().drawImage(image, x, y, width, height, mask, preserveAspectRatio, anchor, anchorAtXY,
                                     showBoundary)
             self.restoreState()
@@ -68,24 +77,27 @@ class PDF(canvas.Canvas):
                                buttonStyle='cross', borderWidth=0.5, checked=state)
         return width, height
 
-    def draw_rect(self, r: Rect, style: Style, method: DrawMethod, rounded=0):
-        method = self._set_drawing_styles(method, style)
+    def draw_rect(self, r: Rect, method: DrawMethod, rounded=0):
+        method = self._set_drawing_styles(method)
+        roughener = self._make_roughener()
         top = self.page_height - r.bottom
-        if style.roughness > 0:
-            path = Roughener(self, style.roughness).rect_to_path(r.left, top, r.width, r.height, rounded=rounded)
+        if roughener:
+            path = roughener.rect_to_path(r.left, top, r.width, r.height, rounded=rounded)
             self.drawPath(path, fill=method.fill, stroke=method.stroke)
         elif rounded > 0:
             self.roundRect(r.left, top, r.width, r.height, rounded, fill=method.fill, stroke=method.stroke)
         else:
             self.rect(r.left, top, r.width, r.height, fill=method.fill, stroke=method.stroke)
 
-    def draw_path(self, path: PDFPathObject, style: Style, method: DrawMethod):
-        method = self._set_drawing_styles(method, style)
-        if style.roughness > 0:
-            path = Roughener(self, style.roughness).roughen_path(path)
+    def draw_path(self, path: PDFPathObject, method: DrawMethod):
+        method, self._set_drawing_styles(method)
+        roughener = self._make_roughener()
+        if roughener:
+            path = roughener.roughen_path(path)
         self.drawPath(path, fill=method.fill, stroke=method.stroke)
 
-    def _set_drawing_styles(self, method: DrawMethod, style: Style) -> DrawMethod:
+    def _set_drawing_styles(self, method: DrawMethod) -> DrawMethod:
+        style = self.style or DEFAULT
         if method.fill and style.background:
             self.setFillColorRGB(*style.background.rgb, alpha=style.opacity)
             self.setLineWidth(0)
@@ -130,6 +142,12 @@ class PDF(canvas.Canvas):
 
     def __hash__(self):
         return id(self)
+
+    def _make_roughener(self) -> Optional[Roughener]:
+        if self.style and self.style.roughness:
+            return Roughener(self, self.style.roughness)
+        else:
+            return None
 
 
 def _element_to_html(e: Element, pdf: PDF, base_style: Style):

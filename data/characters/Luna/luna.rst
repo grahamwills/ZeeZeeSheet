@@ -7,7 +7,6 @@
 ==========================
 
 .. title:: hidden
-.. block:: style=very_rough
 
 .. image:: 13thAgelogo.png
    :height: 34
@@ -57,6 +56,7 @@ Hits: **35**                            --  Staggered: **17**
 ---------------------------------------------------------------
 
 .. section:: stack stack:columns=3 padding=15
+.. block:: style=very_rough
 .. title:: hidden
 
 
@@ -290,7 +290,7 @@ Styles
 ------
 
 default
-  family=Baskerville size=8 align=fill roughness=1.2
+  family=Baskerville size=8 align=fill roughness=0.75 opacity=0.8
 title
   size=40 color=darkGreen family=LoveYou
 
@@ -311,12 +311,12 @@ stat_style
   color=white family=Helvetica size=10
 
 very_rough
-  roughness=3
+  roughness=3 opacity=1
 
 therm_green
-  inherit=heading_green roughness=0.5
+  inherit=heading_green roughness=0.33 opacity=1
 therm_red
-  inherit=heading_red roughness=0.5
+  inherit=heading_red roughness=0.33 opacity=1
 
 
 big

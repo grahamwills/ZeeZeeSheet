@@ -57,7 +57,7 @@ def draw_watermark(sheet: Sheet, pdf: PDF):
         return
     if not hasattr(image, 'imageHeight'):
         # replace it with a real image, not the name fo the file
-        file = pdf.working_dir.joinpath(sheet.watermark)
+        file = pdf.base_dir.joinpath(sheet.watermark)
         image = Image(file)
         scale = max(sheet.pagesize[0] / image.imageWidth, sheet.pagesize[1] / image.imageHeight)
         sheet.watermark = Image(file, width=scale * image.imageWidth, height=scale * image.imageHeight)

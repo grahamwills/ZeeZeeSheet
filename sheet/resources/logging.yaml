@@ -60,7 +60,7 @@ loggers:
 
   sheet:
     level: DEBUG
-    handlers: [ all, file ]
+    handlers: [ important, file ]
     propagate: no
 
   sheet.reader:

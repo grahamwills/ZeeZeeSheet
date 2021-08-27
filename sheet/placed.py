@@ -67,6 +67,10 @@ class PlacedContent(abc.ABC):
         self.requested = self.requested.move(dx=dx, dy=dy)
         return self
 
+    def styled(self, style:Style):
+        return self.pdf.using_style(style)
+
+
     def error_from_variance(self, multiplier: float):
         """ Internal variance in free space"""
         return multiplier * self.internal_variance
@@ -116,10 +120,10 @@ class PlacedParagraphContent(PlacedContent):
 
 
 class PlacedImageContent(PlacedContent):
-    image: Image
 
-    def __init__(self, image: Image, requested: Rect, pdf: PDF):
+    def __init__(self, image: Image, requested: Rect, style: Style, pdf: PDF):
         super().__init__(requested, requested, pdf)
+        self.style = style
         self.image = image
         image.wrapOn(pdf, requested.width, requested.height)
         self.actual = self.requested.resize(width=math.ceil(image.drawWidth), height=math.ceil(image.drawHeight))
@@ -131,7 +135,8 @@ class PlacedImageContent(PlacedContent):
         self.ok_breaks = xdiff / 10
 
     def draw(self):
-        self.pdf.draw_flowable(self.image, self.actual)
+        with self.styled(self.style) as pdf:
+            pdf.draw_flowable(self.image, self.actual)
 
     def __str__(self) -> str:
         return "Image(%dx%d)" % (self.actual.width, self.actual.height)
@@ -175,7 +180,8 @@ class PlacedRectContent(PlacedContent):
         self.rounded = rounded
 
     def draw(self):
-        self.pdf.draw_rect(self.actual, self.style, self.method, rounded=self.rounded)
+        with self.styled(self.style) as pdf:
+            pdf.draw_rect(self.actual, self.method, rounded=self.rounded)
 
     def __str__(self) -> str:
         return "Rect(%s)" % str(self.actual)
@@ -191,10 +197,11 @@ class PlacedPathContent(PlacedContent):
         self.offset = (0, 0)
 
     def draw(self):
-        self.pdf.saveState()
-        self.pdf.transform(1, 0, 0, -1, self.offset[0], self.pdf.page_height - self.offset[1])
-        self.pdf.draw_path(self.path, self.style, self.method)
-        self.pdf.restoreState()
+        with self.styled(self.style) as pdf:
+            pdf.saveState()
+            pdf.transform(1, 0, 0, -1, self.offset[0], self.pdf.page_height - self.offset[1])
+            pdf.draw_path(self.path, self.method)
+            pdf.restoreState()
 
     def __str__(self) -> str:
         return "Path(%s)" % str(self.path)
@@ -208,7 +215,7 @@ class PlacedPathContent(PlacedContent):
 class ErrorContent(PlacedRectContent):
 
     def __init__(self, bounds: Rect, pdf: PDF):
-        super().__init__(bounds, Style(background=Color('red')), PDF.BOTH, pdf, 0)
+        super().__init__(bounds, Style('err'), PDF.FILL, pdf)
 
     def draw(self):
         super().draw()
