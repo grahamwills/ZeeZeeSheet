@@ -33,7 +33,7 @@ Picture
 ==========
  - Mouse
 
-.. block:: style=default
+.. block:: style=medium
 
 
 Qualities
@@ -42,6 +42,7 @@ Qualities
  - I can make it through this
 
 .. title:: banner style=heading1
+.. block:: style=default
 
 Team
  - Chris    | **Darien**
@@ -103,6 +104,8 @@ title
   size=32 color=#008 family=Comics align=left color=black
 big
   size=16 family=Comics align=left
+medium
+  size=14 family=Comics align=left
 
 heading1
   background=#449 color=white align=left

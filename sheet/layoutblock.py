@@ -13,7 +13,7 @@ from placed import ErrorContent, PlacedClipContent, PlacedContent, PlacedGroupCo
     PlacedParagraphContent, PlacedRectContent
 from sheet import common
 from sheet.common import Margins, Rect
-from sheet.model import Block, Run
+from sheet.model import Block, Run, Spacing
 from sheet.optimize import Optimizer, divide_space
 from sheet.pdf import PDF
 from style import Style
@@ -22,49 +22,55 @@ from table import badges_layout, one_line_flowable, table_layout, thermometer_la
 LOGGER = common.configured_logger(__name__)
 
 
+def inset_for_content_style(style: Style, spacing: Spacing):
+    inset = 0
+    if style.has_border():
+        inset += style.borderWidth
+    if style.has_border() or style.background:
+        inset += spacing.margin
+
+    return round(inset)
+
+
 @lru_cache
-def layout_block(block: Block, bounds: Rect, pdf: PDF):
-    pre, insets = _pre_content_layout(block, bounds, pdf)
+def layout_block(block: Block, outer: Rect, pdf: PDF):
+    has_title = block.title and block.title_method.name not in {'hidden', 'none'}
 
-    content = content_layout(block, bounds - insets, pdf)
+    # Reduce the space to account for borders and gaps for background fill
+    inset = inset_for_content_style(block.style, block.spacing)
+    inner = outer - Margins.balanced(inset)
 
-    inner = Rect.make(left=bounds.left, right=bounds.right, top=bounds.top,
-                      bottom=content.actual.bottom + insets.bottom)
+    items = []
 
-    back, post, clip = _post_content_layout(block, inner, pdf)
+    if has_title:
+        # Create title and move the innertop down to avoid it
+        title = banner_title_layout(block, outer, inset, pdf)
+        inner = Rect(left=inner.left, right=inner.right, bottom=inner.bottom,
+                     top=title.actual.bottom + block.spacing.padding)
+    else:
+        title = None
 
-    # Do this better
-    if not (block.style.has_border() or block.style.background) and (not block.title_style.background or block.title_method.name == 'hidden'):
+    content = content_layout(block, inner, pdf)
+
+    # Adjust outer to cover the actual content
+    outer = Rect.make(left=outer.left, right=outer.right, top=outer.top,
+                      bottom=content.actual.bottom + block.spacing.margin)
+
+    post, clip = outline_post_layout(outer, block.style, pdf)
+
+    if not has_title:
         clip = None
 
-    items = [p for p in [clip, back, pre, content] if p]
-    main = PlacedGroupContent(items, bounds)
-    if post:
-        return PlacedGroupContent([main, post], bounds)
-    else:
-        return main
-
-
-def _pre_content_layout(block, bounds, pdf) -> (PlacedContent, Margins):
-    title = block.title_method.name
-    if title in {'hidden', 'none'} or not title:
-        return banner_pre_layout(block, bounds, pdf, show_title=False)
-    elif title == 'banner':
-        return banner_pre_layout(block, bounds, pdf, show_title=True)
-    else:
-        raise ValueError("unknown title method '%s'" % title.command)
-
-
-def _post_content_layout(block: Block, inner: Rect, pdf: PDF):
-    style = block.style
-    if style.background:
-        back = PlacedRectContent(inner, style, PDF.FILL, pdf)
+    if block.style.background:
+        back = PlacedRectContent(outer, block.style, PDF.FILL, pdf)
     else:
         back = None
 
-    post, clip = outline_post_layout(inner, style, pdf)
-
-    return back, post, clip
+    main = PlacedGroupContent([clip, back, title, content], outer)
+    if post:
+        return PlacedGroupContent([main, post], outer)
+    else:
+        return main
 
 
 def content_layout(block, inner: Rect, pdf: PDF):
@@ -198,52 +204,33 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> Optional[PlacedCon
         return PlacedGroupContent(results, bounds)
 
 
-def banner_pre_layout(block: Block, bounds: Rect, pdf: PDF, show_title=True) -> (
-        PlacedContent, Margins):
-    content_style = block.style
-    if content_style.has_border():
-        line_width = int(content_style.borderWidth)
-    else:
-        line_width = 0
+def banner_title_layout(block: Block, bounds: Rect, inset: int, pdf: PDF) -> PlacedContent:
+    # Banner needs a minimum padding around it
+    pad = block.spacing.padding
+    mgn = block.spacing.margin
+    m = Margins(left=max(inset, pad), right=max(inset, pad),
+                top=max(inset, mgn), bottom=max(inset, mgn))
+    bounds -= m
 
-    if content_style.has_border() or content_style.background:
-        margin = block.spacing.margin
-    else:
-        margin = 0
+    style = block.title_style
+    placed = []
+    plaque = bounds.resize(height=round(style.size) + block.spacing.padding)
 
-    inset = line_width + margin
+    title_mod = Run(block.title.items).with_style(style)
+    title = one_line_flowable(title_mod, plaque, block.spacing.padding, pdf)
+    extraLines = title.ok_breaks + title.bad_breaks
+    if extraLines:
+        plaque = plaque.resize(height=plaque.height + extraLines * style.size)
 
-    if show_title and block.title:
+    if style.background:
+        r = plaque + Margins(left=20, top=20, right=20, bottom=0)
+        placed.append(PlacedRectContent(r, style, PDF.FILL, pdf))
 
-        title_margin = max(margin, block.spacing.margin + line_width)
-        title_style = block.title_style
-        plaque_height = round(title_style.size + title_margin * 2)
+    # Move the title up a little to account for the descender
+    title.move(dy=-pdf.descender(style))
+    placed.append(title)
 
-        placed = []
-        plaque = bounds.resize(height=plaque_height)
-
-        title_bounds = plaque - Margins.balanced(title_margin)
-        title_mod = Run(block.title.items).with_style(title_style)
-        title = one_line_flowable(title_mod, title_bounds, margin, pdf)
-        extraLines = title.ok_breaks + title.bad_breaks
-        if extraLines:
-            plaque = plaque.resize(height=plaque.height + extraLines * title_style.size)
-
-        if title_style.background:
-            r = plaque + Margins(left=20, top=20, right=20, bottom=0)
-            placed.append(PlacedRectContent(r, title_style, PDF.FILL, pdf))
-
-        # Move the title up a little to account for the descender
-        title.move(dy=-pdf.descender(title_style))
-        placed.append(title)
-
-        margins = Margins(left=inset, right=inset, top=plaque.bottom - bounds.top + block.spacing.padding, bottom=inset)
-
-        group = PlacedGroupContent(placed, bounds)
-        group.margins = margins
-        return group, margins
-    else:
-        return None, Margins.balanced(inset)
+    return PlacedGroupContent(placed, bounds)
 
 
 def outline_post_layout(bounds: Rect, style: Style, pdf: PDF) -> (Optional[PlacedContent], PlacedClipContent):

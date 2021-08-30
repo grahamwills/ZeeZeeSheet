@@ -5,7 +5,7 @@ import math
 import statistics
 import time
 import warnings
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Tuple
 
 from placed import PlacedContent, PlacedGroupContent
 from sheet.common import Rect, configured_logger
@@ -48,8 +48,13 @@ class ColumnOptimizer(Optimizer):
     def score(self, columns: [PlacedGroupContent]) -> float:
         column_bounds = [c.actual for c in columns]
         max_height = max(c.height for c in column_bounds)
+        min_height = min(c.height for c in column_bounds)
 
         stddev = statistics.stdev(c.height for c in column_bounds) / 10
+
+        # Increase the error qaudratically  as it gets very far from balanced
+        stddev *= 1 + max(0, max_height / min_height - 1) ** 2
+
         breaks = sum(c.error_from_breaks(30, 3) for c in columns)
         fit = sum(c.error_from_size(10, 0.01) for c in columns)
         var = sum(c.error_from_variance(0.1) for c in columns)
@@ -68,7 +73,7 @@ class ColumnOptimizer(Optimizer):
         score += 1e6 * missed
 
         LOGGER.debug("Score: %1.3f -- max_ht=%1.1f, breaks=%1.3f, fit=%1.3f, stddev=%1.3f, var=%1.3f",
-                    score, max_height, breaks, fit, stddev, var)
+                     score, max_height, breaks, fit, stddev, var)
         return score
 
     def place_all(self, widths: Tuple[int], counts: Tuple[int]) -> List[PlacedContent]:
@@ -200,8 +205,7 @@ def _fits(together: PlacedContent, bounds: Rect) -> int:
     return together.actual.bottom <= bounds.bottom
 
 
-def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options:dict) -> List[PlacedGroupContent]:
-
+def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options: dict) -> List[PlacedGroupContent]:
     equal = bool(options.get('equal', False))
     columns = int(options.get('columns', 1))
 
