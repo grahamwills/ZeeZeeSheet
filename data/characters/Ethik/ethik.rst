@@ -1,7 +1,7 @@
 .. page:: size=11inx8.5in margin=20 watermark=background.jpg
 .. section:: stack stack:columns=3 stack:equal padding=10
 .. title:: hidden
-.. block:: style=huge
+.. block:: style=huge padding=6
 
 **Ethik Beigleiter**
 ====================
@@ -30,7 +30,7 @@ Base Info
 Pools
  - Might        |   | **10**    |
  - Speed        |   | **13**    |
- - Intellect    |   | **21**    | *2*
+ - Intellect    |   | **21**    | 2
 
 .. title:: banner style=banner
 .. block:: default style=edged emphasis=red
@@ -112,9 +112,9 @@ Styles
 default
     family=Helvetica color=#444 align=fill
 edged
-    borderWidth=0.5 borderColor=navy
+    borderWidth=0.5 borderColor=navy teeth=1 background=#dddde4
 banner
-    family=Steampunk size=14 color=white background=navy
+    family=Steampunk size=14 color=white background=navy teeth=1
 faint
     opacity=0.5 align=left
 big
@@ -123,10 +123,12 @@ ornate
     size=24 color=navy font=Steampunk
 
 huge
-    size=44 color=#800 font=Steamship
+    size=44 color=#800 font=Steamship teeth=3
 str
     color=#004 bold
 red
     color=#800
 badge
     borderWidth=2 borderColor=#020 color=#8a8 background=#efe size=14 font=Gotham
+    teeth=1
+

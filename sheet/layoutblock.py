@@ -9,8 +9,8 @@ from typing import Callable, Optional, Tuple
 from reportlab.platypus import Image
 
 import layoutparagraph
-from placed import ErrorContent, PlacedContent, PlacedGroupContent, PlacedImageContent, PlacedParagraphContent, \
-    PlacedRectContent
+from placed import ErrorContent, PlacedClipContent, PlacedContent, PlacedGroupContent, PlacedImageContent, \
+    PlacedParagraphContent, PlacedRectContent
 from sheet import common
 from sheet.common import Margins, Rect
 from sheet.model import Block, Run
@@ -26,15 +26,23 @@ LOGGER = common.configured_logger(__name__)
 def layout_block(block: Block, bounds: Rect, pdf: PDF):
     pre, insets = _pre_content_layout(block, bounds, pdf)
 
-    content = _content_layout(block, bounds - insets, pdf)
+    content = content_layout(block, bounds - insets, pdf)
 
     inner = Rect.make(left=bounds.left, right=bounds.right, top=bounds.top,
                       bottom=content.actual.bottom + insets.bottom)
 
-    back, post = _post_content_layout(block, inner, pdf)
+    back, post, clip = _post_content_layout(block, inner, pdf)
 
-    items = [p for p in [back, pre, content, post] if p]
-    return PlacedGroupContent(items, bounds)
+    # Do this better
+    if not (block.style.has_border() or block.style.background) and (not block.title_style.background or block.title_method.name == 'hidden'):
+        clip = None
+
+    items = [p for p in [clip, back, pre, content] if p]
+    main = PlacedGroupContent(items, bounds)
+    if post:
+        return PlacedGroupContent([main, post], bounds)
+    else:
+        return main
 
 
 def _pre_content_layout(block, bounds, pdf) -> (PlacedContent, Margins):
@@ -49,15 +57,17 @@ def _pre_content_layout(block, bounds, pdf) -> (PlacedContent, Margins):
 
 def _post_content_layout(block: Block, inner: Rect, pdf: PDF):
     style = block.style
-    if style and style.background:
+    if style.background:
         back = PlacedRectContent(inner, style, PDF.FILL, pdf)
     else:
         back = None
-    post = outline_post_layout(inner, style, pdf)
-    return back, post
+
+    post, clip = outline_post_layout(inner, style, pdf)
+
+    return back, post, clip
 
 
-def _content_layout(block, inner: Rect, pdf: PDF):
+def content_layout(block, inner: Rect, pdf: PDF):
     method = block.method.name
     if method.startswith('therm'):
         content_layout = thermometer_layout
@@ -220,7 +230,8 @@ def banner_pre_layout(block: Block, bounds: Rect, pdf: PDF, show_title=True) -> 
             plaque = plaque.resize(height=plaque.height + extraLines * title_style.size)
 
         if title_style.background:
-            placed.append(PlacedRectContent(plaque, title_style, PDF.FILL, pdf))
+            r = plaque + Margins(left=20, top=20, right=20, bottom=0)
+            placed.append(PlacedRectContent(r, title_style, PDF.FILL, pdf))
 
         # Move the title up a little to account for the descender
         title.move(dy=-pdf.descender(title_style))
@@ -235,11 +246,13 @@ def banner_pre_layout(block: Block, bounds: Rect, pdf: PDF, show_title=True) -> 
         return None, Margins.balanced(inset)
 
 
-def outline_post_layout(bounds: Rect, style: Style, pdf: PDF) -> Optional[PlacedContent]:
+def outline_post_layout(bounds: Rect, style: Style, pdf: PDF) -> (Optional[PlacedContent], PlacedClipContent):
+    path = pdf.rect_to_path(bounds, style)
+    clip = PlacedClipContent(path, bounds, pdf)
     if style.has_border():
-        return PlacedRectContent(bounds, style, PDF.STROKE, pdf)
+        return PlacedRectContent(bounds, style, PDF.STROKE, pdf), clip
     else:
-        return None
+        return None, clip
 
 
 def no_post_layout(*_) -> Optional[PlacedContent]:

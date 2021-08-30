@@ -1,4 +1,5 @@
 import functools
+import math
 import random
 from copy import copy
 from typing import Callable, List, Sequence
@@ -11,15 +12,20 @@ from common import Point
 
 class Roughener:
 
-    def __init__(self, canvas: Canvas, σ=1, step=10):
+    def __init__(self, canvas: Canvas, method: str = 'rough', σ=1):
         """
             Class used to add a rough effect to drawing constructs
             :param float σ: The size of the roughness effect. The range (0, 3] is generally good
             :param float step: Break up lines into steps of about this size to add roughness
         """
+
         self.canvas = canvas
-        self.σ = σ * step / 20
-        self.step = step
+        self.method = method
+        self.σ = σ / 2
+        if method == 'teeth':
+            self.step = self.σ * 10
+        else:
+            self.step = 10
         self.rand = random.Random()
 
     def rect_to_path(self, x, y, width, height, rounded=0, inset=False) -> PDFPathObject:
@@ -56,7 +62,10 @@ class Roughener:
             code = parts[-1]
             coords = [Point(float(parts[i]), float(parts[i + 1])) for i in range(0, len(parts) - 1, 2)]
             if code == 'm':
-                start = last = self.jitter(coords[0])
+                if self.method == 'teeth':
+                    start = last = coords[0]
+                else:
+                    start = last = self.jitter(coords[0])
                 result.append(join(code, last))
             elif not coords and code not in {'h', 's', 'b', 'b*'}:
                 # Drawing operations that do not close the path
@@ -76,13 +85,19 @@ class Roughener:
                 else:
                     raise ValueError("Unhandled PDF path code: '%s'" % code)
 
-                pts, factor = self.interpolate(f)
-                self.σ /= factor
-                for pt in pts:
-                    p = self.jitter(pt)
-                    result.append(join('l', p))
-                last = pts[-1]
-                self.σ *= factor
+                if self.method == 'teeth':
+                    pts, _ = self.interpolate(f, min_steps=1)
+                    for pt in pts:
+                        result += self.teeth(last, pt)
+                        last = pt
+                else:
+                    pts, factor = self.interpolate(f)
+                    self.σ /= factor
+                    for pt in pts:
+                        p = self.jitter(pt)
+                        result.append(join('l', p))
+                    last = pts[-1]
+                    self.σ *= factor
 
                 # Need to add close after the other interpolations
                 if code == 'h':
@@ -98,16 +113,33 @@ class Roughener:
     def _noise(self):
         return min(2 * self.σ, max(-2 * self.σ, self.rand.gauss(0, self.σ)))
 
-    def interpolate(self, func: Callable) -> Sequence[Point]:
+    def interpolate(self, func: Callable, min_steps=5) -> (Sequence[Point], float):
         v = [func(i / 5) for i in range(0, 6)]
         d = sum(abs(v[i] - v[i + 1]) for i in range(0, 5))
-        steps = max(5, round(d / self.step))
+        if d < 1:
+            return v[:-1:], 1
+        steps = max(min_steps, round(d / self.step))
 
-        # This is the facotr by which our steps are smaller than expected
+        # This is the factor by which our steps are smaller than expected
         # We use this to reduce the sigma value proportionally
         factor = steps * self.step / d
 
         return [func(i / steps) for i in range(1, steps + 1)], factor
+
+    def teeth(self, a: Point, b: Point) -> List[str]:
+        θ, d = (b - a).to_polar()
+        c1 = 0.95 * a + 0.05 * b
+        c2 = 0.55 * a + 0.45 * b
+        c3 = 0.45 * a + 0.55 * b
+        c4 = 0.05 * a + 0.95 * b
+        v = Point.from_polar(θ - math.pi / 2, self.σ)
+        return [
+            join('l', c1 + v),
+            join('l', c2 + v),
+            join('l', c3 - v),
+            join('l', c4 - v),
+            join('l', b),
+        ]
 
 
 def join(code, *args):

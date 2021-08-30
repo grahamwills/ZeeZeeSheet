@@ -247,8 +247,8 @@ def thermometer_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
 
 def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
                    shape_style: Style, tag_style: Style, pdf: PDF) -> (PlacedGroupContent, Tuple[int]):
-    height = y[6]
-    r = y[1]
+    height = y[6] + y[0]
+    r = y[1] - y[0]
     b = Rect.make(left=0, right=width, top=0, bottom=height)
 
     shape = shape or 'oval'
@@ -256,7 +256,6 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
     if shape.startswith('oval'):
         path = pdf.beginPath()
         path.arc(0, 0, width, 0 + 2 * r, startAng=180, extent=180)
-
         path.lineTo(width, height - r)
         path.arcTo(0, height - 2 * r, width, height, startAng=0, extent=180)
         path.close()
@@ -291,21 +290,21 @@ def badge_template(width: int, y: Tuple[int], shape: str, tags: List[str],
     # tags
     if len(tags) > 0 and tags[0]:
         p = layoutparagraph.from_text(tags[0], tag_style, pdf)
-        r = Rect.make(left=0, right=width, top=y[4], bottom=y[5])
+        r = Rect.make(left=0, right=width, top=y[4] + shape_style.borderWidth, bottom=y[5])
         tag = layoutparagraph.align_vertically_within(p, r, pdf, posY=-1)
         group.append(tag)
     if len(tags) > 1 and tags[1]:
         p = layoutparagraph.from_text(tags[1], tag_style, pdf)
-        r = Rect.make(left=0, right=width, top=y[1], bottom=y[2])
+        r = Rect.make(left=0, right=width, top=y[1], bottom=y[2] - shape_style.borderWidth)
         tag = layoutparagraph.align_vertically_within(p, r, pdf, posY=1)
         group.append(tag)
 
     return PlacedGroupContent(group, b)
 
 
-def badge_vertical_layout(width: int, tags: List[str], style: Style, tag_style: Style) -> Tuple[int]:
+def badge_vertical_layout(width: int, tags: List[str], style: Style, tag_style: Style, lineWidth: float) -> Tuple[int]:
     # 20% extra for leading on the font sizes
-    extreme = max(width / 2, style.size * 1.2)
+    extreme = max(width / 2, style.size * 1.2 + lineWidth)
     tag = tag_style.size * 1.2
     title = style.size * 1.2
     main = max(width - title, style.size * 2 * 1.2)
@@ -366,7 +365,7 @@ def badges_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
     tag_style = shape_style.clone(size=tag_height, align='center')
     width = (bounds.width - padding * (n - 1)) // n
 
-    ypos = badge_vertical_layout(width, tags, block.style, tag_style)
+    ypos = badge_vertical_layout(width, tags, block.style, tag_style, shape_style.borderWidth)
 
     stamp = badge_template(width, ypos, shape, tags, shape_style, tag_style, pdf)
 

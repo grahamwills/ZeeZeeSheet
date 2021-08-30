@@ -194,22 +194,31 @@ class PlacedPathContent(PlacedContent):
         self.method = method
         self.style = style
         self.path = path
-        self.offset = (0, 0)
 
     def draw(self):
         with self.styled(self.style) as pdf:
-            pdf.saveState()
-            pdf.transform(1, 0, 0, -1, self.offset[0], self.pdf.page_height - self.offset[1])
-            pdf.draw_path(self.path, self.method)
-            pdf.restoreState()
+            pdf.draw_path(self.path, self.requested.left, self.requested.top, self.method)
 
     def __str__(self) -> str:
         return "Path(%s)" % str(self.path)
 
-    def move(self, dx=0, dy=0) -> PlacedPathContent:
-        super().move(dx, dy)
-        self.offset = (self.offset[0] + dx, self.offset[1] + dy)
-        return self
+class PlacedClipContent(PlacedContent):
+
+    def __init__(self, path: PDFPathObject, bounds: Rect, pdf: PDF):
+        super().__init__(bounds, bounds, pdf)
+        self.path = path
+
+    def draw(self):
+        x = self.requested.left
+        y = self.pdf.page_height - self.requested.bottom
+        self.pdf.translate(x,y)
+        self.pdf.clipPath(self.path, stroke=0, fill=0)
+        self.pdf.translate(-x, -y)
+
+    def __str__(self) -> str:
+        return "Clip(%s)" % str(self.path)
+
+
 
 
 class ErrorContent(PlacedRectContent):
@@ -225,14 +234,13 @@ class ErrorContent(PlacedRectContent):
 
 
 class PlacedGroupContent(PlacedContent):
-    group: [PlacedContent]
 
-    def __init__(self, children: List[PlacedContent], requested: Rect, actual=None):
+    def __init__(self, children: List[PlacedContent], requested: Rect):
         self.group = [p for p in children if p] if children else []
         if not self.group:
             return
 
-        actual = actual or Rect.union(p.actual for p in self.group)
+        actual = Rect.union(p.actual for p in self.group)
         super().__init__(requested, actual, self.group[0].pdf)
 
         self.ok_breaks = sum(item.ok_breaks for item in self.group)
@@ -245,16 +253,16 @@ class PlacedGroupContent(PlacedContent):
             self.unused_width = calculate_unused_width_for_group(self.group, self.requested)
 
     def draw(self):
+        self.pdf.saveState()
         if self.pdf.debug:
-            self.pdf.saveState()
             self.pdf.setFillColorRGB(0, 0, 1, 0.05)
             self.pdf.setStrokeColorRGB(0, 0, 1, 0.05)
             self.pdf.setLineWidth(2)
             self.pdf.rect(self.actual.left, self.pdf.page_height - self.actual.bottom,
                           self.actual.width, self.actual.height, fill=1, stroke=1)
-            self.pdf.restoreState()
         for p in self.group:
             p.draw()
+        self.pdf.restoreState()
 
     def move(self, dx=0, dy=0) -> PlacedGroupContent:
         super().move(dx, dy)

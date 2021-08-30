@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import logging.config
+import math
 import os
 from collections import namedtuple
 from pathlib import Path
@@ -61,32 +62,47 @@ class Point(NamedTuple):
     x: float
     y: float
 
-    def __add__(self, other):
+    def __add__(self, other) -> Point:
         return Point(self.x + other.x, self.y + other.y)
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> Point:
         return Point(self.x - other.x, self.y - other.y)
 
-    def __abs__(self):
+    def __abs__(self)-> float:
         return (self.x ** 2 + self.y ** 2) ** 0.5
 
-    def __neg__(self):
+    def __neg__(self) -> Point:
         return Point(-self.x, -self.y)
 
-    def __mul__(self, m):
+    def __mul__(self, m) -> Point:
         return Point(m * self.x, m * self.y)
 
-    def __rmul__(self, m):
+
+    def __truediv__(self, m) -> Point:
+        return Point(self.x / m, self.y / m)
+
+    def __floordiv__(self, m) -> Point:
+        return Point(self.x // m, self.y // m)
+
+    def __rmul__(self, m) -> Point:
         return Point(m * self.x, m * self.y)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.x == other.x and self.y == other.y
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.x) + 17 * hash(self.y)
 
     def __round__(self, n=None):
         return Point(round(self.x, n), round(self.y, n))
+
+    def to_polar(self) -> (float, float):
+        """ returns θ, d """
+        return math.atan2(self.y, self.x), abs(self)
+
+    @classmethod
+    def from_polar(cls, θ, d) -> Point:
+        return Point(d * math.cos(θ), d * math.sin(θ))
 
 
 class Extent(NamedTuple):

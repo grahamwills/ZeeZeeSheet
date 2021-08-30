@@ -66,6 +66,8 @@ Quote:
 Styles
 ------
 
+default
+    roughness=1
 default-title
     borderWidth=0
 boldblue

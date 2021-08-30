@@ -89,12 +89,15 @@ class PDF(canvas.Canvas):
         else:
             self.rect(r.left, top, r.width, r.height, fill=method.fill, stroke=method.stroke)
 
-    def draw_path(self, path: PDFPathObject, method: DrawMethod):
+    def draw_path(self, path: PDFPathObject, x, y, method: DrawMethod):
         method, self._set_drawing_styles(method)
         roughener = self._make_roughener()
         if roughener:
             path = roughener.roughen_path(path)
+        self.saveState()
+        self.transform(1, 0, 0, -1, x, self.page_height - y)
         self.drawPath(path, fill=method.fill, stroke=method.stroke)
+        self.restoreState()
 
     def _set_drawing_styles(self, method: DrawMethod) -> DrawMethod:
         style = self.style or DEFAULT
@@ -143,11 +146,23 @@ class PDF(canvas.Canvas):
     def __hash__(self):
         return id(self)
 
-    def _make_roughener(self) -> Optional[Roughener]:
-        if self.style and self.style.roughness:
-            return Roughener(self, self.style.roughness)
-        else:
-            return None
+    def _make_roughener(self, style=None) -> Optional[Roughener]:
+        style = style or self.style
+        if style:
+            if style.roughness:
+                return Roughener(self, 'rough', style.roughness)
+            if style.teeth:
+                return Roughener(self, 'teeth', style.teeth)
+        return None
+
+    def rect_to_path(self, b:Rect, style:Style):
+        roughener = self._make_roughener(style)
+        if roughener:
+            return roughener.rect_to_path(b.left, b.top, b.width, b.height)
+        path = self.beginPath()
+        path.rect(b.left, b.top, b.width, b.height)
+        path.close()
+        return path
 
 
 def _element_to_html(e: Element, pdf: PDF, base_style: Style):

@@ -27,6 +27,7 @@ class Style:
     italic: bool = None
 
     roughness: float = None
+    teeth: float = None
 
     align: str = None
 
@@ -113,7 +114,7 @@ class Stylesheet():
             try:
                 if key in {'color', 'background', 'borderColor'}:
                     setattr(s, key, Color(value))
-                elif key in {'size', 'borderWidth', 'opacity', 'roughness'}:
+                elif key in {'size', 'borderWidth', 'opacity', 'roughness', 'teeth'}:
                     setattr(s, key, float(value))
                 elif key in {'bold', 'italic'}:
                     setattr(s, key, bool(value))
