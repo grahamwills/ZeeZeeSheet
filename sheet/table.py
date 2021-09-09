@@ -12,11 +12,11 @@ from flowable import Table
 from placed import PlacedContent, PlacedGroupContent, PlacedParagraphContent, PlacedPathContent, PlacedRectContent, \
     PlacedTableContent
 from sheet import common
-from sheet.common import Rect
-from sheet.model import Block, Element, ElementType, Run
-from sheet.optimize import BadParametersError, Optimizer, divide_space
-from sheet.pdf import PDF
-from sheet.style import Style
+from common import Rect
+from model import Block, Element, ElementType, Run
+from optimize import BadParametersError, Optimizer, divide_space
+from pdf import PDF
+from style import Style
 
 LOGGER = common.configured_logger(__name__)
 
@@ -124,7 +124,7 @@ def as_table(cells, bounds: Rect, pdf: PDF, padding: int, return_as_placed=False
             return table
     else:
         optimizer = TableColumnsOptimizer(cells, padding, bounds, pdf)
-        placed, _ = optimizer.run(method='Nelder-Mead')
+        placed, _ = optimizer.run()
         if return_as_placed:
             return placed
         else:

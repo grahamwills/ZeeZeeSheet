@@ -10,9 +10,9 @@ from reportlab.platypus import Image
 from layoutblock import layout_block
 from layoutsection import stack_in_columns
 from placed import PlacedContent, PlacedGroupContent
-from sheet.common import Margins, Rect, configured_logger
-from sheet.model import Block, Sheet
-from sheet.pdf import PDF
+from common import Margins, Rect, configured_logger
+from model import Block, Sheet
+from pdf import PDF
 
 LOGGER = configured_logger(__name__)
 

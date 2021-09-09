@@ -12,10 +12,10 @@ from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Image
 
 from sheet import common
-from sheet.common import Rect
-from sheet.flowable import Paragraph, Table, line_info
-from sheet.pdf import DrawMethod, PDF
-from sheet.style import Style
+from common import Rect
+from flowable import Paragraph, Table, line_info
+from pdf import DrawMethod, PDF
+from style import Style
 
 LOGGER = common.configured_logger(__name__)
 

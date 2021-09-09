@@ -12,8 +12,8 @@ from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Flowable
 
 from roughen import Roughener
-from sheet.common import Rect, configured_logger
-from sheet.model import Element, ElementType, Run
+from common import Rect, configured_logger
+from model import Element, ElementType, Run
 from style import DEFAULT, Style
 
 LOGGER = configured_logger(__name__)
@@ -72,7 +72,7 @@ class PDF(canvas.Canvas):
         self._name_index += 1
         name = "f%d" % self._name_index
         LOGGER.debug("Adding checkbox name='%s' with state=%s ", name, state)
-        self.acroForm.checkbox(name=name, x=x - 0.5, y=y - 0.5, size=min(width, height) + 1,
+        self.acroForm.checkbox(name=name, x=x - 0.5, y=y, size=min(width, height) + 1,
                                fillColor=reportlab.lib.colors.Color(1, 1, 1),
                                buttonStyle='cross', borderWidth=0.5, checked=state)
         return width, height

@@ -6,9 +6,8 @@ import time
 from pathlib import Path
 from typing import Optional
 
-import dnd4e
-from layoutsheet import layout_sheet
-from sheet import common, pdf, reader
+from sheet.layoutsheet import layout_sheet
+from sheet import common, pdf, reader, pf2, dnd4e
 from sheet.common import DATA_DIR
 
 LOGGER = common.configured_logger(__name__)
@@ -45,6 +44,12 @@ if __name__ == '__main__':
         if file_4e:
             print("  .. Converting '%s' to ReStructuredText file" % file_4e.name)
             result = dnd4e.convert(file_4e)
+            print("  .. ReStructuredText file = %s" % result)
+
+        file_pf2 = find_file(d, 'json')
+        if file_pf2:
+            print("  .. Converting '%s' to ReStructuredText file" % file_pf2.name)
+            result = pf2.convert(file_pf2)
             print("  .. ReStructuredText file = %s" % result)
 
         file_rst = find_file(d, 'rst')

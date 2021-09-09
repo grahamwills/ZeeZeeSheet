@@ -10,6 +10,51 @@ from typing import Dict, List, NamedTuple, Optional
 
 import xmltodict
 
+
+def style_definitions():
+    return dedent("""
+        Styles
+        ------
+
+        default
+            family=Gotham size=8 align=left 
+        quote
+            family=Baskerville size=7 align=center italic color=#020 opacity=0.8
+        heavy
+            bold color=black opacity=1
+        title
+            size=28 color=navy 
+
+        banner
+            background=#88c color=white
+        banner_green
+            inherit=banner background=green borderColor=#7a7
+        banner_red
+            inherit=banner background=red borderColor=#f88
+        banner_black
+            inherit=banner background=black borderColor=#888
+        banner_orange
+            inherit=banner background=orange borderColor=#fe8
+
+        back
+            size=8 family=Helvetica opacity=0.75
+        back_blue
+            inherit=back background=#eef
+        back_orange
+            inherit=back background=#fec
+        back_green
+            inherit=back background=#efe
+        back_red
+            inherit=back background=#fee
+        back_black
+            inherit=back background=#eee
+
+
+        attributes
+            color=white family=Helvetica size=10
+    """)
+
+
 Weapon = namedtuple('Weapon', 'name bonus damage attack_stat defense conditions')
 
 USAGE_TYPE = {
@@ -574,7 +619,7 @@ class DnD4E:
         return "\n\n\n".join(x for x in front_page if x) \
                + '\n\n\n----------------------------------------\n\n\n' \
                + "\n\n\n".join(self.power_cards()) \
-               + '\n\n\n' + self.divider() + '\n\n\n' + self.style_definitions()
+               + '\n\n\n' + self.divider() + '\n\n\n' + style_definitions()
 
     def _stat_of(self, base) -> (str, int, int):
         try:
@@ -609,48 +654,6 @@ class DnD4E:
     def divider(self) -> str:
         return '-' * 40
 
-    def style_definitions(self):
-        return dedent("""
-            Styles
-            ------
-            
-            default
-                family=Gotham size=8 align=left 
-            quote
-                family=Baskerville size=7 align=center italic color=#020 opacity=0.8
-            heavy
-                bold color=black opacity=1
-            title
-                size=28 color=navy 
-            
-            banner
-                background=#88c color=white
-            banner_green
-                inherit=banner background=green borderColor=#7a7
-            banner_red
-                inherit=banner background=red borderColor=#f88
-            banner_black
-                inherit=banner background=black borderColor=#888
-            banner_orange
-                inherit=banner background=orange borderColor=#fe8
-            
-            back
-                size=8 family=Helvetica opacity=0.75
-            back_blue
-                inherit=back background=#eef
-            back_orange
-                inherit=back background=#fec
-            back_green
-                inherit=back background=#efe
-            back_red
-                inherit=back background=#fee
-            back_black
-                inherit=back background=#eee
-
-            
-            attributes
-                color=white family=Helvetica size=10
-        """)
 
     def make_replacements(self, p: Power) -> List[(str, str)]:
         """ replace common text in hits, misses and effects"""

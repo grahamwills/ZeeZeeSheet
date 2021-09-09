@@ -10,7 +10,7 @@ from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
 from model import Run
 from sheet import common
-from sheet.pdf import PDF, _element_to_html
+from pdf import PDF, _element_to_html
 from style import Style
 
 LOGGER = common.configured_logger(__name__)

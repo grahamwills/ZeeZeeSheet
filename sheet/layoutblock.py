@@ -12,10 +12,10 @@ import layoutparagraph
 from placed import ErrorContent, PlacedClipContent, PlacedContent, PlacedGroupContent, PlacedImageContent, \
     PlacedParagraphContent, PlacedRectContent
 from sheet import common
-from sheet.common import Margins, Rect
-from sheet.model import Block, Run, Spacing
-from sheet.optimize import Optimizer, divide_space
-from sheet.pdf import PDF
+from common import Margins, Rect
+from model import Block, Run, Spacing
+from optimize import Optimizer, divide_space
+from pdf import PDF
 from style import Style
 from table import badges_layout, one_line_flowable, table_layout, thermometer_layout
 
@@ -56,10 +56,16 @@ def layout_block(block: Block, outer: Rect, pdf: PDF):
     outer = Rect.make(left=outer.left, right=outer.right, top=outer.top,
                       bottom=content.actual.bottom + block.spacing.margin)
 
-    post, clip = outline_post_layout(outer, block.style, pdf)
-
-    if not has_title:
+    if has_title:
+        path = pdf.rect_to_path(outer, block.style)
+        clip = PlacedClipContent(path, outer, pdf)
+    else:
         clip = None
+
+    if block.style.has_border():
+        post = PlacedRectContent(outer, block.style, PDF.STROKE, pdf)
+    else:
+        post = None
 
     if block.style.background:
         back = PlacedRectContent(outer, block.style, PDF.FILL, pdf)
@@ -220,27 +226,15 @@ def banner_title_layout(block: Block, bounds: Rect, inset: int, pdf: PDF) -> Pla
     title = one_line_flowable(title_mod, plaque, block.spacing.padding, pdf)
     extraLines = title.ok_breaks + title.bad_breaks
     if extraLines:
-        plaque = plaque.resize(height=plaque.height + extraLines * style.size)
+        plaque = plaque.resize(height=plaque.height + extraLines * (style.size * 1.2))
 
     if style.background:
         r = plaque + Margins(left=20, top=20, right=20, bottom=0)
         placed.append(PlacedRectContent(r, style, PDF.FILL, pdf))
 
-    # Move the title up a little to account for the descender
-    title.move(dy=-pdf.descender(style))
+    # Move the title up a little to account for the descender and lien spacing
+    dy = pdf.descender(style) + style.size * 0.1
+    title.move(dy=-dy)
     placed.append(title)
 
     return PlacedGroupContent(placed, bounds)
-
-
-def outline_post_layout(bounds: Rect, style: Style, pdf: PDF) -> (Optional[PlacedContent], PlacedClipContent):
-    path = pdf.rect_to_path(bounds, style)
-    clip = PlacedClipContent(path, bounds, pdf)
-    if style.has_border():
-        return PlacedRectContent(bounds, style, PDF.STROKE, pdf), clip
-    else:
-        return None, clip
-
-
-def no_post_layout(*_) -> Optional[PlacedContent]:
-    return None

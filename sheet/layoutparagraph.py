@@ -4,10 +4,10 @@ from reportlab.platypus import Flowable, Paragraph
 
 from flowable import Paragraph, Table
 from placed import PlacedContent, PlacedParagraphContent, PlacedTableContent
-from sheet.common import Rect
-from sheet.model import Element, ElementType, Run
-from sheet.pdf import PDF
-from sheet.style import Style
+from common import Rect
+from model import Element, ElementType, Run
+from pdf import PDF
+from style import Style
 
 
 def place_within(p: Union[Paragraph, Table], r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedContent:

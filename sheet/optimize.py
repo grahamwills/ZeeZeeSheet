@@ -7,7 +7,7 @@ from typing import Generic, Iterable, Tuple, TypeVar
 import numpy as np
 import scipy.optimize
 
-from sheet.common import configured_logger
+from common import configured_logger
 
 T = TypeVar('T')
 
@@ -68,60 +68,43 @@ class Optimizer(Generic[T]):
         LOGGER.fine("[%s] %s -> %s -> %1.3f", self.name, _pretty(x), item, f)
         return f, item
 
-    def run(self, method='COBYLA') -> (T, (float, [float])):
-        """
-            Run the optimization
-            :param method method: Layout method
-            :return: the optimal score, created item, and parameters
-        """
-
-        def constraint_func(p):
-            try:
-                params_to_x(p)
-                return 0
-            except BadParametersError as err:
-                return err.badness
-
+    def run(self) -> (T, (float, [float])):
         x0 = np.asarray((1.0 / self.k,) * (self.k - 1))
 
         start = time.perf_counter()
 
-        if method == 'COBYLA':
-            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), x0=x0, method='COBYLA',
-                                               constraints={'type': 'ineq', 'fun': constraint_func})
-        elif method.lower() == 'nelder-mead':
-            if self.k == 2:
-                initial_simplex = [[0.4], [0.6]]
-            elif self.k == 3:
-                initial_simplex = [[0.3, 0.3], [0.4, 0.3], [0.3, 0.4]]
-            else:
-                lo = 1 / 1.2 / self.k
-                initial_simplex = [[2 / 3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
-            solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), method='Nelder-Mead', x0=x0,
-                                               bounds=[(0, 1)] * (self.k - 1),
-                                               options={'initial_simplex': initial_simplex})
-        else:
-            raise ValueError("Unknown optimize method '%s'", method)
-
+        initial_simplex = self._unit_simplex()
+        solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), method='Nelder-Mead', x0=x0,
+                                           bounds=[(0, 1)] * (self.k - 1),
+                                           options={'initial_simplex': initial_simplex})
         duration = time.perf_counter() - start
 
         if hasattr(solution, 'success') and not solution.success:
-            LOGGER.info("[%s]: Failed using %s in %1.2fs after %d evaluations: %s", self.name, method, duration,
-                        solution.nfev,
-                        solution.message)
+            LOGGER.info("[%s]: Failed using nelder-mead in %1.2fs after %d evaluations: %s", self.name, duration,
+                        solution.nfev, solution.message)
             results = None, (math.inf, None)
         else:
             f, item = self.score_params(tuple(solution.x))
             assert f == solution.fun
             results = item, (f, params_to_x(solution.x))
-            LOGGER.info("[%s]: Solved using %s in %1.2fs with %d evaluations: %s -> %s -> %1.3f",
-                        self.name, method, duration, solution.nfev, _pretty(solution.x), item, f)
+            LOGGER.info("[%s]: Solved using nelder-mead in %1.2fs with %d evaluations: %s -> %s -> %1.3f",
+                        self.name, duration, solution.nfev, _pretty(solution.x), item, f)
 
         if hasattr(_score, 'cache_info'):
             LOGGER.fine("Optimizer cache info = %s", str(_score.cache_info()).replace('CacheInfo', ''))
             _score.cache_clear()
 
         return results
+
+    def _unit_simplex(self):
+        if self.k == 2:
+            initial_simplex = [[0.4], [0.6]]
+        elif self.k == 3:
+            initial_simplex = [[0.3, 0.3], [0.4, 0.3], [0.3, 0.4]]
+        else:
+            lo = 1 / 1.2 / self.k
+            initial_simplex = [[2 / 3 if j == i else lo for j in range(self.k - 1)] for i in range(self.k)]
+        return initial_simplex
 
 
 def divide_space(x: [float], total: int, minval: int, granularity=1) -> Tuple[int]:

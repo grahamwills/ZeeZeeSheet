@@ -26,44 +26,44 @@ handlers:
     backupCount: 5
     level: DEBUG
     formatter: logfile
-    filename: ../tmp/logs/log-zee-sheet.txt
+    filename: ../tmp/logs/log-zee-txt
     encoding: utf8
     when: midnight
 
 
 loggers:
 
-  sheet.optimize:
+  optimize:
     level: WARNING
     handlers: [ important, file ]
     propagate: no
 
-  sheet.placement:
+  placement:
     level: DEBUG
     handlers: [ important, file ]
     propagate: no
 
-  sheet.layout:
+  layout:
     level: DEBUG
     handlers: [ important, file ]
     propagate: no
 
-  sheet.layoutsection:
+  layoutsection:
     level: DEBUG
     handlers: [ important, file ]
     propagate: no
 
-  sheet.layoutblock:
+  layoutblock:
     level: DEBUG
     handlers: [ important, file ]
     propagate: no
 
-  sheet:
+  pf2:
     level: DEBUG
     handlers: [ important, file ]
     propagate: no
 
-  sheet.reader:
+  reader:
     level: DEBUG
     handlers: [ important, file ]
     propagate: no

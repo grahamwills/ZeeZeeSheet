@@ -8,8 +8,8 @@ import warnings
 from typing import List, Optional, Tuple
 
 from placed import PlacedContent, PlacedGroupContent
-from sheet.common import Rect, configured_logger
-from sheet.optimize import Optimizer, divide_space
+from common import Rect, configured_logger
+from optimize import Optimizer, divide_space
 
 LOGGER = configured_logger(__name__)
 
@@ -52,7 +52,7 @@ class ColumnOptimizer(Optimizer):
 
         stddev = statistics.stdev(c.height for c in column_bounds) / 10
 
-        # Increase the error qaudratically  as it gets very far from balanced
+        # Increase the error quadratically  as it gets very far from balanced
         stddev *= 1 + max(0, max_height / min_height - 1) ** 2
 
         breaks = sum(c.error_from_breaks(30, 3) for c in columns)
@@ -189,13 +189,12 @@ def stack_together(bounds, columns, equal, padding, placeables):
     equal = equal in {True, 'True', 'true', 'yes', 'y', '1'}
     if equal:
         LOGGER.info("Allocating %d items in %d equal columns: %s", len(placeables), k, bounds)
-        widths = divide_space([1] * k, columns_optimizer.available_width, MIN_COLUMN_WIDTH, granularity=5)
         columns = columns_optimizer.make_for_known_widths()
         return PlacedGroupContent(columns, bounds)
     else:
         LOGGER.info("Allocating %d items in %d unequal columns: %s", len(placeables), k, bounds)
         start = time.process_time()
-        columns, (score, div) = columns_optimizer.run(method='nelder-mead')
+        columns, (score, div) = columns_optimizer.run()
         widths = columns_optimizer.vector_to_widths(div)
         LOGGER.info("Completed in %1.2fs, widths=%s, score=%1.3f", time.process_time() - start, widths, score)
         return PlacedGroupContent(columns, bounds)
@@ -214,6 +213,7 @@ def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, option
 
     # If it fits completely, we are done
     all = stack_together(bounds, columns, equal, padding, placeables)
+    LOGGER.debug("Binary Search: Trying to fit all (%d), result = %s", len(placeables), _fits(all, bounds))
     if _fits(all, bounds):
         return [all]
 
@@ -254,7 +254,7 @@ def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, option
             mid = hi - 1
 
         trial = stack_together(bounds, columns, equal, padding, placeables[:mid])
-        LOGGER.debug("Binary Search: Trying %d of %d items", mid, len(placeables))
+        LOGGER.info("Binary Search: Trying %d of %d items, result = %s", mid, len(placeables), _fits(trial, bounds))
         if _fits(trial, bounds):
             lo = mid
             lo_bottom = trial.actual.bottom

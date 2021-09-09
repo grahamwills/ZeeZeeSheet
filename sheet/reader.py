@@ -10,9 +10,9 @@ import docutils.utils
 from docutils.parsers.rst import Directive, directives
 from reportlab.lib.units import cm, inch, mm
 
-from sheet.common import configured_logger, parse_options
-from sheet.model import Block, Method, Run, Section, Sheet, Spacing
-from sheet.style import Style, Stylesheet
+from common import configured_logger, parse_options
+from model import Block, Method, Run, Section, Sheet, Spacing
+from style import Style, Stylesheet
 
 LOGGER = configured_logger(__name__)
 
