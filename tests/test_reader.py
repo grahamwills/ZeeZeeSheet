@@ -103,8 +103,9 @@ def test_images():
             """
     ))
     assert dump(
-        sheet) == 'Section< Block["Picture": <im1.jpg>abc, def], Block["Second": <im2.jpg>], Block["Third": A-B-C], ' \
-                  'Block[<im3.jpg>], Block[Fourth] >'
+            sheet) == 'Section< Block["Picture": <im1.jpg>abc, def], Block["Second": <im2.jpg>], Block["Third": ' \
+                      'A-B-C], ' \
+                      'Block[<im3.jpg>], Block[Fourth] >'
 
 
 def test_bad():

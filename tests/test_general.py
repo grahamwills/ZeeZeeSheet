@@ -1,22 +1,22 @@
 from pathlib import Path
 
-from colour import Color
-
 import common
-import layoutparagraph
-import table
-from layoutblock import layout_block
+import flowable
+from colour import Color
+from layout.common import Rect
+from layout.model import Block, Run
+from layout.pdf import PDF
 from placed import PlacedTableContent
-from sheet.common import Rect
-from sheet.model import Block, Run
-from sheet.pdf import PDF
 from style import Stylesheet
+
+import layoutparagraph
+from layoutblock import layout_block
 
 
 def test_table_creation():
     stylesheet = Stylesheet()
     stylesheet.define('default', font='Gotham', size=10)
-    pdf = PDF(Path("/tmp/killme.pdf"), stylesheet, (500, 1000), True)
+    pdf = PDF(Path("/_tmp/killme.pdf"), stylesheet, (500, 1000), True)
     bounds = Rect.make(left=0, top=0, right=120, bottom=100)
 
     r1 = Run().add("Kung Fu Points:", 'default')
@@ -29,7 +29,7 @@ def test_table_creation():
         [layoutparagraph.make_paragraph(r3, pdf), layoutparagraph.make_paragraph(r4, pdf)]
     ]
 
-    t = table.as_table(cells, bounds, pdf, 10)
+    t = flowable.as_table(cells, bounds, pdf, 10)
     content = PlacedTableContent(t, bounds, pdf)
 
     assert content.actual == Rect.make(left=0, top=0, right=120, bottom=106)
@@ -43,7 +43,7 @@ def test_block_table_creation():
     stylesheet.define('default', color=Color('white'), background=Color('navy'), borderWidth=1, align='left', size=10,
                       font='Gotham')
     stylesheet.define('banner', font='Gotham', size=10)
-    pdf = PDF(Path("/tmp/killme.pdf"), (500, 1000), True)
+    pdf = PDF(Path("/_tmp/killme.pdf"), (500, 1000), True)
     bounds = Rect.make(left=0, top=0, right=120, bottom=100)
 
     block = Block()

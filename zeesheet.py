@@ -6,11 +6,12 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from sheet.layoutsheet import layout_sheet
-from sheet import common, pdf, reader, pf2, dnd4e
-from sheet.common import DATA_DIR
+import converters
+from layout import PDF, layout_sheet
+from structure import reader
+from util import DATA_DIR, configured_logger
 
-LOGGER = common.configured_logger(__name__)
+LOGGER = configured_logger(__name__)
 
 
 def find_file(d, ext) -> Optional[Path]:
@@ -43,20 +44,20 @@ if __name__ == '__main__':
         file_4e = find_file(d, 'dnd4e')
         if file_4e:
             print("  .. Converting '%s' to ReStructuredText file" % file_4e.name)
-            result = dnd4e.convert(file_4e)
+            result = converters.convert_dnd4e(file_4e)
             print("  .. ReStructuredText file = %s" % result)
 
         file_pf2 = find_file(d, 'json')
         if file_pf2:
             print("  .. Converting '%s' to ReStructuredText file" % file_pf2.name)
-            result = pf2.convert(file_pf2)
+            result = converters.convert_pf2(file_pf2)
             print("  .. ReStructuredText file = %s" % result)
 
         file_rst = find_file(d, 'rst')
         if file_rst:
             sheet = reader.read_sheet(file_rst)
             out = file_rst.parent.joinpath(file_rst.stem + '.pdf')
-            context = pdf.PDF(out, sheet.pagesize, debug=DEBUG)
+            context = PDF(out, sheet.pagesize, debug=DEBUG)
             layout_sheet(sheet, context)
             subprocess.run(['open', out], check=True)
         else:

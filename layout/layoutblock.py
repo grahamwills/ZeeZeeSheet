@@ -8,18 +8,15 @@ from typing import Callable, Optional, Tuple
 
 from reportlab.platypus import Image
 
-import layoutparagraph
-from placed import ErrorContent, PlacedClipContent, PlacedContent, PlacedGroupContent, PlacedImageContent, \
+from structure import Block, Run, Spacing, Style
+from util import Margins, Optimizer, Rect, configured_logger, divide_space
+from .flowable import badges_layout, one_line_flowable, table_layout, thermometer_layout
+from .layoutparagraph import make_paragraph
+from .pdf import PDF
+from .placed import ErrorContent, PlacedClipContent, PlacedContent, PlacedGroupContent, PlacedImageContent, \
     PlacedParagraphContent, PlacedRectContent
-from sheet import common
-from common import Margins, Rect
-from model import Block, Run, Spacing
-from optimize import Optimizer, divide_space
-from pdf import PDF
-from style import Style
-from table import badges_layout, one_line_flowable, table_layout, thermometer_layout
 
-LOGGER = common.configured_logger(__name__)
+LOGGER = configured_logger(__name__)
 
 
 def inset_for_content_style(style: Style, spacing: Spacing):
@@ -198,7 +195,7 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> Optional[PlacedCon
     # Move up by the excess leading
     b = bounds.move(dy=-(style.size * 0.2))
     for item in block.content:
-        p = layoutparagraph.make_paragraph(item, pdf)
+        p = make_paragraph(item, pdf)
         placed = PlacedParagraphContent(p, b, pdf)
         results.append(placed)
         b = Rect.make(top=placed.actual.bottom + padding, left=b.left, right=b.right, bottom=b.bottom)

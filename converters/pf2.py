@@ -3,9 +3,9 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Dict, List, Optional
 
-import common
+from util import configured_logger
 
-LOGGER = common.configured_logger(__name__)
+LOGGER = configured_logger(__name__)
 
 
 def titled(name: str) -> str:
@@ -170,13 +170,14 @@ def make_usage(target, range, area):
 def action_key(a) -> str:
     traits = "_".join(sorted(a.get('Trait', 'zz').split(',')))
     color = to_color(a['compset'])
-    return traits + '_' +color + a['name']
+    return traits + '_' + color + a['name']
 
 
 def extract_actions(items: List[Dict]) -> Optional[str]:
     lines = []
 
-    abilities = pop(items, 'Ability', isAction=True) + pop(items, 'FocSpell') + pop(items, 'Spell') + pop(items, 'Feat', isAction=True) \
+    abilities = pop(items, 'Ability', isAction=True) + pop(items, 'FocSpell') + pop(items, 'Spell') + pop(items, 'Feat',
+                                                                                                          isAction=True) \
                 + pop(items, 'MagicItem', isAction=True)
 
     for a in sorted(abilities, key=action_key):
@@ -512,7 +513,7 @@ def watermark(dir):
         return ''
 
 
-def convert(input: Path) -> Path:
+def convert_pf2(input: Path) -> Path:
     with open(input, 'r') as f:
         base = json.load(f)
     actors = base['actors']

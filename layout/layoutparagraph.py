@@ -1,13 +1,12 @@
 from typing import List, Optional, Sequence, Union
 
-from reportlab.platypus import Flowable, Paragraph
+from reportlab.platypus import Flowable
 
-from flowable import Paragraph, Table
-from placed import PlacedContent, PlacedParagraphContent, PlacedTableContent
-from common import Rect
-from model import Element, ElementType, Run
-from pdf import PDF
-from style import Style
+from structure import Element, ElementType, Run, Style
+from util import Rect
+from .flowables import Paragraph, Table
+from .pdf import PDF
+from .placed import PlacedContent, PlacedParagraphContent, PlacedTableContent
 
 
 def place_within(p: Union[Paragraph, Table], r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedContent:
@@ -99,7 +98,7 @@ def split_into_paragraphs(run, pdf, styles: List[Style] = None) -> List[Paragrap
     return row
 
 
-def _add_to_row(row, elements:Sequence[Element], pdf: PDF, styles):
+def _add_to_row(row, elements: Sequence[Element], pdf: PDF, styles):
     added = len(row)
     if styles and added < len(styles) and styles[added] is not None:
         elements = [e.with_style(e.style.clone_using(styles[added])) for e in elements]

@@ -1,6 +1,6 @@
 import pytest
 
-from sheet.optimize import BadParametersError, divide_space
+from layout.optimize import BadParametersError, divide_space
 
 
 @pytest.mark.parametrize("input,total,min,output", [

@@ -11,10 +11,10 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Flowable
 
-from roughen import Roughener
-from common import Rect, configured_logger
-from model import Element, ElementType, Run
-from style import DEFAULT, Style
+from structure.model import Element, ElementType, Run
+from structure.style import DEFAULT, Style
+from util.common import Rect, configured_logger
+from util.roughen import LineModifier
 
 LOGGER = configured_logger(__name__)
 
@@ -146,16 +146,16 @@ class PDF(canvas.Canvas):
     def __hash__(self):
         return id(self)
 
-    def _make_roughener(self, style=None) -> Optional[Roughener]:
+    def _make_roughener(self, style=None) -> Optional[LineModifier]:
         style = style or self.style
         if style:
             if style.roughness:
-                return Roughener(self, 'rough', style.roughness)
+                return LineModifier(self, 'rough', style.roughness)
             if style.teeth:
-                return Roughener(self, 'teeth', style.teeth)
+                return LineModifier(self, 'teeth', style.teeth)
         return None
 
-    def rect_to_path(self, b:Rect, style:Style):
+    def rect_to_path(self, b: Rect, style: Style):
         roughener = self._make_roughener(style)
         if roughener:
             return roughener.rect_to_path(b.left, b.top, b.width, b.height)

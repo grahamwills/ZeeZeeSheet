@@ -46,7 +46,7 @@ class Style:
 
         # Ensure we do not share the sub_style dictionary
         result.sub_styles = copy(self.sub_styles)
-        result.name = result.name + "*"
+        result.name += "*"
 
         for k, v in kwargs.items():
             if v is not None and k not in {'name', 'sub_styles', 'inherit'}:
@@ -86,7 +86,7 @@ DEFAULT = Style('default', inherit='---', color=Color('black'), borderWidth=0.5,
                 align='fill', sub_styles={'strong': BOLD, 'emphasis': ITALIC})
 
 
-class Stylesheet():
+class Stylesheet:
     def __init__(self):
         super().__init__()
         self.items = OrderedDict([('default', DEFAULT.clone()), ('bold', BOLD.clone()), ('italic', ITALIC.clone())])

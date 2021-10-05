@@ -1,7 +1,7 @@
 import subprocess
 
+from layout.pdf import PDF
 from placed import PlacedContent
-from sheet.pdf import PDF
 
 
 def debug_placed_content(p: PlacedContent, pdf: PDF):
@@ -16,4 +16,4 @@ def debug_placed_content(p: PlacedContent, pdf: PDF):
     p.draw()
     pdf.showPage()
     pdf.save()
-    subprocess.run(['open', "/tmp/killme.pdf"], check=True)
+    subprocess.run(['open', "/_tmp/killme.pdf"], check=True)

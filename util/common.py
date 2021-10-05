@@ -68,7 +68,7 @@ class Point(NamedTuple):
     def __sub__(self, other) -> Point:
         return Point(self.x - other.x, self.y - other.y)
 
-    def __abs__(self)-> float:
+    def __abs__(self) -> float:
         return (self.x ** 2 + self.y ** 2) ** 0.5
 
     def __neg__(self) -> Point:
@@ -76,7 +76,6 @@ class Point(NamedTuple):
 
     def __mul__(self, m) -> Point:
         return Point(m * self.x, m * self.y)
-
 
     def __truediv__(self, m) -> Point:
         return Point(self.x / m, self.y / m)
@@ -126,9 +125,9 @@ class Rect(namedtuple('Rect', 'left right top bottom')):
 
     @classmethod
     def union(cls, *args):
-        all = list(args[0]) if len(args) == 1 else list(args)
-        u = all[0]
-        for r in all[1:]:
+        mix = list(args[0]) if len(args) == 1 else list(args)
+        u = mix[0]
+        for r in mix[1:]:
             u = Rect.make(left=min(r.left, u.left), top=min(r.top, u.top),
                           right=max(r.right, u.right), bottom=max(r.bottom, u.bottom))
         return u
@@ -195,16 +194,16 @@ _logging_initialized = False
 
 
 def _initialize_logging():
-    logging.FINE = 8
-    logging.addLevelName(logging.FINE, "FINE")
+    logging.FINE = FINE = 8
+    logging.addLevelName(FINE, "FINE")
 
     def fine(self, message, *args, **kws):
-        if self.isEnabledFor(logging.FINE):
-            self._log(logging.FINE, message, args, **kws)
+        if self.isEnabledFor(FINE):
+            self._log(FINE, message, args, **kws)
 
     logging.Logger.fine = fine
 
-    path = Path(__file__).parent.joinpath('resources/logging.yaml')
+    path = Path(__file__).parent.joinpath('logging.yaml')
     if os.path.exists(path):
         with open(path, 'rt') as f:
             try:

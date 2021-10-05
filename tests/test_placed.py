@@ -2,23 +2,23 @@ from collections import namedtuple
 from pathlib import Path
 
 import pytest
-from colour import Color
+from flowable import line_info
+from flowables import Table
+from layout.common import Rect
+from layout.model import Run
+from layout.pdf import PDF
+from layout.style import Style
+from placed import PlacedGroupContent, PlacedParagraphContent, PlacedRectContent, PlacedTableContent, \
+    calculate_unused_width_for_group
 from reportlab.platypus import Paragraph
 
 import layoutparagraph
 from conftest import debug_placed_content
-from flowable import Table, line_info
-from placed import PlacedGroupContent, PlacedParagraphContent, PlacedRectContent, PlacedTableContent, \
-    calculate_unused_width_for_group
-from sheet.common import Rect
-from sheet.model import Run
-from sheet.pdf import PDF
-from sheet.style import Style, Stylesheet
 
 
 @pytest.fixture
 def pdf() -> PDF:
-    return PDF(Path("/tmp/killme.pdf"), (500, 1000), debug=True)
+    return PDF(Path("/_tmp/killme.pdf"), (500, 1000), debug=True)
 
 
 @pytest.fixture
@@ -227,7 +227,7 @@ def test_table_with_terrible_wraps(simple, styled, pdf):
 
 
 def test_line_info():
-    pdf = PDF(Path("/tmp/killme.pdf"), (500, 1000), True)
+    pdf = PDF(Path("/_tmp/killme.pdf"), (500, 1000), True)
 
     run = Run().add("basic test", 'default')
 
@@ -240,7 +240,7 @@ def test_line_info():
 
 
 def test_line_info_for_boxes():
-    pdf = PDF(Path("/tmp/killme.pdf"), (500, 1000), True)
+    pdf = PDF(Path("/_tmp/killme.pdf"), (500, 1000), True)
 
     run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 

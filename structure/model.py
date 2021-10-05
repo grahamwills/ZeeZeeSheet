@@ -11,7 +11,7 @@ from reportlab.lib.rl_accel import unicode2T1
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import Font
 
-from style import Style
+from .style import Style
 
 BLACK = Color('black')
 

@@ -654,7 +654,6 @@ class DnD4E:
     def divider(self) -> str:
         return '-' * 40
 
-
     def make_replacements(self, p: Power) -> List[(str, str)]:
         """ replace common text in hits, misses and effects"""
 
@@ -779,7 +778,7 @@ def xml_file_to_dict(filename):
     return dict
 
 
-def convert(file: Path) -> Path:
+def convert_dnd4e(file: Path) -> Path:
     rules = read_rules_elements()
     dnd = read_dnd4e(file, rules)
     out = dnd.to_rst()

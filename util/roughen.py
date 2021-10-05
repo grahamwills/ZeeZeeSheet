@@ -7,16 +7,16 @@ from typing import Callable, List, Sequence
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.pdfgen.pathobject import PDFPathObject
 
-from common import Point
+from .common import Point
 
 
-class Roughener:
+class LineModifier:
 
     def __init__(self, canvas: Canvas, method: str = 'rough', σ=1):
         """
             Class used to add a rough effect to drawing constructs
+            :param str method:'rough' or 'teeth'
             :param float σ: The size of the roughness effect. The range (0, 3] is generally good
-            :param float step: Break up lines into steps of about this size to add roughness
         """
 
         self.canvas = canvas

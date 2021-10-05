@@ -10,16 +10,16 @@ import docutils.utils
 from docutils.parsers.rst import Directive, directives
 from reportlab.lib.units import cm, inch, mm
 
-from common import configured_logger, parse_options
-from model import Block, Method, Run, Section, Sheet, Spacing
-from style import Style, Stylesheet
+from util import configured_logger, parse_options
+from .model import Block, Method, Run, Section, Sheet, Spacing
+from .style import Style, Stylesheet
 
 LOGGER = configured_logger(__name__)
 
 LOG_UNHANDLED = True
 
 
-class command(docutils.nodes.important):
+class Command(docutils.nodes.important):
     def __init__(self, name: str, options: str):
         super().__init__()
         self.name = name
@@ -32,7 +32,7 @@ class DirectiveHandler(Directive):
     has_content = False
 
     def run(self):
-        return [command(self.name, self.arguments)]
+        return [Command(self.name, self.arguments)]
 
 
 directives.register_directive('page', DirectiveHandler)
@@ -182,7 +182,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         self.status = Status()
         self.sheet = Sheet()
 
-    def apply_options(self, item: object, options: List[str], prefix=''):
+    def apply_options(self, item, options: List[str], prefix=''):
         opts = self._options_as_dict(options)
 
         # Handle method
@@ -243,7 +243,7 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
         return opts
 
-    def visit_command(self, node: command):
+    def visit_Command(self, node: Command):
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         LOGGER.debug("Setting directive '%s' <- %s", node.name, node.options)
         self.status.directives[node.name] = node.options

@@ -7,9 +7,9 @@ import time
 import warnings
 from typing import List, Optional, Tuple
 
-from placed import PlacedContent, PlacedGroupContent
-from common import Rect, configured_logger
-from optimize import Optimizer, divide_space
+from .placed import PlacedContent, PlacedGroupContent
+from util import Rect, configured_logger
+from util import Optimizer, divide_space
 
 LOGGER = configured_logger(__name__)
 

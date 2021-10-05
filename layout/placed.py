@@ -6,18 +6,16 @@ import math
 from copy import copy
 from typing import List
 
-from colour import Color
 from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Image
 
-from sheet import common
-from common import Rect
-from flowable import Paragraph, Table, line_info
-from pdf import DrawMethod, PDF
-from style import Style
+from structure import Style
+from util import Rect, configured_logger
+from .flowables import Paragraph, Table, line_info
+from .pdf import DrawMethod, PDF
 
-LOGGER = common.configured_logger(__name__)
+LOGGER = configured_logger(__name__)
 
 
 class PlacedContent(abc.ABC):
@@ -67,9 +65,8 @@ class PlacedContent(abc.ABC):
         self.requested = self.requested.move(dx=dx, dy=dy)
         return self
 
-    def styled(self, style:Style):
+    def styled(self, style: Style):
         return self.pdf.using_style(style)
-
 
     def error_from_variance(self, multiplier: float):
         """ Internal variance in free space"""
@@ -202,6 +199,7 @@ class PlacedPathContent(PlacedContent):
     def __str__(self) -> str:
         return "Path(%s)" % str(self.path)
 
+
 class PlacedClipContent(PlacedContent):
 
     def __init__(self, path: PDFPathObject, bounds: Rect, pdf: PDF):
@@ -211,14 +209,12 @@ class PlacedClipContent(PlacedContent):
     def draw(self):
         x = self.requested.left
         y = self.pdf.page_height - self.requested.bottom
-        self.pdf.translate(x,y)
+        self.pdf.translate(x, y)
         self.pdf.clipPath(self.path, stroke=0, fill=0)
         self.pdf.translate(-x, -y)
 
     def __str__(self) -> str:
         return "Clip(%s)" % str(self.path)
-
-
 
 
 class ErrorContent(PlacedRectContent):

@@ -7,12 +7,12 @@ from typing import List
 
 from reportlab.platypus import Image
 
-from layoutblock import layout_block
-from layoutsection import stack_in_columns
-from placed import PlacedContent, PlacedGroupContent
-from common import Margins, Rect, configured_logger
-from model import Block, Sheet
-from pdf import PDF
+from structure import Block, Sheet
+from util import Margins, Rect, configured_logger
+from .layoutblock import layout_block
+from .layoutsection import stack_in_columns
+from .pdf import PDF
+from .placed import PlacedContent, PlacedGroupContent
 
 LOGGER = configured_logger(__name__)
 

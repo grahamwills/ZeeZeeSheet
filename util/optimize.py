@@ -7,7 +7,7 @@ from typing import Generic, Iterable, Tuple, TypeVar
 import numpy as np
 import scipy.optimize
 
-from common import configured_logger
+from util import configured_logger
 
 T = TypeVar('T')
 
