@@ -9,8 +9,8 @@ from reportlab.platypus import Image
 
 from structure import Block, Sheet
 from util import Margins, Rect, configured_logger
-from .layoutblock import layout_block
-from .layoutsection import stack_in_columns
+from .flowable import layout_block
+from .section import stack_in_columns
 from .pdf import PDF
 from .placed import PlacedContent, PlacedGroupContent
 

@@ -9,8 +9,7 @@ from layout.pdf import PDF
 from placed import PlacedTableContent
 from style import Stylesheet
 
-import layoutparagraph
-from layoutblock import layout_block
+from flowable import layout_block
 
 
 def test_table_creation():
@@ -25,8 +24,8 @@ def test_table_creation():
     r4 = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
     cells = [
-        [layoutparagraph.make_paragraph(r1, pdf), layoutparagraph.make_paragraph(r2, pdf)],
-        [layoutparagraph.make_paragraph(r3, pdf), layoutparagraph.make_paragraph(r4, pdf)]
+        [flowable.make_paragraph(r1, pdf), flowable.make_paragraph(r2, pdf)],
+        [flowable.make_paragraph(r3, pdf), flowable.make_paragraph(r4, pdf)]
     ]
 
     t = flowable.as_table(cells, bounds, pdf, 10)

@@ -2,6 +2,8 @@ from collections import namedtuple
 from pathlib import Path
 
 import pytest
+
+import flowable
 from flowable import line_info
 from flowables import Table
 from layout.common import Rect
@@ -12,7 +14,6 @@ from placed import PlacedGroupContent, PlacedParagraphContent, PlacedRectContent
     calculate_unused_width_for_group
 from reportlab.platypus import Paragraph
 
-import layoutparagraph
 from conftest import debug_placed_content
 
 
@@ -231,7 +232,7 @@ def test_line_info():
 
     run = Run().add("basic test", 'default')
 
-    p = layoutparagraph.make_paragraph(run, pdf)
+    p = flowable.make_paragraph(run, pdf)
     p.wrapOn(pdf, 10, 100)
 
     bad_breaks, ok_breaks, unused = line_info(p)
@@ -244,7 +245,7 @@ def test_line_info_for_boxes():
 
     run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
-    p = layoutparagraph.make_paragraph(run, pdf)
+    p = flowable.make_paragraph(run, pdf)
     p.wrapOn(pdf, 20, 100)
     bad_breaks, ok_breaks, unused = line_info(p)
     assert bad_breaks == 0

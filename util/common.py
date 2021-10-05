@@ -188,10 +188,11 @@ def _consistent(low, high, size, description):
 # LOGGING #######################################################################################################
 
 _logging_initialized = False
+FINE = 8
 
 
 def _initialize_logging():
-    logging.FINE = FINE = 8
+    logging.FINE = FINE
     logging.addLevelName(FINE, "FINE")
 
     def fine(self, message, *args, **kws):

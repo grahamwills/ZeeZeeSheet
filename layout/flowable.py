@@ -1,20 +1,17 @@
 import warnings
 from copy import copy
 from functools import lru_cache
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 from reportlab.pdfbase import pdfmetrics
-from reportlab.platypus import Flowable, Paragraph
+from reportlab.platypus import Flowable, Image, Paragraph
 
-from .layoutparagraph import align_vertically_within, from_text, make_paragraph, split_into_paragraphs
+from structure import Block, Element, ElementType, Run, Spacing, Style
+from util import BadParametersError, Margins, Optimizer, Rect, configured_logger, divide_space
 from .flowables import Paragraph, Table
 from .pdf import PDF
-from .placed import PlacedContent, PlacedGroupContent, PlacedParagraphContent, PlacedPathContent, PlacedRectContent, \
-    PlacedTableContent
-from structure import Block, Element, ElementType, Run
-from structure import Style
-from util import Rect, configured_logger
-from util import BadParametersError, Optimizer, divide_space
+from .placed import ErrorContent, PlacedClipContent, PlacedContent, PlacedGroupContent, PlacedImageContent, \
+    PlacedParagraphContent, PlacedPathContent, PlacedRectContent, PlacedTableContent
 
 LOGGER = configured_logger(__name__)
 
@@ -235,7 +232,7 @@ def thermometer_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
         contents.append(PlacedRectContent(r2, thermo_style, PDF.FILL, pdf, rounded=rounded))
 
         placed0 = align_vertically_within(cell[0], r1.resize(width=r1.width - W3), pdf,
-                                                           metrics_adjust=-0.2)
+                                          metrics_adjust=-0.2)
         placed1 = align_vertically_within(cell[1], r2, pdf, metrics_adjust=-0.2)
 
         contents.append(placed0)
@@ -389,3 +386,331 @@ def badges_layout(block: Block, bounds: Rect, pdf: PDF) -> PlacedContent:
         left = right + padding
 
     return PlacedGroupContent(items, bounds)
+
+
+def inset_for_content_style(style: Style, spacing: Spacing):
+    inset = 0
+    if style.has_border():
+        inset += style.borderWidth
+    if style.has_border() or style.background:
+        inset += spacing.margin
+
+    return round(inset)
+
+
+@lru_cache
+def layout_block(block: Block, outer: Rect, pdf: PDF):
+    has_title = block.title and block.title_method.name not in {'hidden', 'none'}
+
+    # Reduce the space to account for borders and gaps for background fill
+    inset = inset_for_content_style(block.style, block.spacing)
+    inner = outer - Margins.balanced(inset)
+
+    items = []
+
+    if has_title:
+        # Create title and move the innertop down to avoid it
+        title = banner_title_layout(block, outer, inset, pdf)
+        inner = Rect(left=inner.left, right=inner.right, bottom=inner.bottom,
+                     top=title.actual.bottom + block.spacing.padding)
+    else:
+        title = None
+
+    content = content_layout(block, inner, pdf)
+
+    # Adjust outer to cover the actual content
+    outer = Rect.make(left=outer.left, right=outer.right, top=outer.top,
+                      bottom=content.actual.bottom + block.spacing.margin)
+
+    if has_title:
+        path = pdf.rect_to_path(outer, block.style)
+        clip = PlacedClipContent(path, outer, pdf)
+    else:
+        clip = None
+
+    if block.style.has_border():
+        post = PlacedRectContent(outer, block.style, PDF.STROKE, pdf)
+    else:
+        post = None
+
+    if block.style.background:
+        back = PlacedRectContent(outer, block.style, PDF.FILL, pdf)
+    else:
+        back = None
+
+    main = PlacedGroupContent([clip, back, title, content], outer)
+    if post:
+        return PlacedGroupContent([main, post], outer)
+    else:
+        return main
+
+
+def content_layout(block, inner: Rect, pdf: PDF):
+    method = block.method.name
+    if method.startswith('therm'):
+        content_layout = thermometer_layout
+    elif method == 'badge':
+        content_layout = badges_layout
+    else:
+        if method != 'default':
+            warnings.warn("Unknown block method '%s'. Using default instead" % method)
+        if block.needs_table():
+            content_layout = table_layout
+        else:
+            content_layout = paragraph_layout
+
+    if block.image:
+        return image_layout(block, inner, pdf, other_layout=content_layout)
+    else:
+        return content_layout(block, inner, pdf)
+
+
+class ImagePlacement(Optimizer):
+
+    def __init__(self, block: Block, bounds: Rect, pdf: PDF, other_layout: Callable, style) -> None:
+        super().__init__(2)
+        self.style = style
+        self.bounds = bounds
+        self.block = block
+        self.other_layout = other_layout
+        self.pdf = pdf
+
+    def make(self, x: Tuple[float]) -> PlacedGroupContent:
+        outer = self.bounds
+
+        padding = self.block.spacing.padding
+        widths = divide_space(x, outer.width - padding, 10 + (padding + 1) // 2)
+
+        LOGGER.fine("Allocating %d to image, %d to other", widths[0], widths[1])
+
+        if self.on_right():
+            b_image = outer.make_column(right=outer.right, width=widths[0])
+            b_other = outer.make_column(left=outer.left, width=widths[1])
+        else:
+            b_image = outer.make_column(left=outer.left, width=widths[0])
+            b_other = outer.make_column(right=outer.right, width=widths[1])
+
+        other = self.other_layout(self.block, b_other, self.pdf)
+        b_image = b_image.resize(height=min(b_image.height, other.requested.height))
+        image = self.place_image(b_image)
+        return PlacedGroupContent([image, other], outer)
+
+    def on_right(self):
+        return self.block.image.get('align', 'left') == 'right'
+
+    def score(self, placed: PlacedGroupContent) -> float:
+        # Want them about the same height if possible
+        size_diff = (placed[0].actual.height - placed[1].actual.height) ** 2
+        score = size_diff + placed.error_from_breaks(50, 1) + placed.error_from_variance(1) - placed[0].actual.width
+        LOGGER.fine("Score: %13f (diff=%1.3f, breaks=%1.3f, var=%1.3f", score, size_diff,
+                    placed.error_from_breaks(50, 1), placed.error_from_variance(1))
+        return score
+
+    def place_image(self, bounds: Rect):
+        im = self.make_image(bounds)
+        return PlacedImageContent(im, bounds, self.style, self.pdf)
+
+    def make_image(self, bounds) -> Image:
+        im_info = self.block.image
+        file = self.pdf.base_dir.joinpath(im_info['uri'])
+        width = int(im_info['width']) if 'width' in im_info else None
+        height = int(im_info['height']) if 'height' in im_info else None
+        if width and height:
+            im = Image(file, width=width, height=height, lazy=0)
+        else:
+            im = Image(file, lazy=0)
+            w, h = im.imageWidth, im.imageHeight
+            if width:
+                im = Image(file, width=width, height=h * width / w, lazy=0)
+            elif height:
+                im = Image(file, height=height, width=w * height / h, lazy=0)
+            elif w > bounds.width:
+                # Fit to the column's width
+                im = Image(file, width=bounds.width, height=h * bounds.width / w, lazy=0)
+        return im
+
+
+def image_layout(block: Block, bounds: Rect, pdf: PDF, other_layout: Callable) -> PlacedContent:
+    placer = ImagePlacement(block, bounds, pdf, other_layout, block.style)
+    if block.content:
+        if 'height' in block.image or 'width' in block.image:
+            # It has a fixed size, so we can just use that
+            image = placer.place_image(bounds)
+            if placer.on_right():
+                image.move(dx=bounds.right - image.actual.right)
+                obounds = bounds.make_column(left=bounds.left, right=image.actual.left - block.spacing.padding)
+            else:
+                obounds = bounds.make_column(left=image.actual.right + block.spacing.padding, right=bounds.right)
+            other = other_layout(block, obounds, pdf)
+            return PlacedGroupContent([image, other], bounds)
+        else:
+            # Must optimize to find best image size
+            placed, (score, div) = placer.run()
+            LOGGER.debug("Placed image combination %s, score=%1.3f, division=%s", placed, score, div)
+            return placed if placed else ErrorContent(bounds, pdf)
+    else:
+        return placer.place_image(bounds)
+
+
+def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> Optional[PlacedContent]:
+    if not block.content:
+        return None
+
+    results = []
+    style = block.style
+
+    padding = block.spacing.padding
+
+    # Move up by the excess leading
+    b = bounds.move(dy=-(style.size * 0.2))
+    for item in block.content:
+        p = make_paragraph(item, pdf)
+        placed = PlacedParagraphContent(p, b, pdf)
+        results.append(placed)
+        b = Rect.make(top=placed.actual.bottom + padding, left=b.left, right=b.right, bottom=b.bottom)
+    if not results:
+        return None
+    elif len(results) == 1:
+        return results[0]
+    else:
+        return PlacedGroupContent(results, bounds)
+
+
+def banner_title_layout(block: Block, bounds: Rect, inset: int, pdf: PDF) -> PlacedContent:
+    # Banner needs a minimum padding around it
+    pad = block.spacing.padding
+    mgn = block.spacing.margin
+    m = Margins(left=max(inset, pad), right=max(inset, pad),
+                top=max(inset, mgn), bottom=max(inset, mgn))
+    bounds -= m
+
+    style = block.title_style
+    placed = []
+    plaque = bounds.resize(height=round(style.size) + block.spacing.padding)
+
+    title_mod = Run(block.title.items).with_style(style)
+    title = one_line_flowable(title_mod, plaque, block.spacing.padding, pdf)
+    extraLines = title.ok_breaks + title.bad_breaks
+    if extraLines:
+        plaque = plaque.resize(height=plaque.height + extraLines * (style.size * 1.2))
+
+    if style.background:
+        r = plaque + Margins(left=20, top=20, right=20, bottom=0)
+        placed.append(PlacedRectContent(r, style, PDF.FILL, pdf))
+
+    # Move the title up a little to account for the descender and lien spacing
+    dy = pdf.descender(style) + style.size * 0.1
+    title.move(dy=-dy)
+    placed.append(title)
+
+    return PlacedGroupContent(placed, bounds)
+
+
+def place_within(p: Union[Paragraph, Table], r: Rect, pdf: PDF, posX=0, posY=0, descent_adjust=0.3) -> PlacedContent:
+    """
+        Create a placed paragraph within a set of bounds
+        :param Paragraph p: place this
+        :param Rect r:  within this
+        :param int posX: <0 means to the left, 0 centered, > 0 to the right
+        :param int posY:  <0 means at the top, 0 centered, > 0 at the right
+    """
+
+    if isinstance(p, Paragraph):
+        pfc = PlacedParagraphContent(p, r, pdf)
+    else:
+        pfc = PlacedTableContent(p, r, pdf)
+    a = pfc.actual
+    if posX < 0:
+        dx = r.left - a.left
+    elif posX > 0:
+        dx = r.right - a.right
+    else:
+        dx = r.center.x - a.center.x
+
+    if posY < 0:
+        dy = r.top - a.top
+    elif posY > 0:
+        dy = r.bottom - a.bottom
+    else:
+        dy = r.center.y - a.center.y
+
+    pfc.move(dx=dx, dy=dy + descent_of(p) * descent_adjust)
+    return pfc
+
+
+def align_vertically_within(p: Paragraph, r: Rect, pdf: PDF, posY=0, metrics_adjust=0) -> PlacedParagraphContent:
+    """
+        Create a placed paragraph within a set of bounds
+        :param Paragraph p: place this
+        :param Rect r:  within this
+        :param int posY:  <0 means at the top, 0 centered, > 0 at the right
+    """
+
+    pfc = PlacedParagraphContent(p, r, pdf)
+    a = pfc.actual
+    if posY < 0:
+        dy = r.top - a.top - leading_extra(p) * metrics_adjust
+    elif posY > 0:
+        dy = r.bottom - a.bottom + descent_of(p) * metrics_adjust
+    else:
+        dy = r.center.y - a.center.y + descent_of(p) * metrics_adjust
+
+    pfc.move(dy=dy)
+    return pfc
+
+
+def descent_of(p):
+    if hasattr(p, 'blPara'):
+        if hasattr(p.blPara, 'descent'):
+            return p.blPara.descent
+        else:
+            return min(d.descent for d in p.blPara.lines)
+    return 0
+
+
+def leading_extra(p: Flowable):
+    if hasattr(p, 'style'):
+        return p.style.leading - p.style.fontSize
+    else:
+        return 0
+
+
+def from_text(txt, style: Style, pdf: PDF) -> Paragraph:
+    run = Run([Element(ElementType.TEXT, txt, style)])
+    return make_paragraph(run, pdf)
+
+
+def split_into_paragraphs(run, pdf, styles: List[Style] = None) -> List[Paragraph]:
+    items = run.items
+    row = []
+    start = 0
+    spacer_idx = 0
+    for i, e in enumerate(items):
+        if e.which in {ElementType.SPACER, ElementType.DIVIDER}:
+            _add_to_row(row, items[start:i], pdf, styles)
+            if e.which == ElementType.SPACER:
+                spacer_idx += 1
+            start = i + 1
+    _add_to_row(row, items[start:], pdf, styles)
+    return row
+
+
+def _add_to_row(row, elements: Sequence[Element], pdf: PDF, styles):
+    added = len(row)
+    if styles and added < len(styles) and styles[added] is not None:
+        elements = [e.with_style(e.style.clone_using(styles[added])) for e in elements]
+    run = Run(elements)
+    row.append(make_paragraph(run, pdf))
+
+
+def make_paragraph(run: Run, pdf: PDF, align=None, size_factor=None) -> Optional[Paragraph]:
+    if not len(run.items):
+        return None
+
+    style = pdf.paragraph_style_for(run)
+    if align:
+        style = style.clone(align=align)
+    if size_factor:
+        style = style.clone(size=style.size * size_factor)
+
+    return Paragraph(run, style, pdf)

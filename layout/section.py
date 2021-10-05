@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import math
 import statistics
 import time
@@ -8,7 +7,7 @@ import warnings
 from typing import List, Optional, Tuple
 
 from .placed import PlacedContent, PlacedGroupContent
-from util import Rect, configured_logger
+from util import Rect, configured_logger, FINE
 from util import Optimizer, divide_space
 
 LOGGER = configured_logger(__name__)
@@ -59,7 +58,7 @@ class ColumnOptimizer(Optimizer):
         fit = sum(c.error_from_size(10, 0.01) for c in columns)
         var = sum(c.error_from_variance(0.1) for c in columns)
 
-        if LOGGER.getEffectiveLevel() <= logging.FINE:
+        if LOGGER.getEffectiveLevel() <= FINE:
             for i, c in enumerate(columns):
                 LOGGER.fine("[%d] n=%d width=%d height=%d breaks=%1.3f fit=%1.3f", i,
                             len(c.group), c.actual.width, c.actual.height,
