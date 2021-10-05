@@ -29,7 +29,7 @@ Base Info
 
 Pools
  - Might        |   | **10**    |
- - Speed        |   | **13**    |
+ - Speed        |   | **13**    | 1
  - Intellect    |   | **21**    | 2
 
 .. title:: banner style=banner
@@ -65,14 +65,13 @@ Spells
  - I    | **Onslaught**             | Does 4 physical or 2 mental damage
  - I    | **Resonance Field**       | Defend with intellect for one minute. On a defense of 19-20 attacker takes 1 or 4 damage
  - 2I   | **Far Step**              | Leap up to long range
- - 3I   | **Clockwork Assistant**   | level 2, one hour (*"Mr. Robinson"*)
+ - 3I   | **Clockwork Companion**   | level 3, one hour (*"Zhu Li"*)
  - 3I   | **Stasis**                | Lasts one minute
+ - 3I   | **Machine Efficiency**    | For one minutes adds +2 to machine's level or allows it to ease two levels as an asset.
 
 Artifacts and Cyphers
  - Anti-magic Lab Coat (1/20)
- - Mechanical Man Statutue (???)
  - Potion of knowledege enhancement
- - Potion of moderate healing
  - `_______________________________________`
  - `_______________________________________`
 
@@ -94,15 +93,17 @@ Advancement
 
  - [ ] Increase Abilities -- 4 pool
  - [ ] Move to perfection -- +1 edge
- - [X] Extra Effort
- - [X] Skill Training
+ - [ ] Extra Effort
+ - [ ] Skill Training
  - [ ] Other -- spell/feature
 
 
 Advances Taken
  - 1: Effort, Edge, Spell (Stasis)
- - 2: *Inverted Pyramid Focus*
- - 2: Effort, Skill
+ - 2: **Inverted Pyramid Focus**
+ - 2: Effort, Skill (Magic), Edge, Spell (Machine Companion)
+ - 3: **Crafts Unique**: Specialized in *Craft Chaos Tech*,
+   **Adept**: Trained in Ranged attacks doing physical damage, Extra Cipher
 
 -----------------------------------------
 

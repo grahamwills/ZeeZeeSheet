@@ -138,7 +138,7 @@ def to_color(s):
         return 'green'
     if s == 'Feat':
         return 'black'
-    if s == 'Spell':
+    if s == 'Spell' or s == 'FocSpell':
         return 'red'
     if s == 'MagicItem':
         return 'orange'
@@ -168,35 +168,26 @@ def make_usage(target, range, area):
 
 
 def action_key(a) -> str:
-    action = action_icon(a.get('Action', ''))
-    if action == '':
-        v = 'Z_'
-    elif action == '↺':
-        v = 'B_'
-    elif action == '◌':
-        v = 'C_'
-    else:
-        v = 'D_' + str(5 - len(action)) + '_'
-
+    traits = "_".join(sorted(a.get('Trait', 'zz').split(',')))
     color = to_color(a['compset'])
-    return v + color + a['name']
+    return traits + '_' +color + a['name']
 
 
-def extract_actions(items: List[Dict], ) -> Optional[str]:
+def extract_actions(items: List[Dict]) -> Optional[str]:
     lines = []
 
-    abilities = pop(items, 'Ability', isAction=True) + pop(items, 'Spell') + pop(items, 'Feat', isAction=True) \
+    abilities = pop(items, 'Ability', isAction=True) + pop(items, 'FocSpell') + pop(items, 'Spell') + pop(items, 'Feat', isAction=True) \
                 + pop(items, 'MagicItem', isAction=True)
 
     for a in sorted(abilities, key=action_key):
         color = to_color(a['compset'])
         name = a['name']
-        description = a.get('summary', None) or a['description']
+        level = a.get('spLevelNet', None)
+        description = extract_description(a, level)
         trigger = a.get('reTrigger', '')
         frequency = capitalize(a.get('reFrequency', ''))
         action = action_icon(a.get('Action', ''))
         traits = prettify_traits(a.get('Trait', ''))
-        level = a.get('spLevelNet', None)
         levelBase = a.get('spLevelBase', None)
         usage = make_usage(a.get('vaTarget', ''), a.get('vaRangeText', ''), a.get('vaArea', ''))
         duration = a.get('vaDuraText', None) or a.get('spCastTime', None)
@@ -221,12 +212,114 @@ def extract_actions(items: List[Dict], ) -> Optional[str]:
             lines.append(" - {0} -- {1}".format(trigger, frequency))
         if duration:
             lines.append(" - **Duration**: {0}".format(duration))
-        add_description(description, lines)
+        lines += description
         if traits:
             lines.append(" - -- <font size=6 color='gray'>{0}</font> -- ".format(traits))
         lines.append('\n')
 
     return "\n".join(lines)
+
+
+def embellish_description(p: str, lvl):
+    p = p.strip()
+    if not p:
+        return None
+    if p.startswith('{para type:bare below}'):
+        # Don't want these extras
+        return None
+
+    if p.startswith('{para type:bare}') and p.endswith('{/para}'):
+        p = p[16:-7]
+    if p.startswith('{para}') and p.endswith('{/para}'):
+        p = p[6:-7]
+
+    if p.startswith('Heightened'):
+        if p.startswith('Heightened (+') or p.startswith('Heightened ' + _level_heightened(lvl)):
+            i = p.index(')')
+            p = "**{0}**: {1}".format(p[:i + 1].strip(), p[i + 1:].strip())
+        else:
+            # Don't care about other levels
+            return None
+
+    if p.startswith('• '):
+        p = "`• " + p[2:] + "`"
+    if p.startswith('Activate'):
+        p = "**Activate**: {0}".format(p[9:].strip())
+    if p.startswith('Effect'):
+        p = "**Effect**: {0}".format(p[7:].strip())
+    if p.startswith('Critical Failure'):
+        p = "**Critical Failure**: {0}".format(p[17:].strip())
+    if p.startswith('Critical Success'):
+        p = "**Critical Success**: {0}".format(p[17:].strip())
+    if p.startswith('Success'):
+        p = "**Success**: {0}".format(p[8:].strip())
+    if p.startswith('Failure'):
+        p = "**Failure**: {0}".format(p[8:].strip())
+
+    p = p.replace('{icon:action1}', '▶')
+    p = p.replace('{icon:action2}', '▶▶')
+    p = p.replace('{icon:action3}', '▶▶▶')
+    p = p.replace('{icon:reaction}', '↺')
+    p = p.replace('{icon:free}', '◌')
+    p = p.replace('{Icon:Action1}', '▶')
+    p = p.replace('{Icon:Action2}', '▶▶')
+    p = p.replace('{Icon:Action3}', '▶▶▶')
+    p = p.replace('{Icon:Reaction}', '↺')
+    p = p.replace('{Icon:Free}', '◌')
+    return p
+
+
+def _level_heightened(lvl):
+    if lvl == 2:
+        return '(2nd)'
+    if lvl == 5:
+        return '(3rd)'
+    return "({}th)".format(lvl)
+
+
+def extract_description(a, level: int) -> List[str]:
+    description: str = a.get('description', a.get('summary', None))
+
+    # Remove meta-info within {object} ... {/object} tag
+    start = description.find('{object')
+    if start >= 0:
+        end = description.rfind("{/object}")
+        description = description[:start] + description[end + 9:]
+
+    p = description.find('{hdr')
+    if p >= 0:
+        # Kill this extra info
+        description = description[:p]
+
+    # Split effect onto its own line
+    description = description.replace("; Effect", "\nEffect")
+
+    lines = description.split('\n')
+
+    # Short lines preceded by a blank and with text after it is a title
+    for i in range(1, len(lines) - 1):
+        if len(lines[i]) < 40 and not lines[i - 1] and lines[i + 1] and lines[i][0].isalnum():
+            lines[i] = '**' + lines[i].title().strip() + '**'
+
+    # A weird description error seems to have some info in twice:
+    good = []
+    for line in lines:
+        line = embellish_description(line, level)
+        if line and not line in good:
+            good.append(line)
+
+    # Reduce very long descriptions
+    while sum(len(x) for x in good) > 1000:
+        kill = None
+        for line in good[1:]:
+            if line[0].isalnum():
+                kill = line
+        if kill:
+            good.remove(kill)
+        else:
+            break
+
+    return [" - {}".format(line) for line in good]
 
 
 def extract_weapons(items: List[Dict]) -> Optional[str]:
@@ -253,32 +346,6 @@ def extract_weapons(items: List[Dict]) -> Optional[str]:
                 lines.append(" - Properties: {0}".format(" • ".join(aspects)))
 
     return "\n".join(lines)
-
-
-def add_description(description: str, lines):
-    for p in description.split('\n'):
-        p = p.strip()
-        if not p:
-            continue
-        if p.startswith('• '):
-            p = '> ' + p[2:]
-        if p.startswith('Heightened'):
-            i = p.index(')')
-            p = "**{0}**: {1}".format(p[:i + 1].strip(), p[i + 1:].strip())
-        if p.startswith('Critical Failure'):
-            p = "**Critical Failure**: {0}".format(p[17:].strip())
-        if p.startswith('Critical Success'):
-            p = "**Critical Success**: {0}".format(p[17:].strip())
-        if p.startswith('Success'):
-            p = "**Success**: {0}".format(p[8:].strip())
-        if p.startswith('Failure'):
-            p = "**Failure**: {0}".format(p[8:].strip())
-
-        p = p.replace('{icon:action1}', '▶')
-        p = p.replace('{icon:action2}', '▶▶')
-        p = p.replace('{icon:action3}', '▶▶▶')
-
-        lines.append(" - {0}".format(p))
 
 
 def extract_abilities(items: List[Dict], type: str, title: str) -> Optional[str]:
@@ -334,7 +401,9 @@ def pop_item(items: List[Dict], type: str, name: str = None) -> Dict:
 
 
 def to_rst(actor: Dict, dir, main) -> str:
-    level = actor['gameValues']['actLevelNet']
+    gamevals = actor['gameValues']
+    level = gamevals['actLevelNet']
+
     name = actor['name'].replace('-{0}'.format(level), '')  # Kill name suffix if any
 
     # Items in known order
@@ -389,12 +458,24 @@ def basic_info(actor, items):
     deity = pop_item(items, 'Deity')['name']
     focus_points = pop_item(items, 'Reserves', 'Focus Points').get('rvMax', 0)
 
+    player = actor.get('player', None)
+    socID = actor['gameValues'].get('actSocietyID', None)
+    socChar = actor['gameValues'].get('actSocietyChar', None)
+
     hits = pop_item(items, 'Reserves', 'Hit Points')['rvMax']
 
     # Just remove them from the list
     _ = pop_item(items, 'Reserves', 'Hero Points')['rvMax']
 
-    lines = ["**Ancestry**: {0} -- **Class**: {1}".format(ancestry, character_class)]
+    lines = []
+    if player and socID and socChar:
+        lines.append("**Player**: {} -- **Society ID**: {}-{}".format(player, socID, socChar))
+    elif player:
+        lines.append("**Player**: {}".format(player))
+    elif socID and socChar:
+        lines.append("**Society ID**: {}-{}".format(socID, socChar))
+
+    lines.append("**Ancestry**: {0} -- **Class**: {1}".format(ancestry, character_class))
 
     if deity:
         lines.append("**Alignment**: {0} -- **Deity**: {1}".format(align, deity))

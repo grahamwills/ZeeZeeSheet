@@ -1,0 +1,755 @@
+{
+  "portfolio": {
+    "charId": "pDNC9Q2B",
+    "version": 85,
+    "baseline": 0
+  },
+  "metadata": {
+    "gameCode": "pf2",
+    "gameName": "Pathfinder Roleplaying Game (Second Edition)",
+    "gameMajor": 3,
+    "gameMinor": 39,
+    "hloVersion": 1103,
+    "exportVersion": 1,
+    "legal": "Hero Lab and the Hero Lab logo are Registered Trademarks of LWD Technology, Inc. Free demo available at https://herolab.online\nPathfinder and associated marks and logos are trademarks of Paizo Inc., and are used under license."
+  },
+  "actors": {
+    "actor.1": {
+      "name": "M374 \"Penny\"",
+      "player": "Graham Wills",
+      "gameValues": {
+        "actLevelNet": 1,
+        "actAlignment": "Lawful Good",
+        "actRace": "human",
+        "actRaceEthnicity": "Many-Souled",
+        "actBackgroundText": "Magical Misfit",
+        "actClassText": "magus 1",
+        "actBulk": 1.3,
+        "actEncumbered": 7,
+        "actOverburdened": 12,
+        "actMoneyNet": "11 gp; 1 sp",
+        "actSpace": 5,
+        "actReach": 5,
+        "actReachNet": 5,
+        "actSocietyID": 140873,
+        "actSocietyChar": 2006,
+        "Trait": "trtAndroid,trtGood,trtHumanoid,trtLawful"
+      },
+      "items": {
+        "Perception.152": {
+          "name": "Perception",
+          "description": "Your Perception measures your ability to notice things, search for what’s hidden, and tell whether something about a situation is “off.” This statistic is frequently used for rolling initiative to determine who goes first in an encounter, and for the Seek action.\n\nYou have a Perception modifier based on your Wisdom. Your class determines your proficiency in Perception.\n\nPerception modifier = Wisdom modifier + Perception proficiency modifier + circumstance bonus + status bonus + item bonus + circumstance penalty + status penalty + item penalty + untyped penalties\n\nIn many circumstances, such as when someone’s trying to sneak past you, the GM will roll against your Perception DC. Much like skill DCs, your Perception DC is 10 plus your Perception modifier.",
+          "compset": "Derived",
+          "components": "Derived",
+          "stNet": 3,
+          "stDC": 13,
+          "proLevelBonNet": 3,
+          "ProfLevel": "Trained"
+        },
+        "abArcCascadeMag.296": {
+          "name": "Arcane Cascade +1",
+          "description": "You divert a portion of the spell’s magical power and keep it cycling through your body and weapon using specialized forms, breathing, or footwork. While you’re in the stance, your melee Strikes deal 1 extra damage. This damage increases to 2 if you have weapon specialization and 3 if you have greater weapon specialization. Any Strike that benefits from this damage gains the arcane trait, making it magical. If your most recent spell before entering the stance was one that can deal damage, the damage from the stance is the same type that spell could deal (or one type of your choice if the spell could deal multiple types of damage). If the spell couldn’t deal damage, this stance’s bonus damage depends on the spell’s school.\n\n• Abjuration or Evocation force\n• Conjuration or Transmutation same type as your weapon or unarmed attack\n• Divination, Enchantment, or Illusion mental\n• Necromancy negative",
+          "summary": "After you wield magic, you can enter a special stance to make your attacks more effective.",
+          "compset": "Ability",
+          "components": "Ability",
+          "reRequirements": "You used your most recent action to Cast a Spell or make a Spellstrike.",
+          "Action": "Action1",
+          "Trait": "clMagus,trtConcentrate,trtStance"
+        },
+        "abConstructedAnd.279": {
+          "name": "Constructed",
+          "description": "Your synthetic body resists ailments better than those of purely biological organisms. You gain a +1 circumstance bonus to saving throws against diseases, poisons, and radiation.",
+          "summary": "+1 circumstance bonus to saving throws against diseases, poisons, and radiation.",
+          "compset": "Ability",
+          "components": "Ability"
+        },
+        "abEmotUnawareAnd.280": {
+          "name": "Emotionally Unaware",
+          "description": "You find it difficult to understand and express complex emotions. You take a -1 circumstance penalty to Diplomacy and Performance checks, and on Perception checks to Sense Motive.",
+          "summary": "-1 circumstance penalty on Perception checks to Sense Motive",
+          "compset": "Ability",
+          "components": "Ability"
+        },
+        "abLowLightVision.278": {
+          "name": "Low-Light Vision",
+          "description": "The creature can see in dim light as though it were bright light, so it ignores the concealed condition due to dim light.",
+          "summary": "See in dim light as if it were normal light.",
+          "compset": "Ability",
+          "components": "Ability"
+        },
+        "abSpellstrikeMag.295": {
+          "name": "Spellstrike",
+          "description": "{para}You’ve learned the fundamental magus technique that lets you combine magical and physical attacks together. You gain the Spellstrike activity.{/para}\n{object:thing}\n  {value:name}Spellstrike{/value}\n  {value:id}{/value}\n  {value:type}Action{/value}\n  {value:action}action2{/value}\n  {values:tags}\n    {object:tag}\n      {value:group}Trait{/value}\n      {value:name}Magus{/value}\n    {/object}\n  {/values}\n{/object}\n{para type:bare below}Frequency until recharged (see below){/para}\n{para type:bare}You channel a spell into a punch or sword thrust to deliver a combined attack. You Cast a Spell that takes 1 or 2 actions to cast and requires a spell attack roll. The effects of the spell don’t occur immediately but are imbued into your attack instead. Make a melee Strike with a weapon or unarmed attack. Your spell is coupled with your attack, using your attack roll result to determine the effects of both the Strike and the spell. This counts as two attacks for your multiple attack penalty, but you don’t apply the penalty until after you’ve completed the Spellstrike. The infusion of spell energy grants your Strike the arcane trait, making it magical.{/para}\n{para type:bare}After you use Spellstrike, you can’t do so again until you recharge your Spellstrike as a single action, which has the concentrate trait. You also recharge your Spellstrike when you cast a conflux spell (Secrets of Magic 40) that takes at least 1 action to cast; casting a focus spell of another type doesn’t recharge your Spellstrike.{/para}\n{hdr:3}Spellstrike Specifics{/hdr}\n{para}Though the base Spellstrike rules cover most spells, various modifications apply to more complicated spells when loaded into your fist, blade, or other attack.{/para}\n{para}One Target: The spell targets only the target of your Strike, even if it normally allows more targets. Some feats let you affect more creatures.{/para}\n{para}Reach: The coupled spell affects the target using the reach of the weapon or unarmed attack you make your Spellstrike with. For instance, shocking grasp would affect a creature beyond the reach of your hand if you used a weapon with reach, and ray of frost would affect only a creature in your weapon’s reach, even though the spell’s range is longer.{/para}\n{para}Ancillary Effects: Your spell still has any non-targeted effects that might affect creatures other than the target, as well as any ongoing effects starting from the moment you hit with the Strike. For example, acid splash would still deal its splash damage to creatures other than the target and tanglefoot’s circumstance penalty would last for its normal duration. The spell takes effect after the Strike deals damage; if the Strike has other special effects, the GM determines whether they happen before or after the spell.{/para}\n{para}Multiple Defenses: Any additional rolls after the initial spell attack still happen normally, such as the Fortitude save attempted by the target of a disintegrate spell. Similarly, a spell that allows you to attack with it again on subsequent rounds would only combine a Strike with its initial attack roll, not with any later ones.{/para}\n{para}Invalid or Immune Target: If the target you hit wouldn’t be a valid target for the spell, the spell is still expended but doesn’t affect the target. If the target is immune to your attack but not the spell, it can still be affected by the spell.{/para}\n{para}Variable Actions: Some spells have different effects based on the number of actions you spend to cast them. You choose whether to use the effects of the 1- or 2-action version of the spell when you use Spellstrike. A spell has to take exactly 1 or 2 actions; you can’t use Spellstrike with a spell that takes a free action, reaction, or 3 or more actions.{/para}\n{para}Metamagic: You typically can’t use metamagic with Spellstrike because metamagic requires the next action you take to be Cast a Spell, and Spellstrike is a combined activity that doesn’t qualify.{/para}",
+          "summary": "You channel a spell into a punch or sword thrust to deliver a combined attack.",
+          "compset": "Ability",
+          "components": "Ability",
+          "reFrequency": "until recharged",
+          "Action": "Action2"
+        },
+        "abStarlitSpanMag.329": {
+          "name": "Starlit Span",
+          "description": "With magic, the sky’s the limit, and you can’t be bound by the confines of physical proximity. Your power reaches as far as your senses can perceive, transcending the space between you and your target even with spells that normally require direct physical contact.\n\nWhen you use Spellstrike, you can make a ranged weapon or ranged unarmed Strike, as long as the target is within the first range increment of your ranged weapon or ranged unarmed attack. You can deliver the spell even if its range is shorter than the range increment of your ranged attack.\n\nConflux Spell shooting star\nStudious Spells 7th: darkvision; 11th: wall of wind; 13th: freedom of movement",
+          "summary": "You can make a ranged weapon or unarmed Strike as part of your Spellstrike.",
+          "compset": "Ability",
+          "components": "Ability"
+        },
+        "acArmorClass.69": {
+          "name": "Armor Class",
+          "description": "Your character’s Armor Class represents how difficult they are to hit in combat. To calculate your AC, add 10 plus your character’s Dexterity modifier (up to their armor’s Dexterity modifier cap; page 274), plus their proficiency bonus with their armor, plus their armor’s item bonus to AC and any other permanent bonuses and penalties.",
+          "compset": "ArmorClass",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 18,
+          "stMiscMod": 2,
+          "ProfLevel": "Trained"
+        },
+        "anAndroid.275": {
+          "name": "Android",
+          "description": "Technological wonders from another world, androids have synthetic bodies and living souls. Their dual nature makes them quick-thinking and calm under pressure, but comfortable in stillness and solitude. \n\nAndroids first arrived on Golarion during the Rain of Stars, when an interstellar vessel from the far-off planet of Androffa crash-landed, scattering debris across Numeria. While some android survivors of this crash still walk Golarion today, most were created from the technological pods, known as foundries, that operate sporadically amid the starship’s wreckage. Androids birthed from these mechanical wombs possess mature bodies and newborn souls, both organic and synthetic; they emerge knowing only their creators’ language and the motor skills necessary for survival. They have no understanding of their surroundings, origin, or purpose. Most learn how to behave through keen observation while wandering Numeria.\n\nAndroids tend to be logical introverts, rational and contemplative. Insatiably curious, with an urge to understand themselves and the world around them, androids place great value on intellectual pursuits. They have difficulty interpreting and expressing emotions, both in themselves and in others, which makes them seem distant and uncaring. While androids can forge emotional bonds, they find it more difficult to connect with non-androids.\n\nIf you want a character that’s a synthetic foreigner in a fantastic world, forced to learn the nuances of reality and society through the powers of observation and logic alone, you should play an android.\n\nYou Might...\n• Keep your identity a secret, assuming others want to exploit or harm you.\n• Plan ahead, preparing multiple contingencies for even simple tasks.\n• Calculate the repercussions of your actions, inventions, and thoughts before sharing them.\n\nOthers Probably...\n• Assume you understand how to operate technology and that you can capably communicate with constructs and robots.\n• Believe you to be immortal and envy your eternal youth and vigor.\n• Think you have no feelings and that you can’t form emotional connections with others.\n\nPhysical Description\nAndroids were created in humanity’s image; thus, foundries produce androids that represent all humankind. Androids display great diversity in coloration and ethnicity, height and body shape, and gender identity. Androids breathe, eat, and sleep like a human, although they’re incapable of biological procreation. Their bodies contain microscopic nanites, transported by fluid too watery to be blood, that manage their organic processes. These nanites are controlled through biological circuitry that resembles tattoos and is typically located along an android’s hands, forearms, face, or neck. Many androids can harness their nanites to increase their bodies’ efficiency, causing the circuitry to glow.\n\nAndroids don’t grow old. Instead, their organic appearance becomes less convincing over time, causing them to look more artificial. After a century, most androids feel their time coming to an end and willingly release their souls to the Boneyard to face Pharasma’s judgment. Their bodies then shut down, entering a lifeless hibernation as their nanites begin restoration protocol and reset their synthetic bodies to their original manufactured state. After a few weeks, a new soul enters the android’s form, triggering reinitialization. This process, called Renewal, is an event to be celebrated, akin to bearing a child. Those that die by violence can’t Renew, so androids go to great lengths to protect themselves and their brethren from harm.\n\nSociety\nAndroids have a history of being exploited, enslaved, and destroyed by their Numerian neighbors, so they hide in order to survive. Most choose to keep their ancestry secret by integrating into human society or by adapting to a nomadic lifestyle. Some androids eschew humanity to live among their kind. Such groups often remain small by necessity; while a pair of androids can avoid danger through careful secrecy, large groups attract too much attention.\n\nAndroid communities are efficient and highly organized. Each citizen understands their role and takes pride in filling it effectively. Debates and lectures frequently occur, as androids seek to understand themselves and their world through education and inquiry. These insular and secretive enclaves relocate when discovered.\n\nAlignment and Religion\nMost androids are neutral. They care for their own safety and that of their companions and their kind. Androids interested in religion usually worship Casandalee or Brigh, goddesses that unite invention and life. Other popular deities include Desna, Irori, and Gozreh.\n\nNames\nAndroids adopt the naming conventions of their surrounding societies, while those raised among their own kind instead select a single name that utilizes Androffan phonology. Occasionally, such androids add a numerical designation to their names, denoting how many generations their body has hosted life as a kind of homage to their bloodline.\n\nSample Names\nAnati, Daniv, Era-4, Feralia, Gelegor, Ilgos-5, Koresh, Oris, Prime, Urdun, Verity-3, Ymry",
+          "compset": "Ancestry",
+          "Rarity": "Rare",
+          "Trait": "trtAndroid,trtHumanoid"
+        },
+        "arStuddedLeather.390": {
+          "name": "Studded leather armor",
+          "description": "This leather armor is reinforced with metal studs and sometimes small metal plates, providing most of the flexibility of leather armor with more robust protection.",
+          "compset": "Armor",
+          "arAC": 5,
+          "arItemAC": 2,
+          "arDexModCap": 3,
+          "arArmorMinStr": 12,
+          "proLevelBonNet": 3,
+          "grBulk": 1,
+          "ProfLevel": "Trained"
+        },
+        "asCha.45": {
+          "name": "Charisma",
+          "description": "This score measures your character’s strength of personality, personal magnetism, and ability to influence the thoughts and moods of others. Charisma is an important statistic for bards and sorcerers, and it grants benefits to clerics and paladins.",
+          "summary": "This score measures your character’s strength of personality, personal magnetism, and ability to influence the thoughts and moods of others.",
+          "compset": "AbilScore",
+          "stAbScModifier": -1,
+          "stNet": 8
+        },
+        "asCon.42": {
+          "name": "Constitution",
+          "description": "Constitution measures your character’s health and stamina. Constitution is an important statistic for all characters, especially those who fight in close combat. Fighters, monks, paladins, rangers, and rogues particularly benefit from a solid Constitution score. Additionally, Constitution grants characters extra Hit Points and makes them more resistant against poison and disease.",
+          "summary": "Constitution measures your character’s health and stamina.",
+          "compset": "AbilScore",
+          "stAbScModifier": 1,
+          "stNet": 12
+        },
+        "asDex.40": {
+          "name": "Dexterity",
+          "description": "Dexterity measures your character’s agility, balance, and reflexes. Dexterity is important if your character plans to use stealth to surprise foes or to make attacks with ranged weapons. Rogues in particular benefit from having a high Dexterity score, as do rangers and some fighters and monks. A high Dexterity score allows your character to reduce or avoid attacks and magical effects that can be dodged or outright evaded, such as dragon’s breath.",
+          "summary": "Dexterity measures your character’s agility, balance, and reflexes.",
+          "compset": "AbilScore",
+          "stAbScModifier": 4,
+          "stNet": 18
+        },
+        "asInt.44": {
+          "name": "Intelligence",
+          "description": "Intelligence measures how well your character can learn and reason. Intelligence is a vital statistic if your character is an alchemist or a wizard, since these classes use complicated formulas or spell notations when using their abilities. A high Intelligence score allows your character to perceive and understand patterns, and to pick up skills that can serve her during her adventuring career.",
+          "summary": "Intelligence measures how well your character can learn and reason.",
+          "compset": "AbilScore",
+          "stAbScModifier": 3,
+          "stNet": 16
+        },
+        "asStr.39": {
+          "name": "Strength",
+          "description": "Strength measures your character’s physical power. Strength is important if your character plans to engage in the hand-to-hand fighting of melee combat. Fighters, monks, paladins, and rangers all benefit from having a high Strength score. Strength also determines how much Bulk your character can carry (see page 175).",
+          "summary": "Strength measures your character’s physical power.",
+          "compset": "AbilScore",
+          "stAbScModifier": 2,
+          "stNet": 14
+        },
+        "asWis.43": {
+          "name": "Wisdom",
+          "description": "Wisdom measures your character’s common sense, awareness, and intuition. Wisdom helps you understand religion and nature, and is a crucial statistic for clerics and druids. A high Wisdom score can help your character shake off mental spells and effects. Additionally, Wisdom affects your character’s Perception modifier, which measures how well she observes and identifies threats or curiosities among her surroundings.",
+          "summary": "Wisdom measures your character’s common sense, awareness, and intuition.",
+          "compset": "AbilScore",
+          "stNet": 10
+        },
+        "clMagus.293": {
+          "name": "Magus",
+          "description": "{box style:intro}\n{para}Combining the physicality and technique of a warrior with the ability to cast arcane magic, you seek to perfect the art of fusing spell and strike. While the hefty tome you carry reflects hours conducting arcane research, your enemies need no reminder of your training. They recognize it as you take them down.{/para}\n{/box}\n{hdr:2}Key Ability{/hdr}\n{para}Strength or Dexterity{/para}\n{para}At 1st level, your class gives you an ability boost to your choice of Strength or Dexterity.{/para}\n{hdr:2}Hit Points{/hdr}\n{para}8 plus your Constitution modifier{/para}\n{para}You increase your maximum number of HP by this number at 1st level and every level thereafter.{/para}\n{hdr:2}During Combat Encounters...{/hdr}\n{para}You channel spells through your weapon or body to hit enemies with a powerful attack and spell combination. Because your spells per day are limited, you often rely on trusty, carefully chosen cantrips and focus spells. When necessary, you know how to win a fight without magic.{/para}\n{hdr:2}During Social Encounters...{/hdr}\n{para}Your education and breadth of experience make you knowledgeable about many subjects. You can contribute information related to your scholarly pursuits, especially about magic.{/para}\n{hdr:2}While Exploring...{/hdr}\n{para}Your flexibility means you might look for magical auras, remain on guard, or even sneak around. Your ability to fill different niches means that your role often depends on the talents of the other members of your group.{/para}\n{hdr:2}In Downtime...{/hdr}\n{para}You split your time between magical pursuits, like researching spells and crafting items, and martial practice, such as retraining combat abilities to learn new techniques.{/para}\n{hdr:2}You Might...{/hdr}\n{list:bullet}\n{listitem}Continually refine your spell and item selections to suit your personal style, or prepare battle plans and spell lists for a variety of situations.{/listitem}\n{listitem}Socialize with scholars of magic and veteran combatants alike, seeking out masters to teach you new techniques.{/listitem}\n{listitem}Overreach with ambitious plans that pull you in too many directions at once.{/listitem}\n{/list}\n{hdr:2}Others Probably...{/hdr}\n{list:bullet}\n{listitem}Wonder how you can keep on top of two disparate disciplines at the same time.{/listitem}\n{listitem}Believe you have a broad enough skill set to take care of yourself in most situations.{/listitem}\n{/list}",
+          "compset": "Class",
+          "clDC": 17,
+          "proLevelBonNet": 3,
+          "ProfLevel": "Trained",
+          "Trait": "clMagus"
+        },
+        "deiAtheist.356": {
+          "name": "Atheism",
+          "description": "In a world where the gods demonstrably exist, few people uphold a strictly atheistic or agnostic worldview; that is, a belief that there are no gods, or that the existence of gods is unknowable. However, a good number of people choose not to worship any deities whatsoever. Many do so because of the value they place on freedom — not being beholden to a deity means no limitations, no censure, no anathema, and no strictures. While this decision might sound amoral to some, for atheists, it can be motivated by a desire for autonomy and the right to choose one’s own fate.\n\nSome atheists feel no particular interest toward any of the gods or the divine in general. As a result, they find the thought of worship pointless and unappealing, a waste of time for both the god and the atheist. While these atheists are most likely to be tolerant of the gods and religion in general, they often chafe at efforts to convert them, seeing such overtures as societal pressure to pretend there is faith where truthfully there is none.\n\nSome atheists are driven by thoughts and fears of the afterlife, and by dismay or outrage at the idea of spending eternity serving at the behest of an eternal master. To such people, a quiet eternity in the Boneyard’s graves is akin to a reprieve or a comforting certainty, especially compared to the helpless terror of being judged by a higher power and sent onward to an unknown destination, with little to no say in the matter.\n\nSome atheists feel the gods aren’t inherently worthy of worship. While these skeptics acknowledge that the gods are undeniably powerful beings, they see little difference between these deities and other powerful entities on Golarion and question what the gods have done to merit the worship of mortals. To them, worship of a deity is akin to revering the power of the Eye of Abendego, or like a kobold’s veneration of a nearby dragon. Praise and offerings are demanded for protection, yet the gods are sparing and unreliable with their responses. At best, such worship is demeaning, and at worst it rivals the practice of slavery or, in a slightly more charitable view, indentured servitude.\n\nFinally, some refuse to follow the gods out of anger. Those who believe they have been betrayed by faith in a particular god or wronged by a deity’s followers might refuse to revere any deity who would willfully choose to inflict such pain.\n\nThe paths these free agents follow vary as much as their reasons for rejecting the divine. Bards turn to the aggregate eclectic knowledge of the beyond. Alchemists and wizards alike seek to understand the universal underpinnings of reality through magic, science, and reason. Any number of barbarians, fighters, rogues, and even sorcerers operate with no need for spiritual guidance or reinforcement. Many monks look inward for guidance, rather than outward, and druids and rangers may uphold the natural order but not the divine.\n\nSome free agents refuse any association with the religious altogether. Others adopt a live-and-let-live policy and are happy to let others worship and work divine feats. Without any assurances of (or desire for) divine intervention, the vast majority of the irreligious instead place their faith in other mortals and endeavor to make the material world a better place for all.",
+          "compset": "Deity"
+        },
+        "faEnvoysAlliance.267": {
+          "name": "Envoys’ Alliance",
+          "description": "Being a Pathfinder’s dangerous work. Travel comes with its own dangers, traps seem to be everywhere, and just about everything seems ready to eat aspiring agents. What’s more, the Pathfinder Society has spent the last decade increasingly engaged in major conflicts, each of which saw extraordinary rewards yet also loss of life. After virtually nonstop campaigns, the Society’s ranks are sorely depleted. The Envoys’ Alliance aims to change that, making the Society every stronger, better trained, and better supported.\n\nFaction Leader: Fola Barun (N female half-elf negotiator) first encounter the Pathfinder Society in her role as the envoy of an Ekujae elven community in the Mwangi Expanse, and later joined the Society through a field commission. She quickly established herself as an attentive leader whose even-keeled, professional approach not only expanded the Society’s understanding of the mighty Vanji River, but also helped devastate the Aspis Consortium’s predatory operations along that route. Having never trained at the Grand Lodge or absorbed the conventional Society wisdom imparted to initiates, she was appalled upon first reaching Absalom and learning of the many counts of negligence of the past century. She’s brought a fresh approach to recruitment and supporting agents in the field, which often sees her collaborating (and occasionally clashing) with the deans of the Pathfinder Society’s three schools.\n\nMotto: Strength in Community\n\nObjectives: The Envoys’ Alliance is dedicated to recruiting new agents, rescuing Pathfinders in distress, and rebuilding the Society in a way that supports and values operatives’ lives and wellbeing—at least as much as one can in the adventuring world. Through collaboration, the Society can accomplish ever-greater feats—particularly with a powerful faction to advocate for the Pathfinders themselves when they’re tasked with the Grand Lodge’s latest projects.\n\nYear 1 Goal: In addition to devastating several nations, the Whispering Tyrant’s rise resulted in hundreds of Pathfinder casualties. The aftermath is a serious wake-up call for the Society, and the Envoys’ Alliance in particular seeks not only to rescue those agents stranded by the recent chaos, but also to provide assistance to other distant operations that have suffered from insufficient support.",
+          "compset": "Faction"
+        },
+        "fsShootingStar.330": {
+          "name": "Shooting Star",
+          "description": "You let loose a projectile that flies true and leaves the blazing trail of a meteor behind it. Make a ranged Strike, ignoring the target’s concealment and reducing the target’s cover by one degree for this Strike only (greater to standard, standard to lesser, and lesser to none). If the Strike hits, the meteor trail hangs in the air. This gives the benefits of concealment negation and cover reduction to any attacks made against the creature (by anyone) until the start of your next turn.",
+          "compset": "FocSpell",
+          "spLevelBase": 1,
+          "spLevelNet": 1,
+          "spCastingText": "{icon:action1} verbal",
+          "reRequirements": "You’re wielding a ranged weapon or a thrown weapon.",
+          "trkMaximum": 1,
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "Action": "Action1",
+          "ProfLevel": "Trained",
+          "Rarity": "Uncommon",
+          "Trait": "clMagus,ssDivination"
+        },
+        "ftEmotionlessAnd.355": {
+          "name": "Emotionless",
+          "description": "Your malfunctioning emotional processors make it difficult for you to feel strong emotions. You gain a +1 circumstance bonus to saving throws against emotion and fear effects. If you roll a success on a saving throw against an emotion or fear effect, you get a critical success instead.",
+          "summary": "+1 circ bonus on saves vs. emotion or fear effects, sucess on such a save becomes crit success.",
+          "compset": "Feat",
+          "components": "Ability",
+          "reqLevelNet": 1,
+          "Trait": "trtAndroid"
+        },
+        "ftSpecialtyCraft.344": {
+          "name": "Specialty Crafting (Artistry )",
+          "description": "Your training focused on Crafting one particular kind of item. Select one of the specialties listed on page 267; you gain a +1 circumstance bonus to Crafting checks to Craft items of that type. If you are a master in Crafting, this bonus increases to +2. If it’s unclear whether the specialty applies, the GM decides. Some specialties might apply only partially. For example, if you were making a morningstar and had specialty in woodworking, the GM might give you half your bonus because the item requires both blacksmithing and woodworking.\n\nAlchemy* - Alchemical items such as elixirs\nArtistry - Fine art, including jewelry\nBlacksmithing - Durable metal goods, including metal armor\nBookmaking - Books and paper\nGlassmaking - Glass, including glassware and windows\nLeatherworking - Leather goods, including leather armor\nPottery - Ceramic goods\nShipbuilding - Ships and boats\nStonemasonry - Stone goods and structures\nTailoring - Clothing\nWeaving - Textiles, baskets, and rugs\nWoodworking - Wooden goods and structures\n * You must have the Alchemical Crafting skill feat to Craft alchemical items.",
+          "summary": "+1 circumstance bonus when crafting items of type Artistry .",
+          "compset": "Feat",
+          "components": "Ability",
+          "reqLevelNet": 1,
+          "rePrerequisites": "trained in Crafting",
+          "Trait": "trtGeneral,trtSkill"
+        },
+        "ftTrickMagicItem.351": {
+          "name": "Trick Magic Item",
+          "description": "You examine a magic item you normally couldn’t use in an effort to fool it and activate it temporarily. For example, this might allow a fighter to cast a spell from a wand or allow a wizard to cast a spell that’s not on the arcane list using a scroll. You must know what activating the item does, or you can’t attempt to trick it.\n\nAttempt a check using the skill matching the item’s magic tradition, or matching a tradition that has the spell on its list, if you’re trying to cast a spell from the item. The relevant skills are Arcana for arcane, Nature for primal, Occultism for occult, Religion for divine, or any of the four for an item that has the magical trait and not a tradition trait. The GM determines the DC based on the item’s level (possibly adjusted depending on the item or situation).\n\nIf you activate a magic item that requires a spell attack roll or spell DC and you don’t have the ability to cast spells of the relevant tradition, use your level as your proficiency bonus and the highest of your Intelligence, Wisdom, or Charisma modifiers. If you’re a master in the appropriate skill for the item’s tradition, you instead use the trained proficiency bonus, and if you’re legendary, you instead use the expert proficiency bonus.\n\nSuccess For the rest of the current turn, you can spend actions to activate the item as if you could normally use it.\nFailure You can’t use the item or try to trick it again this turn, but you can try again on subsequent turns.\nCritical Failure You can’t use the item, and you can’t try to trick it again until your next daily preparations.\n\nSuccess For the rest of the current turn, you can spend actions to activate the item as if you could normally use it.\nFailure You can’t use the item or try to trick it again this turn, but you can try again on subsequent turns.\nCritical Failure You can’t use the item, and you can’t try to trick it again until your next daily preparations.",
+          "summary": "Trick an item you normally can't use into activating for you.",
+          "compset": "Feat",
+          "components": "Ability",
+          "reqLevelNet": 1,
+          "rePrerequisites": "trained in Arcana, Nature, Occultism or Religion",
+          "Action": "Action1",
+          "Trait": "trtGeneral,trtManipulate,trtSkill"
+        },
+        "grSpellbook.289": {
+          "name": "Combat Ready Techniques",
+          "description": "A spellbook holds the written knowledge necessary to learn and prepare various spells, a necessity for wizards (who typically get one for free) and a useful luxury for other spellcasters looking to learn additional spells. Each spellbook can hold up to 100 spells. The Price listed is for a blank spellbook.",
+          "compset": "Spellbook",
+          "grBulk": 0.1
+        },
+        "hrArtisanAnd.343": {
+          "name": "Artisan Android",
+          "description": "Your body was originally designed to create works of art, complex tools, or maintain advanced machinery. You become trained in Crafting (or another skill if you’re already trained in Crafting), and you gain the Specialty Crafting skill feat in a specialty of your choice.",
+          "summary": "You are trained in Crafting and gain the Specialty Crafting skill feat.",
+          "compset": "Heritage",
+          "components": "Ability",
+          "Trait": "trtAndroid"
+        },
+        "lnAbyssal.349": {
+          "name": "Abyssal",
+          "compset": "Language",
+          "Rarity": "Uncommon"
+        },
+        "lnAndroffan.276": {
+          "name": "Androffan",
+          "compset": "Language",
+          "Rarity": "Uncommon"
+        },
+        "lnCelestial.357": {
+          "name": "Celestial",
+          "compset": "Language",
+          "Rarity": "Uncommon"
+        },
+        "lnCommon.277": {
+          "name": "Common",
+          "compset": "Language",
+          "Rarity": "Common"
+        },
+        "lnInfernal.348": {
+          "name": "Infernal",
+          "compset": "Language",
+          "Rarity": "Uncommon"
+        },
+        "mvSpeed.282": {
+          "name": "Speed",
+          "description": "The Speed statistic—also called land Speed—that most player characters and monsters have indicates how far they can move across the ground. When you use the Stride action, you move a number of feet equal to your Speed. Numerous other abilities allow you to move, from Crawling to Leaping, and most of them are based on your Speed in some way. Whenever a rule mentions your Speed without specifying a type, it’s referring to your land Speed.",
+          "compset": "Movement",
+          "stNet": 25,
+          "stMiscMod": 25
+        },
+        "nwFist.159": {
+          "name": "Fist",
+          "compset": "NaturalWep",
+          "wpMelAttacks": {
+            "atk1": {
+              "id": "Melee",
+              "name": "Melee",
+              "attack": "+7|+3|-1",
+              "attackExpr": "={1d20+7}|={1d20+3}|={1d20-1}",
+              "damage": "1d4+2 B|1d4+2 B|1d4+2 B",
+              "damageExpr": "={(1d4+2)f1c2rm[Bludgeoning:B]}|={(1d4+2)f1c2rm[Bludgeoning:B]}|={(1d4+2)f1c2rm[Bludgeoning:B]}"
+            }
+          },
+          "proLevelBonNet": 3,
+          "ProfLevel": "Trained",
+          "items": {
+            "wtAgile.174": {
+              "name": "Agile",
+              "description": "The multiple attack penalty you take with this weapon on the second attack on your turn is –4 instead of –5, and –8 instead of –10 on the third and subsequent attacks in the turn.",
+              "summary": "Multiple attack penalties reduced by 1 (2nd attack) or 2 (3rd attack).",
+              "compset": "WeaponTrait",
+              "components": "Ability",
+              "containment": "Installed"
+            },
+            "wtFinesse.175": {
+              "name": "Finesse",
+              "description": "You can use your Dexterity modifier instead of your Strength modifier on attack rolls using this melee weapon. You still use your Strength modifier when calculating damage.",
+              "summary": "Can use your Dex modifier to calculate attacks with this weapon.",
+              "compset": "WeaponTrait",
+              "components": "Ability",
+              "containment": "Installed"
+            },
+            "wtNonlethal.176": {
+              "name": "Nonlethal",
+              "description": "Attacks with this weapon are nonlethal, and are used to knock creatures unconscious instead of kill them. You can use a nonlethal weapon to make a lethal attack with a –2 circumstance penalty.",
+              "compset": "WeaponTrait",
+              "components": "Ability",
+              "containment": "Installed"
+            },
+            "wtUnarmed.173": {
+              "name": "Unarmed",
+              "description": "An unarmed attack uses your body rather than a manufactured weapon. An unarmed attack isn’t a weapon, though it’s categorized with weapons for weapon groups, and it might have weapon traits. Since it’s part of your body, an unarmed attack can’t be Disarmed. It also doesn’t take up a hand, though a fist or other grasping appendage follows the same rules as a free-hand weapon.",
+              "summary": "Not a weapon, and can't be Disarmed.",
+              "compset": "WeaponTrait",
+              "components": "Ability",
+              "containment": "Installed"
+            }
+          }
+        },
+        "rvFocusPoints.54": {
+          "name": "Focus Points",
+          "compset": "Reserves",
+          "rvMax": 1,
+          "rvCurrent": 1
+        },
+        "rvHeroPoints.55": {
+          "name": "Hero Points",
+          "description": "Your character earns Hero Points for performing heroic deeds or tasks and can spend these Hero Points to gain certain benefits. Your character starts each game session with 1 Hero Point. The GM can award Hero Points when PCs perform further heroic deeds or tasks, or when players do something special for the group. For the characters’ actions, this all comes from the story. A character needs to do something selfless or daring beyond normal expectations. Players add Hero Points by taking on at least one additional responsibility, such as bringing food for the group, keeping a map of a dungeon, or taking notes.\n\nEach game session, the GM should award no more than 1 Hero Point per PC for in-game actions plus 1 Hero Point per PC for out-of-game actions. This number can be higher for game sessions longer than 4 hours.\n\nYour character can have a maximum of 3 Hero Points at a given time. These points can’t be saved up over the course of multiple sessions; at the end of each game session, your character loses all Hero Points.\n\nSpending Hero Points\n\nSpending Hero Points doesn’t require your character to take an action, a reaction, or a free action.\n\n• Spending 1 Hero Point allows you to stave off death. Anytime you gain the dying condition or your dying condition increases in severity (see page 296), you can return to 1 Hit Point. As normal for gaining HP when dying, you lose the dying condition, become conscious, and are slowed for 1 round. lose the dying condition entirely, even if the increase in the dying condition would otherwise cause you to die. If you have 0 Hit Points, you also go to 1 Hit Point.\n\n• Spending 2 Hero Points allows you to reroll a d20 roll. You must use the second result, but if you fail, you regain 1 of the Hero Points you just spent. You can’t spend Hero Points more than once on a single roll. This is a fortune effect.\n\n• Spending 3 Hero Points allows you to act one extra time in an encounter. You can spend the Hero Points on your turn to increase your number of actions for the turn by 1. To take an extra reaction when you’ve already used your reaction for the round, you spend these Hero Points when the trigger for that reaction occurs. You can’t spend Hero Points to use additional actions or reactions if you can’t act.\n\nDescribing Heroic Deeds\n\nBecause spending Hero Points reflects heroic deeds or tasks that surpass normal expectations, if you spend a Hero Point, you should describe the deed or task your character accomplishes with it to the other players.\n\nYour character’s deed might involve a lesson learned in a past adventure, could be spurred on by a determination to save someone else in the encounter, or might depend on an item that ended up on their person due to a previous exploit or social interaction. If you don’t want to describe the deed or don’t have any strong ideas about how to do so, ask the GM to come up with something for you. This can be a collaborative process, too. The GM might remind you of a long-forgotten event in the campaign, then have you fill in how that comes back just at the right time. ",
+          "compset": "Reserves",
+          "rvMax": 3,
+          "rvCurrent": 1
+        },
+        "rvHitPoints.216": {
+          "name": "Hit Points",
+          "compset": "Reserves",
+          "rvMax": 17,
+          "rvCurrent": 17
+        },
+        "skAcrobatics.81": {
+          "name": "Acrobatics",
+          "description": "Acrobatics measures your ability to perform tasks requiring coordination and grace. When you use the Escape basic action (page 470), you can use your Acrobatics modifier instead of your unarmed attack modifier.\n\nBalance {icon:action1}\nMove\nRequirements You are in a square that contains a narrow surface, uneven ground, or another similar feature.\nYou move across a narrow surface or uneven ground, attempting an Acrobatics check against its Balance DC. You are flat-footed while on a narrow surface or uneven ground.\nCritical Success You move up to your Speed.\nSuccess You move up to your Speed, treating it as diflcult terrain (every 5 feet costs 10 feet of movement).\nFailure You must remain stationary to keep your balance (wasting the action) or you fall. If you fall, your turn ends.\nCritical Failure You fall and your turn ends.\n\nSample Balance Tasks\nUntrained tangled roots, uneven cobblestones\nTrained wooden beam\nExpert deep, loose gravel\nExpert tightrope, smooth sheet of ice\nLegendary razor’s edge, chunks of floor falling in midair\n\nTumble Through {icon:action1}\nMove\nYou Stride up to your Speed. During this movement, you can try to move through the space of one enemy. Attempt an Acrobatics check against the enemy’s Reflex DC as soon as you try to enter its space. You can Tumble Through using Climb, Fly, Swim, or another action instead of Stride in the appropriate environment.\nSuccess You move through the enemy’s space, treating the squares in its space as diflcult terrain (every 5 feet costs 10 feet of movement). If you don’t have enough Speed to move all the way through its space, you get the same effect as a failure.\nFailure Your movement ends, and you trigger reactions as if you had moved out of the square you started in.\n\nAcrobatics Trained Actions\n\nManeuver in Flight {icon:action1}\nMove\nRequirements You have a fly Speed.\nYou try a diflcult maneuver while flying. Attempt an Acrobatics check. The GM determines what maneuvers are possible, but they rarely allow you to move farther than your fly Speed.\nSuccess You succeed at the maneuver.\nFailure Your maneuver fails. The GM chooses if you simply can’t move or if some other detrimental effect happens. The outcome should be appropriate for the maneuver you attempted (for instance, being blown off course if you were trying to fly against a strong wind).\nCritical Failure As failure, but the consequence is more dire.\n\nSample Maneuver in Flight Tasks\nTrained steep ascent or descent\nExpert fly against the wind, hover midair\nMaster reverse direction\nLegendary fly through gale force winds\n\nSqueeze\nExploration, Move\nYou contort yourself to squeeze through a space so small you can barely fit through. This action is for exceptionally small spaces; many tight spaces are diflcult terrain (page 475) that you can move through more quickly and without a check.\nCritical Success You squeeze through the tight space in 1 minute per 10 feet of squeezing.\nSuccess You squeeze through in 1 minute per 5 feet.\nCritical Failure You become stuck in the tight space. While you’re stuck, you can spend 1 minute attempting another Acrobatics check at the same DC. Any result on that check other than a critical failure causes you to become unstuck.\n\nSample Squeeze Tasks\nTrained space barely fitting your shoulders\nMaster space barely fitting your head",
+          "summary": "Acrobatics measures your ability to perform tasks requiring coordination and grace.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 4,
+          "stNet": 7,
+          "stDC": 17,
+          "ProfLevel": "Trained"
+        },
+        "skArcana.86": {
+          "name": "Arcana",
+          "description": "Arcana measures how much you know about arcane magic and creatures. Even if you’re untrained, you can Recall Knowledge (page 238).\n• Recall Knowledge about arcane theories; magic traditions; creatures of arcane significance (like dragons and beasts); and the Elemental, Astral, and Shadow Planes.\n\nArcana Trained Actions\nYou must be trained in Arcana to use it for the following general skill actions (page 234).\n• Decipher Writing about arcane theory.\n• Identify Magic, particularly arcane magic.\n• Learn a Spell from the arcane tradition.\n\nBorrow an Arcane Spell\nConcentrate, Exploration\nIf you’re an arcane spellcaster who prepares from a spellbook, you can attempt to prepare a spell from someone else’s spellbook. The GM sets the DC for the check based on the spell’s level and rarity; it’s typically a bit easier than Learning the Spell.\nSuccess You prepare the borrowed spell as part of your normal spell preparation.\nFailure You fail to prepare the spell, but the spell slot remains available for you to prepare a difierent spell. You can’t try to prepare this spell until the next time you prepare spells.",
+          "summary": "Arcana measures how much you know about arcane magic and creatures.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "ProfLevel": "Trained"
+        },
+        "skAthletics.93": {
+          "name": "Athletics",
+          "description": "Athletics allows you to perform deeds of physical prowess. When you use the Escape basic action (page 470), you can use your Athletics modifier instead of your unarmed attack modifier.\n\nClimb {icon:action1}\nMove\nRequirements You have both hands free.\nYou move up, down, or across an incline. Unless it’s particularly easy, you must attempt an Athletics check. The GM determines the DC based on the nature of the incline and environmental circumstances. You’re flat-footed unless you have a climb Speed.\nCritical Success You move up, across, or safely down the incline for 5 feet plus 5 feet per 20 feet of your land Speed (a total of 10 feet for most PCs).\nSuccess You move up, across, or safely down the incline for 5 feet per 20 feet of your land Speed (a total of 5 feet for most PCs, minimum 5 feet if your Speed is below 20 feet).\nCritical Failure You fall. If you began the climb on stable ground, you fall and land prone.\n\nSample Climb Tasks\nUntrained ladder, steep slope, low-branched tree\nTrained rigging, rope, typical tree\nExpert wall with small handholds and footholds\nMaster ceiling with handholds and footholds, rock wall\nLegendary smooth surface\n\nForce Open {icon:action1}\nAttack\nUsing your body, a lever, or some other tool, you attempt to forcefully open a door, window, container or heavy gate. With a high enough result, you can even smash through walls. Without a crowbar, prying something open takes a –2 item penalty to the Athletics check to Force Open.\nCritical Success You open the door, window, container, or gate and can avoid damaging it in the process.\nSuccess You break the door, window, container, or gate open, and the door, window, container, or gate gains the broken condition. If it’s especially sturdy, the GM might have it take damage but not be broken.\nCritical Failure Your attempt jams the door, window, container, or gate shut, imposing a –2 circumstance penalty on future attempts to Force it Open.\n\nSample Force Open Tasks\nUntrained fabric, flimsy glass\nTrained ice, sturdy glass\nExpert flimsy wooden door, wooden portcullis\nMaster sturdy wooden door, iron portcullis, metal bar\nLegendary stone or iron door\n\nGrapple {icon:action1}\nAttack\nRequirements You have at least one free hand. Your target cannot be more than one size larger than you.\nYou attempt to grab an opponent with your free hand. Attempt an Athletics check against their Fortitude DC. You can also Grapple to keep your hold on a creature you already grabbed.\nCritical Success Your opponent is restrained until the end of your next turn unless you move or your opponent Escapes (page 470).\nSuccess Your opponent is grabbed until the end of your next turn unless you move or your opponent Escapes.\nFailure You fail to grab your opponent. If you already had the opponent grabbed or restrained using a Grapple, those conditions on that creature end.\nCritical Failure If you already had the opponent grabbed or restrained, it breaks free. Your target can either grab you, as if it succeeded at using the Grapple action against you, or force you to fall and land prone.\n\nHigh Jump {icon:action2}\nYou Stride, then make a vertical Leap and attempt a DC 30 Athletics check to increase the height of your jump. If you didn’t Stride at least 10 feet, you automatically fail your check. This DC might be increased or decreased due to the situation, as determined by the GM.\nCritical Success Increase the maximum vertical distance to 8 feet, or increase the maximum vertical distance to 5 feet and maximum horizontal distance to 10 feet.\nSuccess Increase the maximum vertical distance to 5 feet.\nFailure You Leap normally.\nCritical Failure You don’t Leap at all, and instead you fall prone in your space.\n\nLeap\nThe Leap basic action is used for High Jump and Long Jump. Leap lets you take a careful, short jump. You can Leap up to 10 feet horizontally if your Speed is at least 15 feet, or up to 15 feet horizontally if your Speed is at least 30 feet. You land in the space where your Leap ends (meaning you can typically clear a 5-foot gap if your Speed is between 15 feet and 30 feet, or a 10-foot gap if your Speed is 30 feet or more). If you make a vertical Leap, you can move up to 3 feet vertically and 5 feet horizontally onto an elevated surface.\n\nLong Jump {icon:action2}\nYou Stride, then make a horizontal Leap and attempt an Athletics check to increase the length of your jump. The DC of the Athletics check is equal to the total distance in feet you’re attempting to move during your Leap (so you’d need to succeed at a DC 20 check to Leap 20 feet). You can’t Leap farther than your Speed. If you didn’t Stride at least 10 feet, or if you attempt to jump in a difierent direction than your Stride, you automatically fail your check. This DC might be increased or decreased due to the situation, as determined by the GM.\nSuccess Increase the maximum horizontal distance you Leap to the desired distance.\nFailure You Leap normally.\nCritical Failure You Leap normally, but then fall and land prone.\n\nShove {icon:action1}\nAttack\nRequirements You have at least one hand free. The target can’t be more than one size larger than you.\nYou push an opponent away from you. Attempt an Athletics check against your opponent’s Fortitude DC.\nCritical Success You push your opponent up to 10 feet away from you. You can Stride after it, but you must move the same distance and in the same direction.\nSuccess You push your opponent back 5 feet. You can Stride after it, but you must move the same distance and in the same direction.\nCritical Failure You lose your balance, fall, and land prone.\n\nForced Movement\nThe Shove action can force a creature to move. When an effect forces you to move, or if you start falling, the distance you move is defined by the effect that moved you, not by your Speed. Because you’re not acting to move, this doesn’t trigger reactions triggered by movement.\n\nSwim {icon:action1}\nMove\nYou propel yourself through water. In most calm water, you succeed at the action without needing to attempt a check. If you must breathe air and you’re submerged in water, you must hold your breath each round. If you fail to hold your breath, you begin to drown (as described on page 478). If the water you are swimming in is turbulent or otherwise dangerous, you might have to attempt an Athletics check to Swim. If you end your turn in water and haven’t succeeded at a Swim action that turn, you sink 10 feet or get moved by the current, as determined by the GM. However, if your last action on your turn was to enter the water, you don’t sink or move with the current that turn.\nCritical Success You move through the water 10 feet, plus 5 feet per 20 feet of your land Speed (a total of 15 feet for most PCs).\nSuccess You move through the water 5 feet, plus 5 feet per 20 feet of your land Speed (a total of 10 feet for most PCs).\nCritical Failure You make no progress, and if you’re holding your breath, you lose 1 round of air.\n\nSample Swim Tasks\nUntrained lake or other still water\nTrained flowing water, like a river\nExpert swiftly flowing river\nMaster stormy sea\nLegendary maelstrom, waterfall\n\nFalling\nWhen you fall more than 5 feet, you take falling damage when you land, which is bludgeoning damage equal to half the distance you fell. If you take any damage from a fall, you’re knocked prone when you land. If you fall into water, snow, or another soft substance, calculate the damage from the fall as though your fall were 20 feet shorter. The reduction can’t be greater than the depth of the water (so when falling into water that is only 10 feet deep, you treat the fall as 10 feet shorter). You can Grab an Edge as a reaction (page 472) to reduce or eliminate the damage from some falls. More detailed rules for falling damage appear on page 463.\n\nTrip {icon:action1}\nAttack\nRequirements You have at least one hand free. Your target can’t be more than one size larger than you.\nYou try to knock an opponent to the ground. Attempt an Athletics check against the target’s Reflex DC.\nCritical Success The target falls and lands prone and takes 1d6 bludgeoning damage.\nSuccess The target falls and lands prone.\nCritical Failure You lose your balance and fall and land prone.\n\nAthletics Trained Action\n\nDisarm {icon:action1}\nAttack\nRequirements You have at least one hand free. The target can’t be more than one size larger than you.\nYou try to knock something out of an opponent’s grasp. Attempt an Athletics check against the opponent’s Reflex DC.\nCritical Success You knock the item out of the opponent’s grasp. It falls to the ground in the opponent’s space.\nSuccess You weaken your opponent’s grasp on the item. Until the start of that creature’s turn, attempts to Disarm the opponent of that item gain a +2 circumstance bonus, and the target takes a –2 circumstance penalty to attacks with the item or other checks requiring a firm grasp on the item.\nCritical Failure You lose your balance and become flat-footed until the start of your next turn.",
+          "summary": "Athletics allows you to perform deeds of physical prowess.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 2,
+          "stNet": 5,
+          "stDC": 15,
+          "ProfLevel": "Trained"
+        },
+        "skCrafting.103": {
+          "name": "Crafting",
+          "description": "You can use this skill to create, understand, and repair items. Even if you’re untrained, you can Recall Knowledge (page 238).\n• Recall Knowledge about alchemical reactions, the value of items, engineering, unusual materials, and alchemical or mechanical creatures. The GM determines which creatures this applies to, but it usually includes constructs.\n\nRepair\nExploration, Manipulate\nRequirements You have a repair kit (page 291).\nYou spend 10 minutes attempting to fix a damaged item, placing the item on a stable surface and using the repair kit with both hands. The GM sets the DC, but it’s usually about the same DC to Repair a given item as it is to Craft it in the first place. You can’t Repair a destroyed item.\nCritical Success You restore 10 Hit Points to the item, plus an additional 10 Hit Points per proficiency rank you have in Crafting (a total of 20 HP if you’re trained, 30 HP if you’re an expert, 40 HP if you’re a master, or 50 HP if you’re legendary).\nSuccess You restore 5 Hit Points to the item, plus an additional 5 per proficiency rank you have in Crafting (for a total of 10 HP if you are trained, 15 HP if you’re an expert, 20 HP if you’re a master, or 25 HP if you’re legendary).\nCritical Failure You deal 2d6 damage to the item. Apply the item’s Hardness to this damage.\n\nCrafting Trained Actions\n\nYou must be trained in Crafting to use it to Earn Income (page 236).\n• Earn Income by crafting goods for the market.\n\nCraft\nDowntime, Manipulate\nYou can make an item from raw materials. You need the Alchemical Crafting skill feat to create alchemical items, the Magical Crafting skill feat to create magic items, and the Snare Crafting feat to create snares.\nTo Craft an item, you must meet the following requirements:\n• The item is your level or lower. An item that doesn’t list a level is level 0. If the item is 9th level or higher, you must be a master in Crafting, and if it’s 16th or higher, you must be legendary.\n• You have the formula for the item; see Getting Formulas below for more information.\n• You have an appropriate set of tools and, in many cases, a workshop. For example, you need access to a smithy to forge a metal shield.\n• You must supply raw materials worth at least half the item’s Price. You always expend at least that amount of raw materials when you Craft successfully. If you’re in a settlement, you can usually spend currency to get the amount of raw materials you need, except in the case of rarer precious materials.\n\nYou must spend 4 days at work, at which point you attempt a Crafting check. The GM determines the DC to Craft the item based on its level, rarity, and other circumstances.\n\nIf your attempt to create the item is successful, you expend the raw materials you supplied. You can pay the remaining portion of the item’s Price in materials to complete the item immediately, or you can spend additional downtime days working on it. For each additional day you spend, reduce the value of the materials you need to expend to complete the item. This amount is determined using Table 4–2: Income Earned (page 236), based on your proficiency rank in Crafting and using your own level instead of a task level. After any of these downtime days, you can complete the item by spending the remaining portion of its Price in materials. If the downtime days you spend are interrupted, you can return to finish the item later, continuing where you left off. An example of Crafting appears in the sidebar.\nCritical Success Your attempt is successful. Each additional day spent Crafting reduces the materials needed to complete the item by an amount based on your level + 1 and your proficiency rank in Crafting.\nSuccess Your attempt is successful. Each additional day spent Crafting reduces the materials needed to complete the item by an amount based on your level and your proficiency rank.\nFailure You fail to complete the item. You can salvage the raw materials you supplied for their full value. If you want to try again, you must start over.\nCritical Failure You fail to complete the item. You ruin 10% of the raw materials you supplied, but you can salvage the rest. If you want to try again, you must start over.\n\nConsumables and Ammunition\nYou can Craft items with the consumable trait in batches, making up to four of the same item at once with a single check. This requires you to include the raw materials for all the items in the batch at the start, and you must complete the batch all at once. You also Craft non-magical ammunition in batches, using the quantity listed in Table 6–8: Ranged Weapons (typically 10).\n\nGetting Formulas\nYou can gain access to the formulas for all common items in Chapter 6: Equipment by purchasing a basic crafter’s book (page 287). See the rules on page 293 for information on how to acquire other formulas.\n\nIdentify Alchemy\nConcentrate, Exploration, Secret\nRequirements You have alchemist’s tools (page 287).\nYou can identify the nature of an alchemical item with 10 minutes of testing using alchemist’s tools. If your attempt is interrupted in any way, you must start over.\nSuccess You identify the item and the means of activating it.\nFailure You fail to identify the item but can try again.\nCritical Failure You misidentify the item as another item of the GM’s choice.",
+          "summary": "You can use this skill to create, understand, and repair items.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 7,
+          "stDC": 17,
+          "stMiscMod": 1,
+          "ProfLevel": "Trained"
+        },
+        "skDeception.108": {
+          "name": "Deception",
+          "description": "You can trick and mislead others using disguises, lies, and other forms of subterfuge.\nCreate a Diversion {icon:action1}\nMental\nWith a gesture, a trick, or some distracting words, you can create a diversion that draws creatures’ attention elsewhere. If you use a gesture or trick, this action gains the manipulate trait. If you use distracting words, it gains the auditory and linguistic traits.\n\nAttempt a single Deception check and compare it to the Perception DCs of the creatures whose attention you’re trying to divert. Whether or not you succeed, creatures you attempt to divert gain a +4 circumstance bonus to their Perception DCs against your attempts to Create a Diversion for 1 minute.\nSuccess You become hidden to each creature whose Perception DC is less than or equal to your result. (The hidden condition allows you to Sneak away, as described on page 252.) This lasts until the end of your turn or until you do anything except Step or use the Hide or the Sneak action of the Stealth skill (pages 251 and 252). If you Strike a creature, the creature remains flat-footed against that attack, and you then become observed. If you do anything else, you become observed just before you act unless the GM determines otherwise.\nFailure You don’t divert the attention of any creatures whose Perception DC exceeds your result, and those creatures are aware you were trying to trick them.\n\nImpersonate\nConcentration, Exploration, Manipulate, Secret\nYou create a disguise to pass yourself off as someone or something you are not. Assembling a convincing disguise takes 10 minutes and requires a disguise kit (found on page 290), but a simpler, quicker disguise might do the job if you’re not trying to imitate a specific individual, at the GM’s discretion.\n\nIn most cases, creatures have a chance to detect your deception only if they use the Seek action to attempt Perception checks against your Deception DC. If you attempt to directly interact with someone while disguised, the GM rolls a secret Deception check for you against that creature’s Perception DC instead. If you’re disguised as a specific individual, the GM might give creatures you interact with a circumstance bonus based on how well they know the person you’re imitating, or the GM might roll a secret Deception check even if you aren’t directly interacting with others.\nSuccess You trick the creature into thinking you’re the person you’re disguised as. You might have to attempt a new check if your behavior changes.\nFailure The creature can tell you’re not who you claim to be.\nCritical Failure The creature can tell you’re not who you claim to be, and it recognizes you if it would know you without a disguise.\n\nLie\nAuditory, Concentrate, Linguistic, Mental, Secret\nYou try to fool someone with an untruth. Doing so takes at least 1 round, or longer if the lie is elaborate. You roll a single Deception check and compare it against the Perception DC of every creature you are trying to fool. The GM might give them a circumstance bonus based on the situation and the nature of the lie you are trying to tell. Elaborate or highly unbelievable lies are much harder to get a creature to believe than simpler and more believable lies, and some lies are so big that it’s impossible to get anyone to believe them.\n\nAt the GM’s discretion, if a creature initially believes your lie, it might attempt a Perception check later to Sense Motive against your Deception DC to realize it’s a lie. This usually happens if the creature discovers enough evidence to counter your statements.\nSuccess The target believes your lie.\nFailure The target doesn’t believe your lie and gains a +4 circumstance bonus against your attempts to Lie for the duration of your conversation. The target is also more likely to be suspicious of you in the future.\n\nDeception Trained Action\n\nFeint {icon:action1}\nMental\nRequirements You are within melee reach of the opponent you attempt to Feint.\nWith a misleading flourish, you leave an opponent unprepared for your real attack. Attempt a Deception check against that opponent’s Perception DC.\nCritical Success You throw your enemy’s defenses against you entirely off. The target is flat-footed against melee attacks that you attempt against it until the end of your next turn.\nSuccess Your foe is fooled, but only momentarily. The target is flat-footed against the next melee attack that you attempt against it before the end of your current turn.\nCritical Failure Your feint backfires. You are flat-footed against melee attacks the target attempts against you until the end of your next turn.",
+          "summary": "You can trick and mislead others using disguises, lies, and other forms of subterfuge.",
+          "compset": "Skill",
+          "stAbScModifier": -1,
+          "stNet": -1,
+          "stDC": 9,
+          "ProfLevel": "Untrained"
+        },
+        "skDiplomacy.113": {
+          "name": "Diplomacy",
+          "description": "You infiuence others through negotiation and fiattery.\n\nGather Information\nExploration, Secret\nYou canvass local markets, taverns, and gathering places in an attempt to learn about a specific individual or topic. The GM determines the DC of the check and the amount of time it takes (typically 2 hours, but sometimes more), along with any benefit you might be able to gain by spending coin on bribes, drinks, or gifts.\nSuccess You collect information about the individual or topic. The GM determines the specifics.\nCritical Failure You collect incorrect information about the individual or topic.\n\nSample Gather Information Tasks\nUntrained talk of the town\nTrained common rumor\nExpert obscure rumor, poorly guarded secret\nExpert well-guarded or esoteric information\nLegendary information known only to an incredibly select few, or only to extraordinary beings\n\nMake an Impression\nAuditory, Concentrate, Exploration, Linguistic, Mental\nWith at least 1 minute of conversation, during which you engage in charismatic overtures, flattery, and other acts of goodwill, you seek to make a good impression on someone to make them temporarily agreeable. At the end of the conversation, attempt a Diplomacy check against the Will DC of one target, modified by any circumstances the GM sees fit. Good impressions (or bad impressions, on a critical failure) last for only the current social interaction unless the GM decides otherwise.\nCritical Success The target’s attitude toward you improves by two steps.\nSuccess The target’s attitude toward you improves by one step.\nCritical Failure The target’s attitude toward you decreases by one step.\n\nChanging Attitudes\nYour influence on NPCs is measured with a set of attitudes that reflect how they view your character. These are only a brief summary of a creature’s disposition. The GM will supply additional nuance based on the history and beliefs of the characters you’re interacting with, and their attitudes can change in accordance with the story. The attitudes are detailed in the Conditions Appendix and are summarized here.\n• Helpful: Willing to help you and responds favorably to your requests.\n• Friendly: Has a good attitude toward you, but won’t necessarily stick their neck out to help you.\n• Indifferent: Doesn’t care about you either way. (Most NPCs start out indifierent.)\n• Unfriendly: Dislikes you and doesn’t want to help you.\n• Hostile: Actively works against you—and might attack you just because of their dislike.\n\nNo one can ever change the attitude of a player character with these skills. You can roleplay interactions with player characters, and even use Diplomacy results if the player wants a mechanical sense of how convincing or charming a character is, but players make the ultimate decisions about how their characters respond.\n\nRequest{icon:action1}\nAuditory, Concentrate, Linguistic, Mental\nYou can make a request of a creature that’s friendly or helpful to you. You must couch the request in terms that the target would accept given their current attitude toward you. The GM sets the DC based on the diflculty of the request. Some requests are unsavory or impossible, and even a helpful NPC would never agree to them.\nCritical Success The target agrees to your request without qualifications.\nSuccess The target agrees to your request, but they might demand added provisions or alterations to the request.\nFailure The target refuses the request, though they might propose an alternative that is less extreme.\nCritical Failure Not only does the target refuse the request, but their attitude toward you decreases by one step due to the temerity of the request.",
+          "summary": "You infiuence others through negotiation and fiattery.",
+          "compset": "Skill",
+          "stAbScModifier": -1,
+          "stNet": -2,
+          "stDC": 8,
+          "stMiscMod": -1,
+          "ProfLevel": "Untrained"
+        },
+        "skIntimidation.117": {
+          "name": "Intimidation",
+          "description": "You bend others to your will using threats.\n\nCoerce\nAuditory, Concentrate, Emotion, Exploration, Linguistic, Mental\nWith threats either veiled or overt, you attempt to bully a creature into doing what you want. You must spend at least 1 minute of conversation with a creature you can see and that can either see or sense you. At the end of the conversation, attempt an Intimidation check against the target’s Will DC, modified by any circumstances the GM determines. The attitudes referenced in the effects below are summarized in the Changing Attitudes sidebar on page 246 and described in full in the Conditions Appendix, starting on page 618.\nCritical Success The target gives you the information you seek or agrees to follow your directives so long as they aren’t likely to harm the target in any way. The target continues to comply for an amount of time determined by the GM but not exceeding 1 day, at which point the target becomes unfriendly (if they weren’t already unfriendly or hostile). However, the target is too scared of you to retaliate—at least in the short term.\nSuccess As critical success, but once the target becomes unfriendly, they might decide to act against you—for example, by reporting you to the authorities or assisting your enemies.\nFailure The target doesn’t do what you say, and if they were not already unfriendly or hostile, they become unfriendly.\nCritical Failure The target refuses to comply, becomes hostile if they weren’t already, and can’t be Coerced by you for at least 1 week.\n\nDemoralize {icon:action1}\nAuditory, Concentrate, Emotion, Mental\nWith a sudden shout, a well-timed taunt, or a cutting putdown, you can shake an enemy’s resolve. Choose a creature within 30 feet of you who you’re aware of. Attempt an Intimidation check against that target’s Will DC. If the target does not understand the language you are speaking, you’re not speaking a language, or they can’t hear you, you take a –4 circumstance penalty to the check. Regardless of your result, the target is temporarily immune to your attempts to Demoralize it for 10 minutes.\nCritical Success The target becomes frightened 2.\nSuccess The target becomes frightened 1.",
+          "summary": "You bend others to your will using threats.",
+          "compset": "Skill",
+          "stAbScModifier": -1,
+          "stNet": -1,
+          "stDC": 9,
+          "ProfLevel": "Untrained"
+        },
+        "skLoreAcademia.353": {
+          "name": "Academia Lore",
+          "description": "You have specialized information on a narrow topic. Lore features many subcategories. You might have Military Lore, Sailing Lore, Vampire Lore, or any similar subcategory of the skill. Each subcategory counts as its own skill, so applying a skill increase to Planar Lore wouldn’t increase your proficiency with Sailing Lore, for example.\n\nYou gain a specific subcategory of the Lore skill from your background. The GM determines what other subcategories they’ll allow as Lore skills, though these categories are always less broad than any of the other skills that allow you to Recall Knowledge, and they should never be able to fully or mainly take the place of another skill’s Recall Knowledge action. For instance, Magic Lore wouldn’t enable you to recall the same breadth of knowledge covered by Arcana, Adventuring Lore wouldn’t simply give you all the information an adventurer needs, and Planar Lore would not be sufficient to gain all the information spread across various skills and subcategories such as Heaven Lore.\n\nIf you have multiple subcategories of Lore that could apply to a check or that would overlap with another skill in the circumstances, you can use the skill with the better skill modifier or the one you would prefer to use. If there’s any doubt whether a Lore skill applies to a specific topic or action, the GM decides whether it can be used or not. Even if you’re untrained in Lore, you can use it to Recall Knowledge (page 238).\n• Recall Knowledge about the subject of your Lore skill’s subcategory.\n\nLore Trained Action\nYou must be trained in Lore to use it to Earn Income (page 236).\n• Earn Income by using your knowledge to practice a trade.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "ProfLevel": "Trained"
+        },
+        "skLoreUnderworld.352": {
+          "name": "Underworld Lore",
+          "description": "You have specialized information on a narrow topic. Lore features many subcategories. You might have Military Lore, Sailing Lore, Vampire Lore, or any similar subcategory of the skill. Each subcategory counts as its own skill, so applying a skill increase to Planar Lore wouldn’t increase your proficiency with Sailing Lore, for example.\n\nYou gain a specific subcategory of the Lore skill from your background. The GM determines what other subcategories they’ll allow as Lore skills, though these categories are always less broad than any of the other skills that allow you to Recall Knowledge, and they should never be able to fully or mainly take the place of another skill’s Recall Knowledge action. For instance, Magic Lore wouldn’t enable you to recall the same breadth of knowledge covered by Arcana, Adventuring Lore wouldn’t simply give you all the information an adventurer needs, and Planar Lore would not be sufficient to gain all the information spread across various skills and subcategories such as Heaven Lore.\n\nIf you have multiple subcategories of Lore that could apply to a check or that would overlap with another skill in the circumstances, you can use the skill with the better skill modifier or the one you would prefer to use. If there’s any doubt whether a Lore skill applies to a specific topic or action, the GM decides whether it can be used or not. Even if you’re untrained in Lore, you can use it to Recall Knowledge (page 238).\n• Recall Knowledge about the subject of your Lore skill’s subcategory.\n\nLore Trained Action\nYou must be trained in Lore to use it to Earn Income (page 236).\n• Earn Income by using your knowledge to practice a trade.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "ProfLevel": "Trained"
+        },
+        "skMedicine.120": {
+          "name": "Medicine",
+          "description": "You can patch up wounds and help people recover from diseases and poisons. Even if you’re untrained in Medicine, you can use it to Recall Knowledge (page 238).\n• Recall Knowledge about diseases, injuries, poisons, and other ailments. You can use this to perform forensic examinations if you spend 10 minutes (or more, as determined by the GM) checking for evidence such as wound patterns. This is most useful when determining how a body was injured or killed.\n\nAdminister First Aid {icon:action2}\nManipulate\nRequirements You have healer’s tools (page 290).\nYou perform first aid on an adjacent creature that is dying or bleeding. If a creature is both dying and bleeding, choose which ailment you’re trying to treat before you roll. You can Administer First Aid again to attempt to remedy the other effect.\n• Stabilize Attempt a Medicine check on a creature that has 0 Hit Points and the dying condition. The DC is equal to 5 + that creature’s recovery roll DC (typically 15 + its dying value).\n• Stop Bleeding Attempt a Medicine check on a creature that is taking persistent bleed damage (page 452), giving them a chance to make another flat check to remove the persistent damage. The DC is usually the DC of the effect that caused the bleed.\nSuccess If you’re trying to stabilize, the creature loses the dying condition (but remains unconscious). If you’re trying to stop bleeding, the creature attempts a flat check to end the bleeding.\nCritical Failure If you were trying to stabilize, the creature’s dying value increases by 1. If you were trying to stop bleeding, it immediately takes an amount of damage equal to its persistent bleed damage.\n\nMedicine Trained Actions\n\nTreat Disease\nDowntime, Manipulate\nRequirements You have healer’s tools (page 290).\nYou spend at least 8 hours caring for a diseased creature. Attempt a Medicine check against the disease’s DC. After you attempt to Treat a Disease for a creature, you can’t try again until after that creature’s next save against the disease.\nCritical Success You grant the creature a +4 circumstance bonus to its next saving throw against the disease.\nSuccess You grant the creature a +2 circumstance bonus to its next saving throw against the disease.\nCritical Failure Your efiorts cause the creature to take a –2 circumstance penalty to its next save against the disease.\n\nTreat Poison {icon:action1}\nManipulate\nRequirements You have healer’s tools (page 290).\nYou treat a patient to prevent the spread of poison. Attempt a Medicine check against the poison’s DC. After you attempt to Treat a Poison for a creature, you can’t try again until after the next time that creature attempts a save against the poison.\nCritical Success You grant the creature a +4 circumstance bonus to its next saving throw against the poison.\nSuccess You grant the creature a +2 circumstance bonus to its next saving throw against the poison.\nCritical Failure Your efiorts cause the creature to take a –2 circumstance penalty to its next save against the poison.\n\nTreat Wounds\nExploration, Healing, Manipulate\nRequirements You have healer’s tools (page 290).\nYou spend 10 minutes treating one injured living creature (targeting yourself, if you so choose). The target is then temporarily immune to Treat Wounds actions for 1 hour, but this interval overlaps with the time you spent treating (so a patient can be treated once per hour, not once per 70 minutes).\n\nThe Medicine check DC is usually 15, though the GM might adjust it based on the circumstances, such as treating a patient outside in a storm, or treating magically cursed wounds. If you’re an expert in Medicine, you can instead attempt a DC 20 check to increase the Hit Points regained by 10; if you’re a master of Medicine, you can instead attempt a DC 30 check to increase the Hit Points regained by 30; and if you’re legendary, you can instead attempt a DC 40 check to increase the Hit Points regained by 50. The damage dealt on a critical failure remains the same.\n\nIf you succeed at your check, you can continue treating the target to grant additional healing. If you treat them for a total of 1 hour, double the Hit Points they regain from Treat Wounds. The result of your Medicine check determines how many Hit Points the target regains.\nCritical Success The target regains 4d8 Hit Points, and its wounded condition is removed.\nSuccess The target regains 2d8 Hit Points, and its wounded condition is removed.\nCritical Failure The target takes 1d8 damage.",
+          "summary": "You can patch up wounds and help people recover from diseases and poisons.",
+          "compset": "Skill",
+          "stDC": 10,
+          "ProfLevel": "Untrained"
+        },
+        "skNature.125": {
+          "name": "Nature",
+          "description": "You know a great deal about the natural world, and you command and train animals and magical beasts. Even if you’re untrained in Nature, you can use it to Recall Knowledge (page 238).\n• Recall Knowledge about fauna, fiora, geography, weather, the environment, creatures of natural origin (like animals, beasts, fey, and plants), the First World, the Material Plane, and the Elemental Planes.\n\nCommand an Animal {icon:action1}\nAuditory, Concentrate\nYou issue an order to an animal. Attempt a Nature check against the animal’s Will DC. The GM might adjust the DC if the animal has a good attitude toward you, you suggest a course of action it was predisposed toward, or you offer it a treat.\n\nYou automatically fail if the animal is hostile or unfriendly to you. If the animal is helpful to you, increase your degree of success by one step. You might be able to Command an Animal more easily with a feat like Ride (page 266).\n\nMost animals know the Leap, Seek, Stand, Stride, and Strike basic actions. If an animal knows an activity, such as a horse’s Gallop, you can Command the Animal to perform the activity, but you must spend as many actions on Command an Animal as the activity’s number of actions. You can also spend multiple actions to Command the Animal to perform that number of basic actions on its next turn; for instance, you could spend 3 actions to Command an Animal to Stride three times or to Stride twice and then Strike.\nSuccess The animal does as you command on its next turn.\nFailure The animal is hesitant or resistant, and it does nothing.\nCritical Failure The animal misbehaves or misunderstands, and it takes some other action determined by the GM.\n\nNature Trained Actions\nYou must be trained in Nature to use it for the following general skill actions (page 234).\n• Identify Magic, particularly primal magic.\n• Learn a Spell from the primal tradition.",
+          "summary": "You know a great deal about the natural world, and you command and train animals and magical beasts.",
+          "compset": "Skill",
+          "stDC": 10,
+          "ProfLevel": "Untrained"
+        },
+        "skOccultism.127": {
+          "name": "Occultism",
+          "description": "You know a great deal about ancient philosophies, esoteric lore, obscure mysticism, and supernatural creatures. Even if you’re untrained in Occultism, you can use it to Recall Knowledge (page 238).\n• Recall Knowledge about ancient mysteries; obscure philosophies; creatures of occult significance (like aberrations, spirits, and oozes); and the Positive Energy, Negative Energy, Shadow, Astral, and Ethereal Planes.\n\nOccultism Trained Actions\nYou must be trained in Occultism to use it for the following general skill actions (page 234).\n• Decipher Writing on occult topics, including complex metaphysical systems, syncretic principles, weird philosophies, and incoherent ramblings.\n• Identify Magic, particularly occult magic.\n• Learn a Spell from the occult tradition.",
+          "summary": "You know a great deal about ancient philosophies, esoteric lore, obscure mysticism, and supernatural creatures.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "ProfLevel": "Trained"
+        },
+        "skPerformance.128": {
+          "name": "Performance",
+          "description": "You are skilled at a form of performance, using your talents to impress a crowd or make a living.\nBasic Competence\nSome performances require you to be more than just charismatic, and if you don’t meet the demands of the art form or the audience, the GM might apply a penalty based on the relevant ability score. For example, if you’re dancing and have a negative Dexterity modifier, you might take a penalty to your attempt at dancing. Likewise, if you are orating and have a negative Intelligence modifier, you might have to hope your raw Charisma can overcome the penalties from your intellectual shortcomings—or ask someone to help write your speeches!\n\nPerformance Traits\nWhen you use an action that utilizes the Performance skill, it gains one or more traits relevant to the type of performance. The GM might change these depending on the circumstances, but the most common performance-based traits are listed below.\n\nPerformance: Additional Traits\nAct or perform comedy: Auditory, linguistic, and visual\nDance: Move and visual\nPlay an instrument: Auditory and manipulate\nOrate or sing: Auditory and linguistic\n\nPerform {icon:action1}\nConcentrate\nWhen making a brief performance—one song, a quick dance, or a few jokes—you use the Perform action. This action is most useful when you want to prove your capability or impress someone quickly. Performing rarely has an impact on its own, but it might influence the DCs of subsequent Diplomacy checks against the observers—or even change their attitudes — if the GM sees fit.\nCritical Success Your performance impresses the observers, and they’re likely to share stories of your ability.\nSuccess You prove yourself, and observers appreciate the quality of your performance.\nFailure Your performance falls flat.\nCritical Failure You demonstrate only incompetence.\n\nSample Perform Tasks\nUntrained audience of commoners\nTrained audience of artisans\nExpert audience of merchants or minor nobles\nMaster audience of high nobility or minor royalty\nLegendary audience of major royalty or otherworldly beings\n\nPerformance Trained Action\nYou must be trained in Performance to use it to Earn Income (page 236).\n• Earn Income by staging a performance.",
+          "summary": "You are skilled at a form of performance, using your talents to impress a crowd or make a living.",
+          "compset": "Skill",
+          "stAbScModifier": -1,
+          "stNet": -2,
+          "stDC": 8,
+          "stMiscMod": -1,
+          "ProfLevel": "Untrained"
+        },
+        "skReligion.130": {
+          "name": "Religion",
+          "description": "The secrets of deities, dogma, faith, and the realms of divine creatures both sublime and sinister are open to you. You also understand how magic works, though your training imparts a religious slant to that knowledge. Even if you’re untrained in Religion, you can use it to Recall Knowledge (page 238).\n• Recall Knowledge about divine agents, the finer points of theology, obscure myths regarding a faith, and creatures of religious significance (like celestials, fiends, and undead), the Outer Sphere, and the Positive and Negative Energy Planes.\n\nReligion Trained Actions\nYou must be trained in Religion to use it for the following general skill actions (page 234).\n• Decipher Writing of a religious nature, including allegories, homilies, and proverbs.\n• Identify Magic, particularly divine magic.\n• Learn a Spell from the divine tradition.",
+          "summary": "The secrets of deities, dogma, faith, and the realms of divine creatures both sublime and sinister are open to you.",
+          "compset": "Skill",
+          "stDC": 10,
+          "ProfLevel": "Untrained"
+        },
+        "skSociety.131": {
+          "name": "Society",
+          "description": "You understand the people and systems that make civilization run, and you know the historical events that make societies what they are today. Further, you can use that knowledge to navigate the complex physical, societal, and economic workings of settlements. Even if you’re untrained in Society, you can use it for the following general skill actions (page 234).\n• Recall Knowledge about local history, important personalities, legal institutions, societal structure, and humanoid cultures. The GM might allow Society to apply to other creatures that are major elements of society in your region, such as the draconic nobility in a kingdom of humans ruled by dragons.\n• Subsist in a settlement by finding shelter, scrounging, or begging for food.\n\nSociety Trained Actions\nYou must be trained in Society to use it to Decipher Writing (page 234).\n• Decipher Writing that’s a coded message, text written in an incomplete or archaic form, or in some cases, text in a language you don’t know.\n\nCreate Forgery\nDowntime, Secret\nYou create a forged document, usually over the course of a day or a week. You must have the proper writing material to create a forgery. When you Create a Forgery, the GM rolls a secret DC 20 Society check. If you succeed, the forgery is of good enough quality that passive observers can’t notice the fake. Only those who carefully examine the document and attempt a Perception or Society check against your Society DC can do so.\n\nIf the document’s handwriting doesn’t need to be specific to a person, you need only to have seen a similar document before, and you gain up to a +4 circumstance bonus to your check, as well as to your DC (the GM determines the bonus). To forge a specific person’s handwriting, you need a sample of that person’s handwriting.\n\nIf your check result was below 20, the forgery has some obvious signs of being a fake, so the GM compares your result to each passive observer’s Perception DC or Society DC, whichever is higher, using the success or failure results below. Once the GM rolls your check for a document, that same result is used against all passive observers’ DCs no matter how many creatures passively observe that document.\n\nAn observer who was fooled on a passive glance can still choose to closely scrutinize the documents on the lookout for a forgery, using difierent techniques and analysis methods beyond the surface elements you successfully forged with your original check. In that case, the observer can attempt a Perception or Society check against your Society DC (if they succeed, they know your document is a forgery).\nSuccess The observer does not detect the forgery.\nFailure The observer knows your document is a forgery.",
+          "summary": "You understand the people and systems that make civilization run, and you know the historical events that make societies what they are today.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "ProfLevel": "Trained"
+        },
+        "skStealth.134": {
+          "name": "Stealth",
+          "description": "You are skilled at avoiding detection, allowing you to slip past foes, hide, or conceal an item.\n\nConceal an Object {icon:action1}\nManipulate, Secret\nYou hide a small object on your person (such as a weapon of light Bulk). When you try to sneak a concealed object past someone who might notice it, the GM rolls your Stealth check and compares it to this passive observer’s Perception DC. Once the GM rolls your check for a concealed object, that same result is used no matter how many passive observers you try to sneak it past. If a creature is specifically searching you for an item, it can attempt a Perception check against your Stealth DC (finding the object on success).\n\nYou can also conceal an object somewhere other than your person, such as among undergrowth or in a secret compartment within a piece of furniture. In this case, characters Seeking in an area compare their Perception check results to your Stealth DC to determine whether they find the object.\nSuccess The object remains undetected.\nFailure The searcher finds the object.\n\nBeing Stealthy\nIf you want to sneak around when there are creatures that can see you, you can use a combination of Hide and Sneak to do so.\n• First, Hide behind something (either by taking advantage of cover or having the concealed condition due to fog, a spell, or a similar effect). A successful Stealth check makes you hidden, though the creatures still know roughly where you are.\n• Second, now that you’re hidden, you can Sneak. That means you can move at half your Speed and attempt another Stealth check. If it’s successful, you’re now undetected. That means the creatures don’t know which square you’re in anymore.\n\nIf you were approaching creatures that didn’t know you were there, you could begin Sneaking right away, since they didn’t know your location to start with. Some actions can cause you to become observed again, but they’re mostly what you’d expect: standing out in the open, attacking someone, making a bunch of noise, and so forth. If you Strike someone after successfully Hiding or Sneaking, though, they’re flat-footed to that Strike.\n\nCreatures can try to find you using the Seek action, described on page 471.\n\nThree conditions explain the states of detection. Remember that these conditions are relative to each creature—you can be observed by one creature while hidden to another and undetected by a third.\n\nObserved\nYou’re in the creature’s clear view.\n\nHidden\nThe creature knows your location but can’t see you.\n\nUndetected\nThe creature doesn’t know your location.\n\nHide {icon:action1}\nSecret\nYou huddle behind cover or greater cover or deeper into concealment to become hidden, rather than observed. The GM rolls your Stealth check in secret and compares the result to the Perception DC of each creature you’re observed by but that you have cover or greater cover against or are concealed from. You gain the circumstance bonus from cover or greater cover to your check.\nSuccess If the creature could see you, you’re now hidden from it instead of observed. If you were hidden from or undetected by the creature, you retain that condition. If you successfully become hidden to a creature but then cease to have cover or greater cover against it or be concealed from it, you become observed again. You cease being hidden if you do anything except Hide, Sneak, or Step. If you attempt to Strike a creature, the creature remains flat-footed against that attack, and you then become observed. If you do anything else, you become observed just before you act unless the GM determines otherwise. The GM might allow you to perform a particularly unobtrusive action without being noticed, possibly requiring another Stealth check.\n\nIf a creature uses Seek to make you observed by it, you must successfully Hide to become hidden from it again.\n\nSneak {icon:action1}\nMove, Secret\nYou can attempt to move to another place while becoming or staying undetected. Stride up to half your Speed. (You can use Sneak while Burrowing, Climbing, Flying, or Swimming instead of Striding if you have the corresponding movement type; you must move at half that Speed.) If you’re undetected by a creature and it’s impossible for that creature to observe you (for a typical creature, this includes when you’re invisible, the observer is blinded, or you’re in darkness and the creature can’t see in darkness), for any critical failure you roll on a check to Sneak, you get a failure instead. You also continue to be undetected if you lose cover or greater cover against or are no longer concealed from such a creature. At the end of your movement, the GM rolls your Stealth check in secret and compares the result to the Perception DC of each creature you were hidden from or undetected by at the start of your movement. If you have cover or greater cover from the creature throughout your Stride, you gain the +2 circumstance bonus from cover (or +4 from greater cover) to your Stealth check. Because you’re moving, the bonus increase from Taking Cover doesn’t apply. You don’t get to roll against a creature if, at the end of your movement, you neither are concealed from it nor have cover or greater cover against it. You automatically become observed by such a creature.\nSuccess You’re undetected by the creature during your movement and remain undetected by the creature at the end of it. You become observed as soon as you do anything other than Hide, Sneak, or Step. If you attempt to Strike a creature, the creature remains flat-footed against that attack, and you then become observed. If you do anything else, you become observed just before you act unless the GM determines otherwise. The GM might allow you to perform a particularly unobtrusive action without being noticed, possibly requiring another Stealth check. If you speak or make a deliberate loud noise, you become hidden instead of undetected. If a creature uses Seek and you become hidden to it as a result, you must Sneak if you want to become undetected by that creature again.\nFailure A telltale sound or other sign gives your position away, though you still remain unseen. You’re hidden from the creature throughout your movement and remain so.\nCritical Failure You’re spotted! You’re observed by the creature throughout your movement and remain so. If you’re invisible and were hidden from the creature, instead of being observed you’re hidden throughout your movement and remain so.",
+          "summary": "You are skilled at avoiding detection, allowing you to slip past foes, hide, or conceal an item.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 4,
+          "stNet": 7,
+          "stDC": 17,
+          "ProfLevel": "Trained"
+        },
+        "skSurvival.138": {
+          "name": "Survival",
+          "description": "You are adept at living in the wilderness, foraging for food and building shelter, and with training you discover the secrets of tracking and hiding your trail. Even if you’re untrained, you can still use Survival to Subsist (page 240).\n• Subsist in the wild by foraging for food and building shelter.\n\nSense Direction\nExploration, Secret\nUsing the stars, the position of the sun, traits of the geography or flora, or the behavior of fauna, you can stay oriented in the wild. Typically, you attempt a Survival check only once per day, but some environments or changes might necessitate rolling more often. The GM determines the DC and how long this activity takes (usually just a minute or so). More unusual locales or those you’re unfamiliar with might require you to have a minimum proficiency rank to Sense Direction. Without a compass, you take a –2 item penalty to checks to Sense Direction.\nCritical Success You get an excellent sense of where you are. If you are in an environment with cardinal directions, you know them exactly.\nSuccess You gain enough orientation to avoid becoming hopelessly lost. If you are in an environment with cardinal directions, you have a sense of those directions.\n\nSense Direction Tasks\nUntrained determine a cardinal direction using the sun\nTrained find an overgrown path in a forest\nExpert navigate a hedge maze\nMaster navigate a byzantine labyrinth or relatively featureless desert\nLegendary navigate an ever-changing dream realm\n\nSurvival Trained Actions\n\nCover Tracks\nConcentrate, Exploration, Move\nYou cover your tracks, moving up to half your travel Speed, using the rules on page 479). You don’t need to attempt a Survival check to cover your tracks, but anyone tracking you must succeed at a Survival check against your Survival DC if it is higher than the normal DC to Track.\n\nIn some cases, you might Cover Tracks in an encounter. In this case, Cover Tracks is a single action and doesn’t have the exploration trait.\n\nTrack\nConcentrate, Exploration, Move\nYou follow tracks, moving at up to half your travel Speed, using the rules on page 479). After a successful check to Track, you can continue following the tracks at half your Speed without attempting additional checks for up to 1 hour. In some cases, you might Track in an encounter. In this case, Track is a single action and doesn’t have the exploration trait, but you might need to roll more often because you’re in a tense situation. The GM determines how often you must attempt this check. You attempt your Survival check when you start Tracking, once every hour you continue tracking, and any time something significant changes in the trail. The GM determines the DCs for such checks, depending on the freshness of the trail, the weather, and the type of ground.\nSuccess You find the trail or continue to follow the one you’re already following.\nFailure You lose the trail but can try again after a 1-hour delay.\nCritical Failure You lose the trail and can’t try again for 24 hours.\n\nSample Track Tasks\nUntrained the path of a large army following a road\nTrained relatively fresh tracks of a rampaging bear through the plains\nExpert a nimble panther’s tracks through a jungle, tracks after the rain\nMaster tracks after a winter snow, tracks of a mouse or smaller creature, tracks left on surfaces that can’t hold prints like bare rock\nLegendary old tracks through a windy desert’s sands, tracks after a major blizzard or hurricane",
+          "summary": "You are adept at living in the wilderness, foraging for food and building shelter, and with training you discover the secrets of tracking and hiding your trail.",
+          "compset": "Skill",
+          "stDC": 10,
+          "ProfLevel": "Untrained"
+        },
+        "skThievery.142": {
+          "name": "Thievery",
+          "description": "You are trained in a particular set of skills favored by thieves and miscreants.\n\nPalm an Object {icon:action1}\nManipulate\nPalming a small, unattended object without being noticed requires you to roll a single Thievery check against the Perception DCs of all creatures who are currently observing you. You take the object whether or not you successfully conceal that you did so. You can typically only Palm Objects of negligible Bulk, though the GM might determine otherwise depending on the situation.\nSuccess The creature does not notice you Palming the Object.\nFailure The creature notices you Palming the Object, and the GM determines the creature’s response.\n\nSteal{icon:action1}\nManipulate\nYou try to take a small object from another creature without being noticed. Typically, you can Steal only an object of negligible Bulk, and you automatically fail if the creature who has the object is in combat or on guard.\n\nAttempt a Thievery check to determine if you successfully Steal the object. The DC to Steal is usually the Perception DC of the creature wearing the object. This assumes the object is worn but not closely guarded (like a loosely carried pouch filled with coins, or an object within such a pouch). If the object is in a pocket or similarly protected, you take a –5 penalty to your Thievery check. The GM might increase the DC of your check if the nature of the object makes it harder to steal (such as a very small item in a large pack, or a sheet of parchment mixed in with other documents).\n\nYou might also need to compare your Thievery check result against the Perception DCs of observers other than the person wearing the object. The GM may increase the Perception DCs of these observers if they’re distracted.\nSuccess You steal the item without the bearer noticing, or an observer doesn’t see you take or attempt to take the item.\nFailure The item’s bearer notices your attempt before you can take the object, or an observer sees you take or attempt to take the item. The GM determines the response of any creature that notices your theft.\n\nThievery Trained Actions\n\nDisable a Device {icon:action2}\nManipulate\nRequirements Some devices require you to use thieves’ tools (page 291) when disabling them.\nThis action allows you to disarm a trap or another complex device. Often, a device requires numerous successes before becoming disabled, depending on its construction and complexity. Thieves’ tools are helpful and sometimes even required to Disable a Device, as determined by the GM, and sometimes a device requires a higher proficiency rank in Thievery to disable it.\n\nYour Thievery check result determines how much progress you make.\nCritical Success You disable the device, or you achieve two successes toward disabling a complex device. You leave no trace of your tampering, and you can rearm the device later, if that type of device can be rearmed.\nSuccess You disable the device, or you achieve one success toward disabling a complex device.\nCritical Failure You trigger the device.\n\nPick a Lock {icon:action2}\nManipulate\nRequirements You have thieves’ tools (page 291).\nOpening a lock without a key is very similar to Disabling a Device, but the DC of the check is determined by the complexity and construction of the lock you are attempting to pick (locks and their DCs are found on page 290). Locks of higher qualities might require multiple successes to unlock, since otherwise even an unskilled burglar could easily crack the lock by attempting the check until they rolled a natural 20. If you lack the proper tools, the GM might let you used improvised picks, which are treated as shoddy tools, depending on the specifics of the lock.\nCritical Success You unlock the lock, or you achieve two successes toward opening a complex lock. You leave no trace of your tampering.\nSuccess You open the lock, or you achieve one success toward opening a complex lock.\nCritical Failure You break your tools. Fixing them requires using Crafting to Repair them or else swapping in replacement picks (costing 3 sp, or 3 gp for infiltrator thieves’ tools).",
+          "summary": "You are trained in a particular set of skills favored by thieves and miscreants.",
+          "compset": "Skill",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 4,
+          "stNet": 7,
+          "stDC": 17,
+          "ProfLevel": "Trained"
+        },
+        "spAcidSplash.338": {
+          "name": "Acid Splash (At Will)",
+          "description": "You splash a glob of acid that splatters creatures and objects alike. Make a spell attack. If you hit, you deal 1d6 acid damage plus 1 splash acid damage. On a critical success, the target also takes 1 persistent acid damage. \n\nHeightened (3rd) The initial damage increases to 1d6 + your spellcasting ability modifier, and the persistent damage increases to 2. \nHeightened (5th) The initial damage increases to 2d6 + your spellcasting ability modifier, the persistent damage increases to 3, and the splash damage increases to 2. \nHeightened (7th) The initial damage increases to 3d6 + your spellcasting ability modifier, the persistent damage increases to 4, and the splash damage increases to 3. \nHeightened (9th) The initial damage increases to 4d6 + your spellcasting ability modifier, the persistent damage increases to 5, and the splash damage increases to 4.",
+          "compset": "Spell",
+          "spLevelBase": 1,
+          "spLevelNet": 1,
+          "spCastingText": "{icon:action2} somatic, verbal",
+          "trkMaximum": 1,
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "vaRangeText": "30 feet",
+          "vaTarget": "one creature or object",
+          "Action": "Action2",
+          "ProfLevel": "Trained",
+          "Trait": "ssEvocation,trdArcane,trtAcid,trtAttack,trtCantrip",
+          "UsageSpec": "AtWill"
+        },
+        "spGustWind.342": {
+          "name": "Gust of Wind",
+          "description": "A violent wind issues forth from your palm, blowing from the point where you are when you cast the spell to the line’s opposite end. The wind extinguishes small non-magical fires, disperses fog and mist, blows objects of light Bulk or less around, and pushes larger objects. Large or smaller creatures in the area must attempt a Fortitude save. Large or smaller creatures that later move into the gust must attempt the save on entering.\n\nCritical Success The creature is unaffected.\nSuccess The creature can’t move against the wind.\nFailure The creature is knocked prone. If it was flying, it suffers the effects of critical failure instead.\nCritical Failure The creature is pushed 30 feet in the wind’s direction, knocked prone, and takes 2d6 bludgeoning damage.",
+          "compset": "Spell",
+          "spLevelBase": 1,
+          "spLevelNet": 1,
+          "spCastingText": "{icon:action2} somatic, verbal",
+          "trkMaximum": 1,
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "vaDuraText": "until the start of your next turn",
+          "vaArea": "60-foot line",
+          "Action": "Action2",
+          "ProfLevel": "Trained",
+          "Trait": "ssEvocation,trdArcane,trtAir"
+        },
+        "spInfectEnthus.340": {
+          "name": "Infectious Enthusiasm (At Will)",
+          "description": "With enchanted gusto, you encourage yourself to get things done and share your motivation with your allies. You gain a +1 status bonus to your choice of attack rolls, Will saves, or Charisma-based skill checks. During the spell’s duration, an ally who observed you Casting this Spell and was within 30 feet when you did so can take a single action, which has the concentrate trait, to gain the same bonus you chose until the start of its next turn.\n\nUsing this spell to influence someone in a social situation is typically considered a faux pas, negating the benefit on Charisma-based skills if the subject of the check observed you casting the spell.",
+          "compset": "Spell",
+          "spLevelBase": 1,
+          "spLevelNet": 1,
+          "spCastingText": "{icon:action2} somatic, verbal",
+          "trkMaximum": 1,
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "vaDuraText": "1 round",
+          "Action": "Action2",
+          "ProfLevel": "Trained",
+          "Trait": "ssEnchantment,trdArcane,trtCantrip,trtEmotion,trtMental",
+          "UsageSpec": "AtWill"
+        },
+        "spProduceFlame.339": {
+          "name": "Produce Flame (At Will)",
+          "description": "A small ball of flame appears in the palm of your hand, and you lash out with it either in melee or at range. Make a spell attack roll against your target’s AC. This is normally a ranged attack, but you can also make a melee attack against a creature in your unarmed reach. On a success, you deal 1d4 fire damage plus your spellcasting ability modifier. On a critical success, the target takes double damage and 1d4 persistent fire damage.\n\nHeightened (+1) Increase the damage by 1d4 and the persistent damage on a critical hit by 1d4.",
+          "compset": "Spell",
+          "spLevelBase": 1,
+          "spLevelNet": 1,
+          "spCastingText": "{icon:action2} somatic, verbal",
+          "trkMaximum": 1,
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "vaRangeText": "30 feet",
+          "vaTarget": "1 creature",
+          "Action": "Action2",
+          "ProfLevel": "Trained",
+          "Trait": "ssEvocation,trdArcane,trtAttack,trtCantrip,trtFire",
+          "UsageSpec": "AtWill"
+        },
+        "spShield.341": {
+          "name": "Shield (At Will)",
+          "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn’t require a hand to use.\n\nWhile the spell is in effect, you can use the Shield Block reaction with your magic shield (see below). The shield has Hardness 5. After you use Shield Block, the spell ends and you can’t cast it again for 10 minutes. Unlike a normal Shield Block, you can use the spell’s reaction against the magic missile spell.\n\nHeightening the spell increases the shield’s Hardness.\n\nHeightened (3rd) The shield has Hardness 10.\nHeightened (5th) The shield has Hardness 15.\nHeightened (7th) The shield has Hardness 20.\nHeightened (9th) The shield has Hardness 25.\n\nShield Actions \nThe shield spell works like a raised shield, and it also gives you the ability to use the Shield Block reaction.\n\nShield Block {icon:reaction}\nTrigger While you have your shield raised, you take damage from a physical attack.\nYou place your shield to ward offa blow. Your shield prevents you from taking an amount of damage up to the shield’s Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield.",
+          "compset": "Spell",
+          "spLevelBase": 1,
+          "spLevelNet": 1,
+          "spCastingText": "{icon:action1} verbal",
+          "trkMaximum": 1,
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "vaDuraText": "until the start of your next turn",
+          "Action": "Action1",
+          "ProfLevel": "Trained",
+          "Trait": "ssAbjuration,trdArcane,trtCantrip,trtForce",
+          "UsageSpec": "AtWill"
+        },
+        "spTelekinProject.337": {
+          "name": "Telekinetic Projectile (At Will)",
+          "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target. If you hit, you deal bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled—equal to 1d6 plus your spellcasting ability modifier. No specific traits or magic properties of the hurled item affect the attack or the damage.\n\nHeightened (+1) The damage increases by 1d6.\n\nCritical Success You deal double damage.\nSuccess You deal full damage.",
+          "compset": "Spell",
+          "spLevelBase": 1,
+          "spLevelNet": 1,
+          "spCastingText": "{icon:action2} somatic, verbal",
+          "trkMaximum": 1,
+          "proLevelBonNet": 3,
+          "stAbScModifier": 3,
+          "stNet": 6,
+          "stDC": 16,
+          "vaRangeText": "30 feet",
+          "vaTarget": "1 creature",
+          "Action": "Action2",
+          "ProfLevel": "Trained",
+          "Trait": "ssEvocation,trdArcane,trtAttack,trtCantrip",
+          "UsageSpec": "AtWill"
+        },
+        "svFortitude.148": {
+          "name": "Fortitude Save",
+          "description": "This save measures your ability to stand up to physical punishment or attacks against your vitality and health. Your Constitution modifier is applied to your Fortitude saving throw.",
+          "summary": "This save measures your ability to stand up to physical punishment or attacks against your vitality and health.",
+          "compset": "Save",
+          "proLevelBonNet": 5,
+          "stAbScModifier": 1,
+          "stNet": 6,
+          "stDC": 16,
+          "ProfLevel": "Expert"
+        },
+        "svReflex.150": {
+          "name": "Reflex Save",
+          "description": "This save tests your ability to dodge area attacks and unexpected situations. Your Dexterity modifier is applied to your Reflex saving throw.",
+          "summary": "This save tests your ability to dodge area attacks and unexpected situations.",
+          "compset": "Save",
+          "proLevelBonNet": 3,
+          "stAbScModifier": 4,
+          "stNet": 7,
+          "stDC": 17,
+          "ProfLevel": "Trained"
+        },
+        "svWill.149": {
+          "name": "Will Save",
+          "description": "This save reflects your resistance to mental influence as well as many magical effects. Your Wisdom modifier is applied to your Will saving throw.",
+          "summary": "This save reflects your resistance to mental influence as well as many magical effects.",
+          "compset": "Save",
+          "proLevelBonNet": 5,
+          "stNet": 5,
+          "stDC": 15,
+          "ProfLevel": "Expert"
+        },
+        "wpShortsword.373": {
+          "name": "Shortsword",
+          "description": "These blades come in a variety of shapes and styles, but they are typically 2 feet long.",
+          "compset": "Weapon",
+          "grBulk": 0.1,
+          "proLevelBonNet": 3,
+          "wpMelAttacks": {
+            "atk1": {
+              "id": "Melee",
+              "name": "Melee",
+              "attack": "+7|+3|-1",
+              "attackExpr": "={1d20+7}|={1d20+3}|={1d20-1}",
+              "damage": "1d6+2 P|1d6+2 P|1d6+2 P",
+              "damageExpr": "={(1d6+2)f1c2rm[Piercing:P]}|={(1d6+2)f1c2rm[Piercing:P]}|={(1d6+2)f1c2rm[Piercing:P]}"
+            }
+          },
+          "ProfLevel": "Trained",
+          "Rarity": "Common",
+          "items": {
+            "wtAgile.387": {
+              "name": "Agile",
+              "description": "The multiple attack penalty you take with this weapon on the second attack on your turn is –4 instead of –5, and –8 instead of –10 on the third and subsequent attacks in the turn.",
+              "summary": "Multiple attack penalties reduced by 1 (2nd attack) or 2 (3rd attack).",
+              "compset": "WeaponTrait",
+              "components": "Ability",
+              "containment": "Installed"
+            },
+            "wtFinesse.388": {
+              "name": "Finesse",
+              "description": "You can use your Dexterity modifier instead of your Strength modifier on attack rolls using this melee weapon. You still use your Strength modifier when calculating damage.",
+              "summary": "Can use your Dex modifier to calculate attacks with this weapon.",
+              "compset": "WeaponTrait",
+              "components": "Ability",
+              "containment": "Installed"
+            },
+            "wtVersatile.389": {
+              "name": "Versatile S",
+              "description": "A versatile weapon can be used to deal a different type of damage than that listed in the Damage entry. This trait indicates the alternate damage type. For instance, a piercing weapon that is versatile S can be used to deal piercing or slashing damage. You choose the damage type each time you make an attack.",
+              "compset": "WeaponTrait",
+              "components": "Ability",
+              "containment": "Installed"
+            }
+          }
+        },
+        "wpSling.358": {
+          "name": "Sling",
+          "description": "Little more than a leather cup attached to a pair of straps, a sling can be used to fling smooth stones or sling bullets at a range.",
+          "compset": "Weapon",
+          "grBulk": 0.1,
+          "proLevelBonNet": 3,
+          "wpRngAttacks": {
+            "atk1": {
+              "id": "Range",
+              "name": "Range",
+              "attack": "+7|+2|-3",
+              "attackExpr": "={1d20+7}|={1d20+2}|={1d20-3}",
+              "damage": "1d6+1 B|1d6+1 B|1d6+1 B",
+              "damageExpr": "={(1d6+1)f1c2rm[Bludgeoning:B]}|={(1d6+1)f1c2rm[Bludgeoning:B]}|={(1d6+1)f1c2rm[Bludgeoning:B]}"
+            }
+          },
+          "ProfLevel": "Trained",
+          "Rarity": "Common",
+          "items": {
+            "wtPropulsive.372": {
+              "name": "Propulsive",
+              "description": "You add half your Strength modifier (if positive) to damage rolls with a propulsive ranged weapon. If you have a negative Strength modifier, you add your full Strength modifier instead.",
+              "summary": "Weapon adds 1/2 your Str modifier to dam (if positive)",
+              "compset": "WeaponTrait",
+              "components": "Ability",
+              "containment": "Installed"
+            }
+          }
+        }
+      }
+    }
+  }
+}

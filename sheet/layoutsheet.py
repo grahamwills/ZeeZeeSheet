@@ -76,6 +76,7 @@ def draw_sheet(sheet: Sheet, sections: List[PlacedContent], pdf):
             pdf.showPage()
             draw_watermark(sheet, pdf)
         section.draw()
+
     pdf.showPage()
     pdf.save()
 
