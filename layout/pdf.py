@@ -1,17 +1,21 @@
 import contextlib
 import io
 from collections import defaultdict, namedtuple
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+import reportlab
 import reportlab.lib.colors
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.pdfgen.pathobject import PDFPathObject
 from reportlab.platypus import Flowable
+from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
-from structure.model import Element, ElementType, Run
+from structure.model import Run
 from structure.style import DEFAULT, Style
 from util.common import Rect, configured_logger
 from util.roughen import LineModifier
@@ -165,51 +169,6 @@ class PDF(canvas.Canvas):
         return path
 
 
-def _element_to_html(e: Element, pdf: PDF, base_style: Style):
-    if e.which == ElementType.TEXT or e.which == ElementType.SYMBOL:
-        txt = e.value
-    else:
-        txt = str(e)
-
-    style = e.style
-
-    if style.italic:
-        txt = '<i>' + txt + '</i>'
-    if style.bold:
-        txt = '<b>' + txt + '</b>'
-
-    if style.size and style.size != base_style.size:
-        size = " size='%d'" % style.size
-    else:
-        size = ''
-
-    if style.font and style.font != base_style.font:
-        face = " face='%s'" % style.font
-    else:
-        face = ''
-
-    if style.color and (style.color != base_style.color or style.opacity != base_style.opacity):
-        opacity = style.opacity if style.opacity is not None else 1.0
-        color = " color='rgba(%d, %d, %d, %1.2f)'" % (
-            round(255 * style.color.get_red()),
-            round(255 * style.color.get_green()),
-            round(255 * style.color.get_blue()),
-            opacity
-        )
-    else:
-        color = ''
-
-    if e.which == ElementType.CHECKBOX:
-        target = _UNCHECKED_BOX if e.value in {'O', 'o', ' ', '0'} else _CHECKED_BOX
-        return "<img height=%d width=%d src='%s'/>" % (style.size, style.size, target)
-    if e.which != ElementType.TEXT:
-        face = " face='Symbola'"
-    if face or size or color:
-        return "<font %s%s%s>%s</font>" % (face, size, color, txt)
-    else:
-        return txt
-
-
 def install_fonts() -> [str]:
     user_fonts = []
     install_font('Gotham', 'Gotham', user_fonts)
@@ -263,3 +222,35 @@ def install_font(name, resource_name, user_fonts, leading: float = None):
         pdfmetrics.registerFontFamily(name, normal=name, bold=bold, italic=italic, boldItalic=bold_italic)
         if leading:
             _LEADING_MAP[name.lower()] = leading
+
+
+def line_info(p):
+    """ Calculate line break info for a paragraph"""
+    frags = p.blPara
+    if frags.kind == 0:
+        unused = min(entry[0] for entry in frags.lines)
+        bad_breaks = sum(type(c) == _SplitWord for entry in frags.lines for c in entry[1])
+        ok_breaks = len(frags.lines) - 1 - bad_breaks
+        LOGGER.fine("Fragments = " + " | ".join(str(c) + ":" + type(c).__name__
+                                                for entry in frags.lines for c in entry[1]))
+    elif frags.kind == 1:
+        unused = min(entry.extraSpace for entry in frags.lines)
+        bad_breaks = sum(type(frag) == _SplitFrag for frag in p.frags)
+        specified_breaks = sum(item.lineBreak for item in frags.lines)
+        ok_breaks = len(frags.lines) - 1 - bad_breaks - specified_breaks
+        LOGGER.fine("Fragments = " + " | ".join((c[1][1] + ":" + type(c).__name__) for c in p.frags))
+    else:
+        raise NotImplementedError()
+    return bad_breaks, ok_breaks, unused
+
+
+@lru_cache
+def make_paragraph_style(align, font, size, leading, opacity, rgb):
+    alignment = {'left': 0, 'center': 1, 'right': 2, 'fill': 4, 'justify': 4}[align]
+    opacity = float(opacity) if opacity is not None else 1.0
+    color = reportlab.lib.colors.Color(*rgb, alpha=opacity)
+    return ParagraphStyle(name='_tmp', spaceShrinkage=0.1,
+                          fontName=font, fontSize=size, leading=leading,
+                          allowWidows=0, embeddedHyphenation=1, alignment=alignment,
+                          hyphenationMinWordLength=1,
+                          textColor=color)

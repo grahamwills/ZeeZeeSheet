@@ -12,8 +12,8 @@ from reportlab.platypus import Image
 
 from structure import Style
 from util import Rect, configured_logger
-from .flowables import Paragraph, Table, line_info
-from .pdf import DrawMethod, PDF
+from .flowables import Paragraph, Table
+from .pdf import DrawMethod, PDF, line_info
 
 LOGGER = configured_logger(__name__)
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import common
-import flowable
+import layout_content
 from colour import Color
 from layout.common import Rect
 from layout.model import Block, Run
@@ -9,7 +9,7 @@ from layout.pdf import PDF
 from placed import PlacedTableContent
 from style import Stylesheet
 
-from flowable import layout_block
+from layout_content import layout_block
 
 
 def test_table_creation():
@@ -24,11 +24,11 @@ def test_table_creation():
     r4 = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
     cells = [
-        [flowable.make_paragraph(r1, pdf), flowable.make_paragraph(r2, pdf)],
-        [flowable.make_paragraph(r3, pdf), flowable.make_paragraph(r4, pdf)]
+        [layout_content.make_paragraph(r1, pdf), layout_content.make_paragraph(r2, pdf)],
+        [layout_content.make_paragraph(r3, pdf), layout_content.make_paragraph(r4, pdf)]
     ]
 
-    t = flowable.as_table(cells, bounds, pdf, 10)
+    t = layout_content.as_table(cells, bounds, pdf, 10)
     content = PlacedTableContent(t, bounds, pdf)
 
     assert content.actual == Rect.make(left=0, top=0, right=120, bottom=106)

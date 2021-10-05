@@ -1,3 +1,4 @@
+import functools
 import warnings
 from copy import copy
 from functools import lru_cache
@@ -714,3 +715,15 @@ def make_paragraph(run: Run, pdf: PDF, align=None, size_factor=None) -> Optional
         style = style.clone(size=style.size * size_factor)
 
     return Paragraph(run, style, pdf)
+
+
+@functools.lru_cache(maxsize=1024)
+def make_block_layout(target: Block, width: int, pdf: PDF) -> PlacedContent:
+    rect = Rect.make(left=0, top=0, width=width, height=1000)
+    return layout_block(target, rect, pdf)
+
+
+def place_block(bounds: Rect, block: Block, pdf: PDF) -> PlacedContent:
+    base = copy(make_block_layout(block, bounds.width, pdf))
+    base.move(dx=bounds.left - base.requested.left, dy=bounds.top - base.requested.top)
+    return base

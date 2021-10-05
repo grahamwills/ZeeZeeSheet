@@ -1,15 +1,12 @@
-from functools import lru_cache
 from typing import Dict, List, Sequence, Tuple
 
 import reportlab
 from colour import Color
-from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Flowable
-from reportlab.platypus.paragraph import _SplitFrag, _SplitWord
 
-from structure import Run, Style
+from structure import Element, ElementType, Run, Style
 from util import configured_logger
-from .pdf import PDF, _element_to_html
+from .pdf import PDF, _CHECKED_BOX, _UNCHECKED_BOX, line_info, make_paragraph_style
 
 LOGGER = configured_logger(__name__)
 
@@ -112,7 +109,7 @@ class Paragraph(reportlab.platypus.Paragraph):
         self.run = run
         self.pdf = PDF
         leading = pdf.paragraph_leading_for(run)
-        pStyle = _make_paragraph_style(style.align, style.font, style.size, leading, style.opacity, style.color.rgb)
+        pStyle = make_paragraph_style(style.align, style.font, style.size, leading, style.opacity, style.color.rgb)
 
         # Add spaces between check boxes and other items
         items = []
@@ -143,33 +140,46 @@ class Paragraph(reportlab.platypus.Paragraph):
         return "P({0})".format(txt)
 
 
-def line_info(p):
-    """ Calculate line break info for a paragraph"""
-    frags = p.blPara
-    if frags.kind == 0:
-        unused = min(entry[0] for entry in frags.lines)
-        bad_breaks = sum(type(c) == _SplitWord for entry in frags.lines for c in entry[1])
-        ok_breaks = len(frags.lines) - 1 - bad_breaks
-        LOGGER.fine("Fragments = " + " | ".join(str(c) + ":" + type(c).__name__
-                                                for entry in frags.lines for c in entry[1]))
-    elif frags.kind == 1:
-        unused = min(entry.extraSpace for entry in frags.lines)
-        bad_breaks = sum(type(frag) == _SplitFrag for frag in p.frags)
-        specified_breaks = sum(item.lineBreak for item in frags.lines)
-        ok_breaks = len(frags.lines) - 1 - bad_breaks - specified_breaks
-        LOGGER.fine("Fragments = " + " | ".join((c[1][1] + ":" + type(c).__name__) for c in p.frags))
+def _element_to_html(e: Element, pdf: PDF, base_style: Style):
+    if e.which == ElementType.TEXT or e.which == ElementType.SYMBOL:
+        txt = e.value
     else:
-        raise NotImplementedError()
-    return bad_breaks, ok_breaks, unused
+        txt = str(e)
 
+    style = e.style
 
-@lru_cache
-def _make_paragraph_style(align, font, size, leading, opacity, rgb):
-    alignment = {'left': 0, 'center': 1, 'right': 2, 'fill': 4, 'justify': 4}[align]
-    opacity = float(opacity) if opacity is not None else 1.0
-    color = reportlab.lib.colors.Color(*rgb, alpha=opacity)
-    return ParagraphStyle(name='_tmp', spaceShrinkage=0.1,
-                          fontName=font, fontSize=size, leading=leading,
-                          allowWidows=0, embeddedHyphenation=1, alignment=alignment,
-                          hyphenationMinWordLength=1,
-                          textColor=color)
+    if style.italic:
+        txt = '<i>' + txt + '</i>'
+    if style.bold:
+        txt = '<b>' + txt + '</b>'
+
+    if style.size and style.size != base_style.size:
+        size = " size='%d'" % style.size
+    else:
+        size = ''
+
+    if style.font and style.font != base_style.font:
+        face = " face='%s'" % style.font
+    else:
+        face = ''
+
+    if style.color and (style.color != base_style.color or style.opacity != base_style.opacity):
+        opacity = style.opacity if style.opacity is not None else 1.0
+        color = " color='rgba(%d, %d, %d, %1.2f)'" % (
+            round(255 * style.color.get_red()),
+            round(255 * style.color.get_green()),
+            round(255 * style.color.get_blue()),
+            opacity
+        )
+    else:
+        color = ''
+
+    if e.which == ElementType.CHECKBOX:
+        target = _UNCHECKED_BOX if e.value in {'O', 'o', ' ', '0'} else _CHECKED_BOX
+        return "<img height=%d width=%d src='%s'/>" % (style.size, style.size, target)
+    if e.which != ElementType.TEXT:
+        face = " face='Symbola'"
+    if face or size or color:
+        return "<font %s%s%s>%s</font>" % (face, size, color, txt)
+    else:
+        return txt

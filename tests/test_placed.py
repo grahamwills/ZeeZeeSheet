@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-import flowable
-from flowable import line_info
+import layout_content
+from layout_content import line_info
 from flowables import Table
 from layout.common import Rect
 from layout.model import Run
@@ -232,7 +232,7 @@ def test_line_info():
 
     run = Run().add("basic test", 'default')
 
-    p = flowable.make_paragraph(run, pdf)
+    p = layout_content.make_paragraph(run, pdf)
     p.wrapOn(pdf, 10, 100)
 
     bad_breaks, ok_breaks, unused = line_info(p)
@@ -245,7 +245,7 @@ def test_line_info_for_boxes():
 
     run = Run().add("[ ][ ][ ][ ][ ][ ][ ][ ]", 'default')
 
-    p = flowable.make_paragraph(run, pdf)
+    p = layout_content.make_paragraph(run, pdf)
     p.wrapOn(pdf, 20, 100)
     bad_breaks, ok_breaks, unused = line_info(p)
     assert bad_breaks == 0
