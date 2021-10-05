@@ -26,7 +26,7 @@ handlers:
     backupCount: 5
     level: DEBUG
     formatter: logfile
-    filename: ../tmp/logs/log-zee-txt
+    filename: ../_tmp/logs/log-zee-txt
     encoding: utf8
     when: midnight
 

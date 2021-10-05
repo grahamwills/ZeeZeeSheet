@@ -9,7 +9,7 @@ from typing import Optional
 import converters
 from layout import PDF, layout_sheet
 from structure import reader
-from util import DATA_DIR, configured_logger
+from util import configured_logger
 
 LOGGER = configured_logger(__name__)
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     DEBUG = False
 
-    character_dir = DATA_DIR.joinpath('characters')
+    character_dir = Path(__file__).parent.joinpath('_characters')
     if not character_dir.exists():
         raise ValueError("character director '%s' does not exist", character_dir)
 

@@ -78,7 +78,7 @@ ACTION_TYPE = {
 
 
 def read_rules_elements() -> Dict:
-    d = xml_file_to_dict('../data/system/dnd4e_rules/combined.dnd40.xml')
+    d = xml_file_to_dict('../resources/dnd4e_rules/combined.dnd40.xml')
     top = d['D20Rules']['RulesElement']
     result = dict((p['@internal-id'], p) for p in top)
     print("Read %d rules" % len(result))

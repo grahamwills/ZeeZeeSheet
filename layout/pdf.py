@@ -18,8 +18,8 @@ from util.roughen import LineModifier
 
 LOGGER = configured_logger(__name__)
 
-_CHECKED_BOX = '../data/system/images/checked.png'
-_UNCHECKED_BOX = '../data/system/images/unchecked.png'
+_CHECKED_BOX = '../resources/images/checked.png'
+_UNCHECKED_BOX = '../resources/images/unchecked.png'
 _LEADING_MAP = defaultdict(lambda: 1.2)
 
 DrawMethod = namedtuple('DrawMethod', 'fill stroke')
@@ -242,7 +242,7 @@ def base_fonts():
 
 
 def create_single_font(name, resource_name, default_font_name, user_fonts):
-    loc = Path(__file__).parent.parent.joinpath('data/system/fonts/', resource_name + ".ttf")
+    loc = Path(__file__).parent.parent.joinpath('resources/fonts/', resource_name + ".ttf")
     if loc.exists():
         font = TTFont(name, loc)
         pdfmetrics.registerFont(font)

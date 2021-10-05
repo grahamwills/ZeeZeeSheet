@@ -11,9 +11,6 @@ from typing import Dict, NamedTuple
 
 import yaml
 
-DATA_DIR = Path(__file__).parent.parent.joinpath('data')
-
-
 def _simplify(txt):
     txt = txt.strip()
     if not txt:
@@ -203,7 +200,7 @@ def _initialize_logging():
 
     logging.Logger.fine = fine
 
-    path = Path(__file__).parent.joinpath('logging.yaml')
+    path = Path(__file__).parent.parent.joinpath('resources','logging.yaml')
     if os.path.exists(path):
         with open(path, 'rt') as f:
             try:
