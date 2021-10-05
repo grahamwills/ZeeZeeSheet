@@ -18,7 +18,7 @@ from .pdf import DrawMethod, PDF, line_info
 LOGGER = configured_logger(__name__)
 
 
-class PlacedContent(abc.ABC):
+class Content(abc.ABC):
     """
         Abstract class for something that has been laid out on the page
 
@@ -60,7 +60,7 @@ class PlacedContent(abc.ABC):
         """ Item placed on screen"""
         raise NotImplementedError()
 
-    def move(self, dx=0, dy=0) -> PlacedContent:
+    def move(self, dx=0, dy=0) -> Content:
         self.actual = self.actual.move(dx=dx, dy=dy)
         self.requested = self.requested.move(dx=dx, dy=dy)
         return self
@@ -87,7 +87,7 @@ class PlacedContent(abc.ABC):
         return self.requested.width - self.actual.width
 
 
-class PlacedParagraphContent(PlacedContent):
+class ParagraphContent(Content):
     paragraph: Paragraph
 
     def __init__(self, paragraph: Paragraph, requested: Rect, pdf: PDF):
@@ -116,7 +116,7 @@ class PlacedParagraphContent(PlacedContent):
         return "Paragraph(%dx%d)" % (self.actual.width, self.actual.height)
 
 
-class PlacedImageContent(PlacedContent):
+class ImageContent(Content):
 
     def __init__(self, image: Image, requested: Rect, style: Style, pdf: PDF):
         super().__init__(requested, requested, pdf)
@@ -139,7 +139,7 @@ class PlacedImageContent(PlacedContent):
         return "Image(%dx%d)" % (self.actual.width, self.actual.height)
 
 
-class PlacedTableContent(PlacedContent):
+class TableContent(Content):
     table: Table
 
     def __init__(self, table: Table, requested: Rect, pdf: PDF):
@@ -160,7 +160,7 @@ class PlacedTableContent(PlacedContent):
     def draw(self):
         self.pdf.draw_flowable(self.table, self.actual)
 
-    def move(self, dx=0, dy=0) -> PlacedTableContent:
+    def move(self, dx=0, dy=0) -> TableContent:
         super().move(dx, dy)
         return self
 
@@ -168,7 +168,7 @@ class PlacedTableContent(PlacedContent):
         return "Table(%dx%d)" % (self.actual.width, self.actual.height)
 
 
-class PlacedRectContent(PlacedContent):
+class RectContent(Content):
 
     def __init__(self, bounds: Rect, style: Style, method: DrawMethod, pdf: PDF, rounded=0):
         super().__init__(bounds, bounds, pdf)
@@ -184,7 +184,7 @@ class PlacedRectContent(PlacedContent):
         return "Rect(%s)" % str(self.actual)
 
 
-class PlacedPathContent(PlacedContent):
+class PathContent(Content):
 
     def __init__(self, path: PDFPathObject, bounds: Rect, style: Style, method: DrawMethod, pdf: PDF):
         super().__init__(bounds, bounds, pdf)
@@ -200,7 +200,7 @@ class PlacedPathContent(PlacedContent):
         return "Path(%s)" % str(self.path)
 
 
-class PlacedClipContent(PlacedContent):
+class ClipContent(Content):
 
     def __init__(self, path: PDFPathObject, bounds: Rect, pdf: PDF):
         super().__init__(bounds, bounds, pdf)
@@ -217,7 +217,7 @@ class PlacedClipContent(PlacedContent):
         return "Clip(%s)" % str(self.path)
 
 
-class ErrorContent(PlacedRectContent):
+class ErrorContent(RectContent):
 
     def __init__(self, bounds: Rect, pdf: PDF):
         super().__init__(bounds, Style('err'), PDF.FILL, pdf)
@@ -229,9 +229,10 @@ class ErrorContent(PlacedRectContent):
         return 1e9 - self.actual.width * self.actual.height
 
 
-class PlacedGroupContent(PlacedContent):
+class GroupContent(Content):
 
-    def __init__(self, children: List[PlacedContent], requested: Rect):
+    def __init__(self, children: List[Content], requested: Rect):
+        self.toc = None
         self.group = [p for p in children if p] if children else []
         if not self.group:
             return
@@ -248,6 +249,9 @@ class PlacedGroupContent(PlacedContent):
         else:
             self.unused_width = calculate_unused_width_for_group(self.group, self.requested)
 
+    def set_table_of_content_info(self, name:str, level:int=0):
+        self.toc = (level, name)
+
     def draw(self):
         self.pdf.saveState()
         if self.pdf.debug:
@@ -260,7 +264,12 @@ class PlacedGroupContent(PlacedContent):
             p.draw()
         self.pdf.restoreState()
 
-    def move(self, dx=0, dy=0) -> PlacedGroupContent:
+        if self.toc:
+            key = "toc_{}".format(id(self))
+            self.pdf.bookmarkPage(key, top=self.pdf.page_height-self.actual.top)
+            self.pdf.addOutlineEntry(self.toc[1], key, self.toc[0])
+
+    def move(self, dx=0, dy=0) -> GroupContent:
         super().move(dx, dy)
         for p in self.group:
             p.move(dx, dy)
@@ -272,7 +281,7 @@ class PlacedGroupContent(PlacedContent):
     def __str__(self, depth: int = 1) -> str:
         if depth:
             content = ", ".join(
-                    c.__str__(depth - 1) if isinstance(c, PlacedGroupContent) else str(c) for c in self.group)
+                    c.__str__(depth - 1) if isinstance(c, GroupContent) else str(c) for c in self.group)
             return "Group(%dx%d: %s)" % (self.actual.width, self.actual.height, content)
         else:
             return "Group(%dx%d: ...)" % (self.actual.width, self.actual.height)
@@ -291,7 +300,7 @@ class PlacedGroupContent(PlacedContent):
         return pgc
 
 
-def _unused_horizontal_strip(group: List[PlacedContent], bounds: Rect):
+def _unused_horizontal_strip(group: List[Content], bounds: Rect):
     """ Unused space, assuming items horizontally laid out, more or less"""
     ox = bounds.left
     # Create an array of bytes that indicate spaces is used
@@ -305,7 +314,7 @@ def _unused_horizontal_strip(group: List[PlacedContent], bounds: Rect):
     return bounds.width - sum(used)
 
 
-def calculate_unused_width_for_group(group: List[PlacedContent], bounds: Rect) -> int:
+def calculate_unused_width_for_group(group: List[Content], bounds: Rect) -> int:
     # Sort vertically by tops
     items = sorted(group, key=lambda x: x.requested.top)
 

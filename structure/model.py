@@ -84,6 +84,16 @@ class Element:
     def with_style(self, style: Style):
         return Element(which=self.which, value=self.value, style=style)
 
+    def as_text(self):
+        if self.which == ElementType.CHECKBOX:
+            if self.value in {'O', 'o', ' ', '0'}:
+                return '☐'
+            else:
+                return '☒'
+        if self.which == ElementType.DIVIDER or self.which == ElementType.SPACER:
+            return ' '
+        return self.value
+
 
 @dataclass
 class Run:
@@ -126,6 +136,9 @@ class Run:
 
     def with_style(self, style: Style):
         return Run([e.with_style(style) for e in self.items])
+
+    def as_text(self):
+        return " ".join(e.as_text() for e in self.items)
 
 
 @dataclass

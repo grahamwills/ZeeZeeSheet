@@ -13,12 +13,12 @@ from structure import Sheet
 from util import FINE, Margins, Optimizer, Rect, configured_logger, divide_space
 from .layout_content import make_block_layout, place_block
 from .pdf import PDF
-from .placed import PlacedContent, PlacedGroupContent
+from .content import Content, GroupContent
 
 LOGGER = configured_logger(__name__)
 
 
-def place_sheet(sheet: Sheet, outer: Rect, pdf: PDF) -> PlacedGroupContent:
+def place_sheet(sheet: Sheet, outer: Rect, pdf: PDF) -> GroupContent:
     children = []
     bounds = outer
     for section in sheet.content:
@@ -37,7 +37,7 @@ def place_sheet(sheet: Sheet, outer: Rect, pdf: PDF) -> PlacedGroupContent:
             LOGGER.debug("Block Layout Cache info = %s", make_block_layout.cache_info())
             make_block_layout.cache_clear()
 
-    return PlacedGroupContent(children, outer)
+    return GroupContent(children, outer)
 
 
 def draw_watermark(sheet: Sheet, pdf: PDF):
@@ -58,7 +58,7 @@ def draw_watermark(sheet: Sheet, pdf: PDF):
     pdf.restoreState()
 
 
-def draw_sheet(sheet: Sheet, sections: List[PlacedContent], pdf):
+def draw_sheet(sheet: Sheet, sections: List[Content], pdf):
     draw_watermark(sheet, pdf)
     for section in sections:
         if section.page_break_before:
@@ -87,7 +87,7 @@ def layout_sheet(sheet: Sheet, pdf: PDF):
 MIN_COLUMN_WIDTH = 40
 
 
-def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[PlacedGroupContent]:
+def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[GroupContent]:
     assert bounds.width >= MIN_COLUMN_WIDTH
 
     current = bounds.top
@@ -102,7 +102,7 @@ def place_in_column(placeables: List, bounds: Rect, padding: int) -> Optional[Pl
             # Give up -- it takes too much space
             break
 
-    return PlacedGroupContent(contents, bounds)
+    return GroupContent(contents, bounds)
 
 
 class ColumnOptimizer(Optimizer):
@@ -116,7 +116,7 @@ class ColumnOptimizer(Optimizer):
         self.outer = outer
         self.padding = padding
 
-    def score(self, columns: [PlacedGroupContent]) -> float:
+    def score(self, columns: [GroupContent]) -> float:
         column_bounds = [c.actual for c in columns]
         max_height = max(c.height for c in column_bounds)
         min_height = min(c.height for c in column_bounds)
@@ -147,7 +147,7 @@ class ColumnOptimizer(Optimizer):
                      score, max_height, breaks, fit, stddev, var)
         return score
 
-    def place_all(self, widths: Tuple[int], counts: Tuple[int]) -> List[PlacedContent]:
+    def place_all(self, widths: Tuple[int], counts: Tuple[int]) -> List[Content]:
         LOGGER.fine("Placing with widths=%s, alloc=%s", widths, counts)
         placed_columns = []
         sum_widths = 0
@@ -180,7 +180,7 @@ class ColumnAllocationOptimizer(ColumnOptimizer):
         super().__init__(k, placeables, outer, padding)
         self.widths = widths
 
-    def make(self, x: Tuple[float]) -> List[PlacedContent]:
+    def make(self, x: Tuple[float]) -> List[Content]:
         counts = self.vector_to_counts(x)
         return self.place_all(self.widths, counts)
 
@@ -207,7 +207,7 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         even = tuple([1 / self.k] * self.k)
         return self.make(even)
 
-    def brute_allocation(self, widths: Tuple[int]) -> (List[PlacedContent], float, List[int]):
+    def brute_allocation(self, widths: Tuple[int]) -> (List[Content], float, List[int]):
         k = self.k
         N = len(self.placeables)
 
@@ -224,7 +224,7 @@ class ColumnWidthOptimizer(ColumnOptimizer):
         LOGGER.debug("Brute force allocation widths=%s: %s -> %1.3f", widths, best[2], best[1])
         return best
 
-    def make(self, x: Tuple[float]) -> Optional[List[PlacedContent]]:
+    def make(self, x: Tuple[float]) -> Optional[List[Content]]:
         widths = self.vector_to_widths(x)
 
         if len(self.placeables) < 10:
@@ -261,21 +261,21 @@ def stack_together(bounds, columns, equal, padding, placeables):
     if equal:
         LOGGER.info("Allocating %d items in %d equal columns: %s", len(placeables), k, bounds)
         columns = columns_optimizer.make_for_known_widths()
-        return PlacedGroupContent(columns, bounds)
+        return GroupContent(columns, bounds)
     else:
         LOGGER.info("Allocating %d items in %d unequal columns: %s", len(placeables), k, bounds)
         start = time.process_time()
         columns, (score, div) = columns_optimizer.run()
         widths = columns_optimizer.vector_to_widths(div)
         LOGGER.info("Completed in %1.2fs, widths=%s, score=%1.3f", time.process_time() - start, widths, score)
-        return PlacedGroupContent(columns, bounds)
+        return GroupContent(columns, bounds)
 
 
-def _fits(together: PlacedContent, bounds: Rect) -> int:
+def _fits(together: Content, bounds: Rect) -> int:
     return together.actual.bottom <= bounds.bottom
 
 
-def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options: dict) -> List[PlacedGroupContent]:
+def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options: dict) -> List[GroupContent]:
     equal = bool(options.get('equal', False))
     columns = int(options.get('columns', 1))
 

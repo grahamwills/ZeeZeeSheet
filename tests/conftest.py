@@ -1,10 +1,10 @@
 import subprocess
 
 from layout.pdf import PDF
-from placed import PlacedContent
+from content import Content
 
 
-def debug_placed_content(p: PlacedContent, pdf: PDF):
+def debug_placed_content(p: Content, pdf: PDF):
     pdf.setStrokeColorRGB(0, 0, 0, 0.2)
     pdf.setLineWidth(0.25)
     for v in range(0, 1000, 10):

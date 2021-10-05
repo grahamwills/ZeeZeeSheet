@@ -6,7 +6,7 @@ from colour import Color
 from layout.common import Rect
 from layout.model import Block, Run
 from layout.pdf import PDF
-from placed import PlacedTableContent
+from content import TableContent
 from style import Stylesheet
 
 from layout_content import layout_block
@@ -29,7 +29,7 @@ def test_table_creation():
     ]
 
     t = layout_content.as_table(cells, bounds, pdf, 10)
-    content = PlacedTableContent(t, bounds, pdf)
+    content = TableContent(t, bounds, pdf)
 
     assert content.actual == Rect.make(left=0, top=0, right=120, bottom=106)
     assert content.unused_width == 8

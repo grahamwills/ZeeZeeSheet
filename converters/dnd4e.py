@@ -376,11 +376,14 @@ def _to_rule_tuple(t):
     try:
         descr = t['specific']['#text']
     except:
+        descr = None
+
+    if not descr:
         try:
             descr = _find('Flavor', t) or _find('Short Description', t)
         except:
-            descr = ''
-    return t['@name'], re.sub('[\n\t ]{2,}', ' ', descr)
+            descr = None
+    return t['@name'], re.sub('[\n\t ]{2,}', ' ', descr or '')
 
 
 def _format_tuple_3_as_line(p):
