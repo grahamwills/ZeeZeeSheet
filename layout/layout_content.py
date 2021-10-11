@@ -9,10 +9,10 @@ from reportlab.platypus import Flowable, Image, Paragraph
 
 from structure import Block, Element, ElementType, Run, Spacing, Style
 from util import BadParametersError, Margins, Optimizer, Rect, configured_logger, divide_space
+from .content import ClipContent, Content, ErrorContent, GroupContent, ImageContent, ParagraphContent, PathContent, \
+    RectContent, TableContent
 from .flowables import Paragraph, Table
 from .pdf import PDF
-from .content import ErrorContent, ClipContent, Content, GroupContent, ImageContent, \
-    ParagraphContent, PathContent, RectContent, TableContent
 
 LOGGER = configured_logger(__name__)
 
@@ -410,13 +410,11 @@ def layout_block(block: Block, outer: Rect, pdf: PDF):
     inset = inset_for_content_style(block.style, block.spacing)
     inner = outer - Margins.balanced(inset)
 
-    items = []
-
     if has_title:
-        # Create title and move the innertop down to avoid it
+        # Create title and move the inner top down to avoid it
         title = banner_title_layout(block, outer, inset, pdf)
         inner = Rect(left=inner.left, right=inner.right, bottom=inner.bottom,
-                     top=title.actual.bottom + block.spacing.padding)
+                     top=title.actual.bottom + 2 * block.spacing.padding)
     else:
         title = None
 
@@ -443,7 +441,7 @@ def layout_block(block: Block, outer: Rect, pdf: PDF):
 
     main = GroupContent([clip, back, title, content], outer)
     if post:
-        main =  GroupContent([main, post], outer)
+        main = GroupContent([main, post], outer)
 
     if block.title:
         main.set_table_of_content_info(block.title.as_text())
@@ -602,7 +600,12 @@ def banner_title_layout(block: Block, bounds: Rect, inset: int, pdf: PDF) -> Con
 
     if style.background:
         r = plaque + Margins(left=20, top=20, right=20, bottom=0)
-        placed.append(RectContent(r, style, PDF.FILL, pdf))
+        plaque_rect = RectContent(r, style, PDF.FILL, pdf)
+
+        # The Plaque rect extends beyond the bounds because it is clipped. So we
+        # Do not want to consider the fact that it is not fitting -- it really isn't
+        plaque_rect.ignore_when_fitting = True
+        placed.append(plaque_rect)
 
     # Move the title up a little to account for the descender and line spacing
     dy = pdf.descender(style) + style.size * 0.1
@@ -644,7 +647,7 @@ def place_within(p: Union[Paragraph, Table], r: Rect, pdf: PDF, posX=0, posY=0, 
     return pfc
 
 
-def align_vertically_within(p: Paragraph, r: Rect, pdf: PDF, posY=0, metrics_adjust=0) -> ParagraphContent:
+def align_vertically_within(p: Paragraph, r: Rect, pdf: PDF, posY=0, metrics_adjust: float = 0) -> ParagraphContent:
     """
         Create a placed paragraph within a set of bounds
         :param Paragraph p: place this

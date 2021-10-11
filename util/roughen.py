@@ -53,13 +53,11 @@ class LineModifier:
         return self.mangle(copy(path))
 
     def _mangle_path_code(self, path: Sequence[str]) -> List[str]:
-        print("mangling")
         self._offset = Point(*self.canvas.absolutePosition(0, 0))
         result = []
         start = None
         last = None
         for term in path:
-            print(term)
             parts = term.split()
             code = parts[-1]
             coords = [Point(float(parts[i]), float(parts[i + 1])) for i in range(0, len(parts) - 1, 2)]

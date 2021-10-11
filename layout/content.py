@@ -33,6 +33,8 @@ class Content(abc.ABC):
             The actual bounds that we were placed into
         page_break_before
             Only used for top-level sections, True => page break before this
+        ignore_when_fitting
+            Don't consider this when evluating how well an item fits its space
 
     """
     pdf: PDF
@@ -44,6 +46,7 @@ class Content(abc.ABC):
     bad_breaks: float
     internal_variance: float
     page_break_before: bool
+    ignore_when_fitting: bool
 
     def __init__(self, requested: Rect, actual: Rect, pdf: PDF) -> None:
         self.actual = actual
@@ -53,8 +56,9 @@ class Content(abc.ABC):
         self.ok_breaks = 0
         self.bad_breaks = 0
         self.internal_variance = 0
-        self.unused_width = self._unused_requested_width()
         self.page_break_before = False
+        self.ignore_when_fitting = False
+        self.unused_width = self._unused_requested_width()
 
     def draw(self):
         """ Item placed on screen"""
@@ -84,7 +88,10 @@ class Content(abc.ABC):
             return self.unused_width * multiplier_good
 
     def _unused_requested_width(self):
-        return self.requested.width - self.actual.width
+        if self.ignore_when_fitting:
+            return 0
+        else:
+            return self.requested.width - self.actual.width
 
 
 class ParagraphContent(Content):
@@ -134,6 +141,8 @@ class ImageContent(Content):
     def draw(self):
         with self.styled(self.style) as pdf:
             pdf.draw_flowable(self.image, self.actual)
+
+
 
     def __str__(self) -> str:
         return "Image(%dx%d)" % (self.actual.width, self.actual.height)
@@ -205,6 +214,7 @@ class ClipContent(Content):
     def __init__(self, bounds: Rect, style:Style, pdf: PDF):
         super().__init__(bounds, bounds, pdf)
         self.style = style
+        self.ignore_when_fitting = True
 
     def draw(self):
         # Invert the rect to fit the coordinates system and then make a path from it
@@ -238,7 +248,7 @@ class GroupContent(Content):
         if not self.group:
             return
 
-        actual = Rect.union(p.actual for p in self.group)
+        actual = Rect.union(p.actual for p in self.group if not p.ignore_when_fitting)
         super().__init__(requested, actual, self.group[0].pdf)
 
         self.ok_breaks = sum(item.ok_breaks for item in self.group)
@@ -307,6 +317,8 @@ def _unused_horizontal_strip(group: List[Content], bounds: Rect):
     # Create an array of bytes that indicate spaces is used
     used = bytearray(bounds.width)
     for g in group:
+        if g.ignore_when_fitting:
+            continue
         d = g.unused_width
         left = g.requested.left + d // 2
         right = g.requested.right - d + d // 2
