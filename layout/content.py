@@ -202,16 +202,17 @@ class PathContent(Content):
 
 class ClipContent(Content):
 
-    def __init__(self, path: PDFPathObject, bounds: Rect, pdf: PDF):
+    def __init__(self, bounds: Rect, style:Style, pdf: PDF):
         super().__init__(bounds, bounds, pdf)
-        self.path = path
+        self.style = style
 
     def draw(self):
-        x = self.requested.left
-        y = self.pdf.page_height - self.requested.bottom
-        self.pdf.translate(x, y)
-        self.pdf.clipPath(self.path, stroke=0, fill=0)
-        self.pdf.translate(-x, -y)
+        # Invert the rect to fit the coordinates system and then make a path from it
+        ht = self.pdf.page_height
+        r = self.requested
+        r = Rect.make(left=r.left, right=r.right, top= ht-r.bottom, height=r.height)
+        path = self.pdf.rect_to_path(r, self.style)
+        self.pdf.clipPath(path, stroke=0, fill=0)
 
     def __str__(self) -> str:
         return "Clip(%s)" % str(self.path)

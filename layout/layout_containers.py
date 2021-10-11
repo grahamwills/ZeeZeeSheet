@@ -21,11 +21,12 @@ LOGGER = configured_logger(__name__)
 def place_sheet(sheet: Sheet, outer: Rect, pdf: PDF) -> GroupContent:
     children = []
     bounds = outer
+    page_break = False
     for section in sheet.content:
         blocks = [functools.partial(place_block, block=block, pdf=pdf) for block in section.content]
 
         # Add all pages creatd by stacking in columns
-        placed_pages = stack_in_columns(bounds, outer, blocks, section.spacing.padding, section.method.options)
+        placed_pages = stack_in_columns(bounds, outer, blocks, section.spacing.padding, section.method.options, page_break)
         children += placed_pages
 
         # Set bounds top for the next section
@@ -36,6 +37,7 @@ def place_sheet(sheet: Sheet, outer: Rect, pdf: PDF) -> GroupContent:
         if hasattr(make_block_layout, 'cache_info'):
             LOGGER.debug("Block Layout Cache info = %s", make_block_layout.cache_info())
             make_block_layout.cache_clear()
+        page_break = section.page_break_after
 
     return GroupContent(children, outer)
 
@@ -275,7 +277,12 @@ def _fits(together: Content, bounds: Rect) -> int:
     return together.actual.bottom <= bounds.bottom
 
 
-def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options: dict) -> List[GroupContent]:
+def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, options: dict, break_before:bool) -> List[GroupContent]:
+    if break_before:
+        on_next_page = stack_in_columns(page, page, placeables, padding, options, False)
+        on_next_page[0].page_break_before = True
+        return on_next_page
+
     equal = bool(options.get('equal', False))
     columns = int(options.get('columns', 1))
 

@@ -293,8 +293,11 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
     def visit_transition(self, node: docutils.nodes.Node) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         LOGGER.debug("... Finishing Current Section")
+        if node.rawsource.startswith('===') and self.status.section:
+            self.status.section.page_break_after = True
         self.status.block = None
         self.status.section = None
+
 
     def visit_list_item(self, node: docutils.nodes.list_item) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))

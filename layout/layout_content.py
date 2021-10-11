@@ -427,8 +427,7 @@ def layout_block(block: Block, outer: Rect, pdf: PDF):
                       bottom=content.actual.bottom + block.spacing.margin)
 
     if has_title:
-        path = pdf.rect_to_path(outer, block.style)
-        clip = ClipContent(path, outer, pdf)
+        clip = ClipContent(outer, block.style, pdf)
     else:
         clip = None
 
@@ -605,7 +604,7 @@ def banner_title_layout(block: Block, bounds: Rect, inset: int, pdf: PDF) -> Con
         r = plaque + Margins(left=20, top=20, right=20, bottom=0)
         placed.append(RectContent(r, style, PDF.FILL, pdf))
 
-    # Move the title up a little to account for the descender and lien spacing
+    # Move the title up a little to account for the descender and line spacing
     dy = pdf.descender(style) + style.size * 0.1
     title.move(dy=-dy)
     placed.append(title)

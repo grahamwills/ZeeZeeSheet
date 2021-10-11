@@ -215,6 +215,7 @@ class Section:
     method: Method = field(default_factory=lambda: Method('columns', {'columns': '3'}))
     spacing: Spacing = Spacing(4, 4)
     style: Style = None
+    page_break_after: bool = False
 
     def add_block(self, block: Block):
         self.content.append(block)
