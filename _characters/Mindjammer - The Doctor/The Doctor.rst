@@ -11,7 +11,8 @@ The Doctor
 .. block:: style=default
 
 Basic Info
- - *Player:* **Suzanne**    | *Culture:* Commonality
+ - *Player:* **Suzanne**
+ - *Culture:* Commonality   |
  - *Genotype:* Synthetic    | *Occupation:* Meditech
  - *Tech Index:* T-9        |  *Habituated Gravity:* 1.0
 
@@ -29,7 +30,7 @@ Skills
  - Athletics    | **+1** | (Average)
  - Empathy      | **+3** | (Good)
  - Investigate  | **+4** | (Great)
-- Knowledge    | **+1** | (Average)
+ - Knowledge    | **+1** | (Average)
  - Melee        | **+1** | (Average)
  - Notice       | **+2** | (Fair)
  - Rapport      | **+2** | (Fair)
@@ -75,9 +76,12 @@ Extras
 Background
  - In the year 17,000AD — the year 193 of the Rediscovery Era — the New Commonality of Humankind contacts
    the countless lost worlds it settled by slower-than-light colony ship thousands of years before.
+ -
  - The new faster-than-light planing engine is changing everything, pushing back the Commonality Frontier
    and revealing strange and divergent cultures and beings that often are no longer even human.
- - the vast neural network storing the memories of the entire human race and enabling the miracles of technopsi.
+ -
+ - Only the Mindjammers hold the Commonality together — intelligent starships carrying the Mindscape between worlds,
+   the vast neural network storing the memories of the entire human race and enabling the miracles of technopsi.
    It’s a time of great danger — but also great hope!
 
 ========================================================================

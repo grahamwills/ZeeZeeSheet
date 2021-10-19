@@ -307,6 +307,9 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def depart_list_item(self, node: docutils.nodes.list_item) -> None:
         LOGGER.debug("Departing '%s'", self.status.depart(node))
+        if self.status.run is not None and not self.status.run.valid():
+            LOGGER.debug("Adding blank text to empty run")
+            self.status.add_to_run('&nbsp;')
         self.status.target_nothing()
 
     def visit_Text(self, node: docutils.nodes.Text) -> None:

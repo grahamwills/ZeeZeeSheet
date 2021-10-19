@@ -130,6 +130,9 @@ class Run:
 
     def fixup(self):
         self.items = _ensure_representable(self.items)
+        # A single nbsp; is a spacer, so just use the paddign to space this out
+        if len(self.items) == 1 and self.items[0].value == '&nbsp;':
+            self.items[0].style =  self.items[0].style.clone(size=0)
 
     def __hash__(self):
         return id(self)
