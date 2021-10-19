@@ -6,7 +6,7 @@ from reportlab.platypus import Flowable
 
 from structure import Element, ElementType, Run, Style
 from util import configured_logger
-from .pdf import PDF, _CHECKED_BOX, _UNCHECKED_BOX, line_info, make_paragraph_style
+from .pdf import PDF, _CHECKED_BOX, _TEXTFIELD, _UNCHECKED_BOX, line_info, make_paragraph_style
 
 LOGGER = configured_logger(__name__)
 
@@ -129,9 +129,10 @@ class Paragraph(reportlab.platypus.Paragraph):
             pdf.setStrokeColor(Color('gray'))
             pdf.rect(0, 0, self.width, self.height)
 
-        pdf.translate(0, self.v_offset)
-        super().drawOn(pdf, x, y, _sW)
-        pdf.translate(0, -self.v_offset)
+        with pdf.using_style(self.style) as pdf:
+            pdf.translate(0, self.v_offset)
+            super().drawOn(pdf, x, y, _sW)
+            pdf.translate(0, -self.v_offset)
 
     def __str__(self):
         txt = str(self.run)
@@ -177,6 +178,8 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
     if e.which == ElementType.CHECKBOX:
         target = _UNCHECKED_BOX if e.value in {'O', 'o', ' ', '0'} else _CHECKED_BOX
         return "<img height=%d width=%d src='%s'/>" % (style.size, style.size, target)
+    if e.which == ElementType.TEXTFIELD:
+        return "<img height=%d width=100%% src='%s'/>" % (style.size + 2, _TEXTFIELD)
     if e.which != ElementType.TEXT:
         face = " face='Symbola'"
     if face or size or color:

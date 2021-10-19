@@ -131,6 +131,9 @@ def as_table(cells, bounds: Rect, pdf: PDF, padding: int, return_as_placed=False
     else:
         optimizer = TableColumnsOptimizer(cells, padding, bounds, pdf)
         placed, _ = optimizer.run()
+        if not placed:
+            LOGGER.debug("Cannot make optimized fit for %d columns into a table of width %d", ncols, width)
+            raise BadParametersError("Optimize fail: Columns likely too small for table", 100 / (1+width))
         if return_as_placed:
             return placed
         else:
@@ -414,11 +417,14 @@ def layout_block(block: Block, outer: Rect, pdf: PDF):
         # Create title and move the inner top down to avoid it
         title = banner_title_layout(block, outer, inset, pdf)
         inner = Rect(left=inner.left, right=inner.right, bottom=inner.bottom,
-                     top=title.actual.bottom + 2 * block.spacing.padding)
+                     top=title.actual.bottom + block.spacing.padding + block.spacing.margin)
     else:
         title = None
 
     content = content_layout(block, inner, pdf)
+
+    if content is None:
+        content = content_layout(block, inner, pdf)
 
     # Adjust outer to cover the actual content
     outer = Rect.make(left=outer.left, right=outer.right, top=outer.top,

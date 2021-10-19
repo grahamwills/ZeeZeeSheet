@@ -45,9 +45,9 @@ Status
  - Fate:        | [X][X][X][X][X]
  - Physical:    | [ ][ ][ ][ ]
  - Mental:      | [ ][ ]
- - Mild:        | __________________________________
- - Moderate:    | __________________________________
- - Severe:      | __________________________________
+ - Mild:        | [[ ]]
+ - Moderate:    | [[ ]]
+ - Severe:      | [[ ]]
 
 
 .. title:: style=heading2blue
@@ -83,6 +83,13 @@ Background
  - Only the Mindjammers hold the Commonality together — intelligent starships carrying the Mindscape between worlds,
    the vast neural network storing the memories of the entire human race and enabling the miracles of technopsi.
    It’s a time of great danger — but also great hope!
+
+Notes
+ - [[ ]]
+ - [[ ]]
+ - [[ ]]
+ - [[ ]]
+
 
 ========================================================================
 

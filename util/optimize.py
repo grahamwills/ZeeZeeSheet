@@ -19,6 +19,7 @@ BAD_PARAMS_FACTOR = 1e12
 class BadParametersError(RuntimeError):
     def __init__(self, message: str, badness: float) -> None:
         super().__init__(message)
+        assert badness > 0
         self.badness = badness
 
 

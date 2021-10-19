@@ -59,8 +59,9 @@ class ElementType(Enum):
     TEXT = 0
     SYMBOL = 1
     CHECKBOX = 2
-    DIVIDER = 3
-    SPACER = 4
+    TEXTFIELD = 3
+    DIVIDER = 4
+    SPACER = 5
 
 
 @dataclass
@@ -77,6 +78,8 @@ class Element:
                 return '☒'
         if self.which == ElementType.DIVIDER:
             return '●'
+        if self.which == ElementType.TEXTFIELD:
+            return '[[ ... ]]'
         if self.which == ElementType.SPACER:
             return '⋯'
         return self.value
@@ -92,6 +95,8 @@ class Element:
                 return '☒'
         if self.which == ElementType.DIVIDER or self.which == ElementType.SPACER:
             return ' '
+        if self.which == ElementType.TEXTFIELD:
+            return '[[ ... ]]'
         return self.value
 
 
@@ -104,13 +109,16 @@ class Run:
 
     def add(self, txt, style) -> Run:
         # Search for all the special codes
-        parts = re.split(r'[ \t]*(\||--|\[[XO ]?])[ \t]*', txt)
+        parts = re.split(r'[ \t]*(\||--|\[+[XO ]?]+)[ \t]*', txt)
         for p in parts:
             p = p.strip()
             if p == '|':
                 self.items.append(Element(ElementType.DIVIDER))
             elif p == '--':
                 self.items.append(Element(ElementType.SPACER))
+            elif p.startswith('[[') and p.endswith(']]'):
+                v = p[2:-2]
+                self.items.append(Element(ElementType.TEXTFIELD, value=v, style=style))
             elif p.startswith('[') and p.endswith(']'):
                 v = p[1] if len(p) > 2 else 'O'
                 self.items.append(Element(ElementType.CHECKBOX, value=v, style=style))

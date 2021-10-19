@@ -7,6 +7,7 @@ from typing import Optional
 
 import reportlab
 import reportlab.lib.colors
+from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -24,6 +25,7 @@ LOGGER = configured_logger(__name__)
 
 _CHECKED_BOX = '../resources/images/checked.png'
 _UNCHECKED_BOX = '../resources/images/unchecked.png'
+_TEXTFIELD = '../resources/images/blank.png'
 _LEADING_MAP = defaultdict(lambda: 1.2)
 
 DrawMethod = namedtuple('DrawMethod', 'fill stroke')
@@ -60,6 +62,8 @@ class PDF(canvas.Canvas):
             return self._add_checkbox(x, y, width, height, False)
         elif fileName == _CHECKED_BOX:
             return self._add_checkbox(x, y, width, height, True)
+        elif fileName == _TEXTFIELD:
+            return self._add_textfield(x, y, width, height)
         else:
             self.saveState()
             roughener = self._make_roughener()
@@ -80,6 +84,17 @@ class PDF(canvas.Canvas):
                                fillColor=reportlab.lib.colors.Color(1, 1, 1),
                                buttonStyle='cross', borderWidth=0.5, checked=state)
         return width, height
+
+    def _add_textfield(self, rx, ry, width, height) -> (int, int):
+        style = self.style
+        x, y = self.absolutePosition(rx, ry)
+        self._name_index += 1
+        name = "f%d" % self._name_index
+        LOGGER.debug("Adding text field name='%s'", name)
+        self.acroForm.textfield(name=name, x=x-1, y=y - 1, relative=False, width=width, height=height,
+                                fontName='Helvetica', fontSize=style.fontSize, textColor=style.textColor,
+                                fillColor=reportlab.lib.colors.HexColor(0xF4F4FF),
+                                borderWidth=0.5, borderColor=colors.lightgrey)
 
     def draw_rect(self, r: Rect, method: DrawMethod, rounded=None):
         method = self._set_drawing_styles(method)
