@@ -28,6 +28,7 @@ class Style:
 
     roughness: float = None
     teeth: float = None
+    rounded: float = None
 
     align: str = None
 
@@ -114,7 +115,7 @@ class Stylesheet:
             try:
                 if key in {'color', 'background', 'borderColor'}:
                     setattr(s, key, Color(value))
-                elif key in {'size', 'borderWidth', 'opacity', 'roughness', 'teeth'}:
+                elif key in {'size', 'borderWidth', 'opacity', 'roughness', 'teeth', 'rounded'}:
                     setattr(s, key, float(value))
                 elif key in {'bold', 'italic'}:
                     setattr(s, key, bool(value))

@@ -81,10 +81,17 @@ class PDF(canvas.Canvas):
                                buttonStyle='cross', borderWidth=0.5, checked=state)
         return width, height
 
-    def draw_rect(self, r: Rect, method: DrawMethod, rounded=0):
+    def draw_rect(self, r: Rect, method: DrawMethod, rounded=None):
         method = self._set_drawing_styles(method)
         roughener = self._make_roughener()
         top = self.page_height - r.bottom
+
+        if rounded is None:
+            if self.style.rounded is not None:
+                rounded = self.style.rounded
+            else:
+                rounded = 0
+
         if roughener:
             path = roughener.rect_to_path(r.left, top, r.width, r.height, rounded=rounded)
             self.drawPath(path, fill=method.fill, stroke=method.stroke)
@@ -160,11 +167,19 @@ class PDF(canvas.Canvas):
         return None
 
     def rect_to_path(self, b: Rect, style: Style):
+        if style and style.rounded is not None:
+            rounded = style.rounded
+        else:
+            rounded = 0
+
         roughener = self._make_roughener(style)
         if roughener:
-            return roughener.rect_to_path(b.left, b.top, b.width, b.height)
+            return roughener.rect_to_path(b.left, b.top, b.width, b.height, rounded=rounded)
         path = self.beginPath()
-        path.rect(b.left, b.top, b.width, b.height)
+        if rounded:
+            path.roundRect(b.left, b.top, b.width, b.height, rounded)
+        else:
+            path.rect(b.left, b.top, b.width, b.height)
         path.close()
         return path
 
@@ -179,6 +194,7 @@ def install_fonts() -> [str]:
     install_font('Steamship', 'Starship', user_fonts, 1.15)
     install_font('LoveYou', 'I Love What You Do', user_fonts, 1.2)
     install_font('Comics', 'back-issues-bb', user_fonts)
+    install_font('Tech', 'oceanicdrift', user_fonts)
     install_font('Jedi', 'Starjedi', user_fonts)
     install_font('Western', 'Carnevalee Freakshow', user_fonts, 1.0)
     install_font('ArtDeco', 'CaviarDreams', user_fonts, 1.1)

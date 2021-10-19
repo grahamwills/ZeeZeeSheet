@@ -179,7 +179,7 @@ class TableContent(Content):
 
 class RectContent(Content):
 
-    def __init__(self, bounds: Rect, style: Style, method: DrawMethod, pdf: PDF, rounded=0):
+    def __init__(self, bounds: Rect, style: Style, method: DrawMethod, pdf: PDF, rounded=None):
         super().__init__(bounds, bounds, pdf)
         self.method = method
         self.style = style

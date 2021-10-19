@@ -75,7 +75,6 @@ class Optimizer(Generic[T]):
 
         initial_simplex = self._unit_simplex()
         solution = scipy.optimize.minimize(lambda x: _score(tuple(x), self), method='Nelder-Mead', x0=x0,
-                                           bounds=[(0, 1)] * (self.k - 1),
                                            options={'initial_simplex': initial_simplex})
         duration = time.perf_counter() - start
 

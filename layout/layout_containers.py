@@ -305,7 +305,7 @@ def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, option
             return [all]
         else:
             # Set the bounds to a full page and try that
-            on_next_page = stack_in_columns(page, page, placeables, padding, options)
+            on_next_page = stack_in_columns(page, page, placeables, padding, options, False)
             on_next_page[0].page_break_before = True
             return on_next_page
 
@@ -344,7 +344,7 @@ def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, option
     assert sum(len(c.group) for c in best.group) == lo
 
     # Now try the rest on a new page, inserting the section we just made before it
-    all = stack_in_columns(page, page, placeables[lo:], padding, options)
+    all = stack_in_columns(page, page, placeables[lo:], padding, options, False)
     all[0].page_break_before = True
     all.insert(0, best)
 
