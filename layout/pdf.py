@@ -3,6 +3,7 @@ import io
 from collections import defaultdict, namedtuple
 from functools import lru_cache
 from pathlib import Path
+from textwrap import dedent
 from typing import Optional
 
 import reportlab
@@ -27,6 +28,7 @@ _CHECKED_BOX = '../resources/images/checked.png'
 _UNCHECKED_BOX = '../resources/images/unchecked.png'
 _TEXTFIELD = '../resources/images/blank.png'
 _LEADING_MAP = defaultdict(lambda: 1.2)
+_MULTIPLIER_MAP = defaultdict(lambda: 1)
 
 DrawMethod = namedtuple('DrawMethod', 'fill stroke')
 
@@ -41,12 +43,32 @@ class PDF(canvas.Canvas):
         self.setLineJoin(1)
         self.setLineCap(1)
         fonts = install_fonts()
+
+
         LOGGER.info("Installed fonts = %s", fonts)
+        # self._fonts_for_documentation(fonts)
         self.base_dir = output_file.parent
         self.page_height = int(pagesize[1])
         self.debug = debug
         self._name_index = 0
         self.style = None
+
+    def _fonts_for_documentation(self, fonts):
+        fonts = [f for f in fonts if 'talic' not in f.lower() and 'bold' not in f.lower()]
+        for i in fonts:
+            print('font_sample_{0}\n\tinherit=font_sample_base family={0}\n'.format(i))
+        sample = dedent(
+                """
+                    .. block:: style=font_sample_{0}
+
+                    {0}
+                     - The five boxing wizards jump quickly | *Pack my box with five dozen liquor jugs* | **How 
+                     vexingly quick daft zebras jump**
+                """
+        ).strip()
+        for i in fonts:
+            print(sample.format(i))
+            print()
 
     @contextlib.contextmanager
     def using_style(self, style: Style):
@@ -201,25 +223,29 @@ class PDF(canvas.Canvas):
 
 def install_fonts() -> [str]:
     user_fonts = []
-    install_font('Gotham', 'Gotham', user_fonts)
+    install_font('Gotham', 'Gotham', user_fonts, multiplier=0.9)
     install_font('Baskerville', 'Baskerville', user_fonts)
 
-    install_font('Adventure', 'Adventure', user_fonts, 1.0)
-    install_font('Steampunk', 'Steamwreck', user_fonts, 0.9)
-    install_font('Steamship', 'Starship', user_fonts, 1.15)
-    install_font('LoveYou', 'I Love What You Do', user_fonts, 1.2)
-    install_font('Comics', 'back-issues-bb', user_fonts)
-    install_font('Tech', 'oceanicdrift', user_fonts)
-    install_font('Jedi', 'Starjedi', user_fonts)
-    install_font('Western', 'Carnevalee Freakshow', user_fonts, 1.0)
-    install_font('ArtDeco', 'CaviarDreams', user_fonts, 1.1)
-    install_font('Radioactive', '28 Days Later', user_fonts, 1.0)
+    install_font('Adventure', 'Adventure', user_fonts, leading=1.0)
+    install_font('Steampunk', 'Steamwreck', user_fonts, leading=0.9, multiplier=1.2)
+    install_font('Steamship', 'Starship', user_fonts, leading=1.15)
+    install_font('LoveYou', 'I Love What You Do', user_fonts, leading=1.1, multiplier=1.2)
+    install_font('Comics', 'back-issues-bb', user_fonts, multiplier=0.9)
+    install_font('Tech', 'oceanicdrift', user_fonts, leading=0.8, multiplier=1.2)
+    install_font('Space', 'Starjedi', user_fonts,  leading=1.1)
+    install_font('Western', 'Carnevalee Freakshow', user_fonts, leading=1.0, multiplier=1.15)
+    install_font('ArtDeco', 'CaviarDreams', user_fonts, leading=1.1)
+    install_font('Radioactive', '28 Days Later', user_fonts, leading=1.1)
     install_font('Typewriter', 'SpecialElite', user_fonts)
-    install_font('Monster', 'mrsmonster', user_fonts, 1.0)
-    install_font('Script', 'Parisienne', user_fonts, 1.1)
+    install_font('Monster', 'mrsmonster', user_fonts, leading=1.1)
+    install_font('Script', 'Parisienne', user_fonts, leading=1.1)
 
-    install_font('MotionPicture', 'MotionPicture', user_fonts, 1.0)
+    install_font('MotionPicture', 'MotionPicture', user_fonts, leading=1.0, multiplier=1.2)
     install_font('Symbola', 'Symbola', user_fonts)
+
+    # Leading adjustments to standard fonts
+    _LEADING_MAP['courier'] = 1.1
+
     return sorted(base_fonts() + user_fonts)
 
 
@@ -242,7 +268,7 @@ def create_single_font(name, resource_name, default_font_name, user_fonts):
         return default_font_name
 
 
-def install_font(name, resource_name, user_fonts, leading: float = None):
+def install_font(name, resource_name, user_fonts, leading: float = None, multiplier=None):
     try:
         pdfmetrics.getFont(name)
     except:
@@ -253,6 +279,8 @@ def install_font(name, resource_name, user_fonts, leading: float = None):
         pdfmetrics.registerFontFamily(name, normal=name, bold=bold, italic=italic, boldItalic=bold_italic)
         if leading:
             _LEADING_MAP[name.lower()] = leading
+        if multiplier:
+            _MULTIPLIER_MAP[name.lower()] = multiplier
 
 
 def line_info(p):
@@ -280,6 +308,8 @@ def make_paragraph_style(align, font, size, leading, opacity, rgb):
     alignment = {'left': 0, 'center': 1, 'right': 2, 'fill': 4, 'justify': 4}[align]
     opacity = float(opacity) if opacity is not None else 1.0
     color = reportlab.lib.colors.Color(*rgb, alpha=opacity)
+    leading *= _MULTIPLIER_MAP[font.lower()]
+    size *= _MULTIPLIER_MAP[font.lower()]
     return ParagraphStyle(name='_tmp', spaceShrinkage=0.1,
                           fontName=font, fontSize=size, leading=leading,
                           allowWidows=0, embeddedHyphenation=1, alignment=alignment,

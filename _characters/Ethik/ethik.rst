@@ -107,9 +107,6 @@ Advances Taken
 
 -----------------------------------------
 
-Styles
-======
-
 default
     family=Helvetica color=#444 align=fill
 edged

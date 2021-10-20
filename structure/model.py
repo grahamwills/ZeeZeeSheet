@@ -191,19 +191,17 @@ class Block:
         return id(self)
 
     def fixup(self, parent: Section):
+        if not self.title and not self.content:
+            parent.content.remove(self)
+            return
+
         if self.title:
             self.title.fixup()
         if self.content:
             for r in self.content:
                 r.fixup()
         elif not self.image:
-            if self.title:
-                # Move the title to the content
-                self.content = [self.title]
-                self.title = None
-            else:
-                # Nothing is defined so kill this
-                parent.content.remove(self)
+            self.content = [ Run([Element(ElementType.TEXT, '&nbsp;', self.title.style())])]
 
     def base_style(self) -> Optional[Style]:
         #  Lazy, just use the first

@@ -52,7 +52,6 @@ def _to_size(txt: str) -> int:
         return round(float(txt[:-2]))
     return int(txt)
 
-
 @dataclass
 class Status:
     section: Optional[Section] = None
@@ -136,23 +135,32 @@ def line_of(node: docutils.nodes.Node):
     else:
         return node.line
 
+class FindLastTransitionVisitor(docutils.nodes.SparseNodeVisitor):
+    last_transition: docutils.nodes.transition
 
-# noinspection PyPep8Naming
+    def unknown_visit(self, node):
+        pass
+
+    def visit_transition(self, node: docutils.nodes.transition) -> None:
+        self.last_transition = node
+
+
 class StyleVisitor(docutils.nodes.NodeVisitor):
 
-    def __init__(self, document):
+    def __init__(self, document, last_transition):
         super().__init__(document)
+        self.last_transition = last_transition
         self.styles = Stylesheet()
         self.style_name = None
         self.active = False
 
     def visit_title(self, node: docutils.nodes.title) -> None:
-        if self.active:
-            self.style_name = node.astext()
-        if node.astext().lower() == 'styles':
-            # We are about to process style definitions
-            self.active = True
+        self.style_name = node.astext()
         raise docutils.nodes.SkipChildren
+
+    def visit_transition(self, node: docutils.nodes.transition) -> None:
+        if node == self.last_transition:
+            self.active = True
 
     def unknown_visit(self, node: docutils.nodes.Node) -> None:
         pass
@@ -176,8 +184,9 @@ class StyleVisitor(docutils.nodes.NodeVisitor):
 
 class SheetVisitor(docutils.nodes.NodeVisitor):
 
-    def __init__(self, document, styles: Stylesheet):
+    def __init__(self, document, styles: Stylesheet, last_transition):
         super().__init__(document)
+        self.last_transition = last_transition
         self.styles = styles
         self.status = Status()
         self.sheet = Sheet()
@@ -273,14 +282,9 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
 
     def visit_title(self, node: docutils.nodes.title) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
-        # Check to see if we are about to process style definitions
-        if node.astext().lower() == 'styles':
-            LOGGER.info("***** Style Sheet enocuntered: aborting regular processing")
-            raise docutils.nodes.StopTraversal
-        else:
-            self.create_block()
-            self.status.block.add_title()
-            self.status.target_block_title()
+        self.create_block()
+        self.status.block.add_title()
+        self.status.target_block_title()
 
     def depart_title(self, node) -> None:
         LOGGER.debug("Departing '%s'", self.status.depart(node))
@@ -290,13 +294,19 @@ class SheetVisitor(docutils.nodes.NodeVisitor):
         LOGGER.debug("Departing '%s'", self.status.depart(node))
         self.status.target_nothing()
 
-    def visit_transition(self, node: docutils.nodes.Node) -> None:
+    def visit_transition(self, node: docutils.nodes.transition) -> None:
         LOGGER.debug("Entering '%s'", self.status.enter(node))
         LOGGER.debug("... Finishing Current Section")
-        if node.rawsource.startswith('===') and self.status.section:
-            self.status.section.page_break_after = True
-        self.status.block = None
-        self.status.section = None
+
+        # Check to see if we are about to process style definitions
+        if node == self.last_transition:
+            LOGGER.info("***** Style Sheet enocuntered: aborting regular processing")
+            raise docutils.nodes.StopTraversal
+        else:
+            if node.rawsource.startswith('===') and self.status.section:
+                self.status.section.page_break_after = True
+            self.status.block = None
+            self.status.section = None
 
 
     def visit_list_item(self, node: docutils.nodes.list_item) -> None:
@@ -393,7 +403,11 @@ def build_sheet(data):
         warnings.simplefilter("always")
         doc = parse_rst(data)
 
-        style_visitor = StyleVisitor(doc)
+        last_visitor = FindLastTransitionVisitor(doc)
+        doc.walk(last_visitor)
+        last_transition = last_visitor.last_transition
+
+        style_visitor = StyleVisitor(doc, last_transition)
         doc.walkabout(style_visitor)
         styles = style_visitor.styles
 
@@ -401,7 +415,7 @@ def build_sheet(data):
             for k, v in styles.items.items():
                 LOGGER.debug('.. style %16s = %s', k, v)
 
-        sheet_visitor = SheetVisitor(doc, styles)
+        sheet_visitor = SheetVisitor(doc, styles, last_transition)
         doc.walkabout(sheet_visitor)
         sheet = sheet_visitor.sheet
         sheet.fixup()

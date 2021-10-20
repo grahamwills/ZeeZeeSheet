@@ -93,9 +93,6 @@ Notes
 
 ========================================================================
 
-Styles
-------
-
 default
     opacity=0.8 font=Gotham rounded=3
 bigger
