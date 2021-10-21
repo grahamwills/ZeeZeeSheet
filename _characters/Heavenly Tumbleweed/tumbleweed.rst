@@ -29,8 +29,9 @@ Basic Info
 .. section:: stack stack:columns=2 padding=8
 .. block:: style=default
 
+Picture
+
 .. image:: Heavenly_Tumbleweed.jpg
-..
 
 .. block:: style=red
 

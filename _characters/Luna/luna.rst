@@ -292,7 +292,7 @@ Styles
 default
   family=Baskerville size=8 align=fill roughness=0.75 opacity=0.8
 title
-  size=40 color=darkGreen family=LoveYou
+  size=32 color=darkGreen family=LoveYou
 
 heading
   color=white background=black family=Gotham
@@ -320,7 +320,7 @@ therm_red
 
 
 big
-  size=20 color=darkGreen family=LoveYou align=center
+  size=16 color=darkGreen family=LoveYou align=center
 
 
 blue

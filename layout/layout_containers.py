@@ -121,7 +121,7 @@ class ColumnOptimizer(Optimizer):
     def score(self, columns: [GroupContent]) -> float:
         column_bounds = [c.actual for c in columns]
         max_height = max(c.height for c in column_bounds)
-        min_height = min(c.height for c in column_bounds)
+        min_height = max(1,min(c.height for c in column_bounds))
 
         stddev = statistics.stdev(c.height for c in column_bounds) / 10
 

@@ -35,7 +35,7 @@ Pools
 .. title:: banner style=banner
 .. block:: default style=edged emphasis=red
 
-Recoveries -- **D6 + 4**
+Recoveries -- **D6 + 3**
  - [ ] 1 action | [ ] 10 mins | [ ] 1 hour | [ ] 10 hours
 
 
@@ -112,13 +112,13 @@ default
 edged
     borderWidth=0.5 borderColor=navy teeth=1 background=#dddde4
 banner
-    family=Steampunk size=14 color=white background=navy teeth=1
+    family=Gotham size=12 color=white background=navy teeth=1
 faint
     opacity=0.5 align=left
 big
-    size=24 color=navy opacity=1 font=Steamship
+    size=18 color=navy opacity=1 font=Steamship
 ornate
-    size=24 color=navy font=Steampunk
+    size=22 color=navy font=Steampunk
 
 huge
     size=44 color=#800 font=Steamship teeth=3

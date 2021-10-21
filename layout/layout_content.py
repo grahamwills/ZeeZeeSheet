@@ -596,7 +596,7 @@ def banner_title_layout(block: Block, bounds: Rect, inset: int, pdf: PDF) -> Con
 
     style = block.title_style
     placed = []
-    plaque = bounds.resize(height=round(style.size) + block.spacing.padding)
+    plaque = bounds.resize(height=round(style.size))
 
     title_mod = Run(block.title.items).with_style(style)
     title = one_line_flowable(title_mod, plaque, block.spacing.padding, pdf)
