@@ -227,7 +227,7 @@ def install_fonts() -> [str]:
     install_font('Baskerville', 'Baskerville', user_fonts)
 
     install_font('Adventure', 'Adventure', user_fonts, leading=1.0)
-    install_font('Steampunk', 'Steamwreck', user_fonts, leading=0.9, multiplier=1.2)
+    install_font('Steampunk', 'Zalora', user_fonts, leading=1.1, multiplier=0.95)
     install_font('Steamship', 'Starship', user_fonts, leading=1.15)
     install_font('LoveYou', 'I Love What You Do', user_fonts, leading=1.1, multiplier=1.2)
     install_font('Comics', 'back-issues-bb', user_fonts, multiplier=0.9)

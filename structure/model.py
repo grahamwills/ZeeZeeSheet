@@ -191,7 +191,7 @@ class Block:
         return id(self)
 
     def fixup(self, parent: Section):
-        if not self.title and not self.content:
+        if not self.title and not self.content and not self.image:
             parent.content.remove(self)
             return
 

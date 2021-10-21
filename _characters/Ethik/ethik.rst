@@ -112,13 +112,13 @@ default
 edged
     borderWidth=0.5 borderColor=navy teeth=1 background=#dddde4
 banner
-    family=Gotham size=12 color=white background=navy teeth=1
+    family=Steampunk color=white background=navy teeth=1
 faint
     opacity=0.5 align=left
 big
     size=18 color=navy opacity=1 font=Steamship
 ornate
-    size=22 color=navy font=Steampunk
+    size=18 color=navy font=Gotham
 
 huge
     size=44 color=#800 font=Steamship teeth=3
