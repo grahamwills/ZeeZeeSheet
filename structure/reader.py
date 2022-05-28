@@ -138,6 +138,10 @@ def line_of(node: docutils.nodes.Node):
 class FindLastTransitionVisitor(docutils.nodes.SparseNodeVisitor):
     last_transition: docutils.nodes.transition
 
+    def __init__(self, visitor):
+        super().__init__(visitor)
+        self.last_transition = None
+
     def unknown_visit(self, node):
         pass
 

@@ -164,9 +164,9 @@ class Rect(namedtuple('Rect', 'left right top bottom')):
                     self.top, self.bottom if height is None else self.top + height)
 
     def make_column(self, *, width: int = None, left: int = None, right: int = None) -> Rect:
-        if not width:
+        if width is None:
             return Rect(left, right, self.top, self.bottom)
-        if not left:
+        if left is None:
             return Rect(right - width, right, self.top, self.bottom)
         return Rect(left, left + width, self.top, self.bottom)
 

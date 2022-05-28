@@ -341,7 +341,7 @@ def stack_in_columns(bounds: Rect, page: Rect, placeables: List, padding, option
             hi = mid
             hi_bottom = trial.actual.bottom
 
-    assert sum(len(c.group) for c in best.group) == lo
+    # assert sum(len(c.group) for c in best.group) == lo
 
     # Now try the rest on a new page, inserting the section we just made before it
     all = stack_in_columns(page, page, placeables[lo:], padding, options, False)

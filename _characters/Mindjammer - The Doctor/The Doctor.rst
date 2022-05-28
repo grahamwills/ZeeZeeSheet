@@ -1,4 +1,4 @@
-.. page:: watermark=sci-fi-abstract.jpg padding=4 size=6inx8in margin=0.25in
+.. page:: watermark=sci-fi-abstract.jpg padding=3 size=6inx8in margin=0.2in
 
 .. section:: stack stack:columns=2 padding=0
 .. title:: hidden
@@ -11,14 +11,14 @@ The Doctor
 
 ---------------------------------------------------------------
 
-.. section:: stack stack:columns=2 padding=8
+.. section:: stack stack:columns=2 padding=5
 .. block:: style=default
 
 Picture
 
 .. image:: TheDoctor.png
 
-.. block:: style=lefty padding=4
+.. block:: style=lefty padding=5
 
 Basic Info
  - *Player* | Suzanne
@@ -33,54 +33,56 @@ Basic Info
 .. block:: style=green padding=4
 
 Skills
- - Athletics    | **+2** | (Fair)
- - Empathy      | **+3** | (Good)
+ - Athletics    | **+3** | (Good)
+ - Empathy      | **+5** | (Superb)
  - Investigate  | **+4** | (Great)
  - Knowledge    | **+1** | (Average)
  - Melee        | **+1** | (Average)
  - Notice       | **+2** | (Fair)
- - Rapport      | **+2** | (Fair)
+ - Rapport      | **+3** | (Good)
  - Resources    | **+2** | (Fair)
  - Science      | **+3** | (Good)
  - Stealth      | **+1** | (Average)
- - Technical    | **+1** | (Average)
+ - Technical    | **+2** | (Fair)
  - Will         | **+1** | (Average)
 
 .. title:: default style=heading2red
-.. block:: style=red  padding=4
+.. block:: style=red  padding=3
 
 Status
- - Fate:        | [X][X][X][X][X]
- - Physical:    | [ ][ ]
- - Mental:      | [ ][ ][ ]
+ - Fate:        | [X][X][X][X][X][X]
+ - Physical:    | [ ][ ] -- Mental: [ ][ ][ ]
  - Mild:        | [[ ]]
  - Moderate:    | [[ ]]
  - Severe:      | [[ ]]
 
 
 .. title:: style=heading2blue
-.. block:: style=blue padding=4
+.. block:: style=blue padding=3
 
 Aspects
- - High Concept | **Holographic Doctor**
+ - High Concept | **Amiable Doctor**
  - Trouble      | **Afraid of the Dark**
  - Cultural     | **The Ends Justify the Means**
  - Genotype     | **Artificial Holographic Life Form**
  - General      | **Dapper**
  - General      | **Scientific Curiosity**
- - General      | [[ ]]
+ - General      | **Nimble**
 
 Stunts
  - **Truth Scan**: Use target's Mindscape implant as a lie detector.
  - **Polymath**:  [Costs Fate] Use Science in place of any other skill
  - **Medical Specialist**: +2 to Science skill when medical in nature
  - **Psychologist**: Use Empathy at +2 to overcome mental stress and consequences
+ - **Mindscape Investigator**: +2 to investigate in the Mindscape
 
 Extras
- - **Haze Field**: +1 armor (noticeable)
+ - **Bark Skin**: +1 armor (noticeable)
  - **Extreme Environment Adaptation**: Ignore most environmental hazards
  - **Black Ops Chip**: Allows and enhances Mindscape shenanigans
  - **Holographic Light Blade**: +2 damage
+ - **Nanobugs**: Tiny, insect-sized low-level infiltration sentiences.
+   Conduct passive surveillance (using Notice). They return when successful while transmitting info (Fair to oppose)
 
 .. title:: style=heading2green
 .. block:: style=lefty padding=4
@@ -88,8 +90,9 @@ Extras
 
 -----------------------------
 
+.. section:: stack stack:columns=1 padding=0
 .. title:: style=heading2gray
-.. block:: style=lefty padding=4
+.. block:: style=lefty padding=3
 
 Background
  - In the year 17,000AD — the year 193 of the Rediscovery Era — the New Commonality of Humankind contacts
@@ -102,6 +105,18 @@ Background
    the vast neural network storing the memories of the entire human race and enabling the miracles of technopsi.
    It’s a time of great danger — but also great hope!
 
+Notes
+ - [[ ]]]
+ - [[ ]]]
+ - [[ ]]]
+ -
+ - [[ ]]]
+ - [[ ]]]
+ - [[ ]]]
+ -
+ - [[ ]]]
+ - [[ ]]]
+ - [[ ]]]
 
 
 ========================================================================

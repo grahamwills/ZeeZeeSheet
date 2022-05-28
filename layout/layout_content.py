@@ -133,7 +133,7 @@ def as_table(cells, bounds: Rect, pdf: PDF, padding: int, return_as_placed=False
         placed, _ = optimizer.run()
         if not placed:
             LOGGER.debug("Cannot make optimized fit for %d columns into a table of width %d", ncols, width)
-            raise BadParametersError("Optimize fail: Columns likely too small for table", 100 / (1+width))
+            raise BadParametersError("Optimize fail: Columns likely too small for table", 100 / (1 + width))
         if return_as_placed:
             return placed
         else:
@@ -577,7 +577,9 @@ def paragraph_layout(block: Block, bounds: Rect, pdf: PDF) -> Optional[Content]:
         p = make_paragraph(item, pdf)
         placed = ParagraphContent(p, b, pdf)
         results.append(placed)
-        b = Rect.make(top=placed.actual.bottom + padding, left=b.left, right=b.right, bottom=b.bottom)
+        # If the line is blank, ensure at least one line height
+        new_top = max(placed.actual.bottom, placed.actual.top + style.size) + padding
+        b = Rect.make(top=new_top, left=b.left, right=b.right, bottom=b.bottom)
     if not results:
         return None
     elif len(results) == 1:

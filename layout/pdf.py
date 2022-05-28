@@ -113,10 +113,14 @@ class PDF(canvas.Canvas):
         self._name_index += 1
         name = "f%d" % self._name_index
         LOGGER.debug("Adding text field name='%s'", name)
+        fname = 'Helvetica'
+        if 'Times' in style.fontName:
+            fname = 'Times-Roman'
+
         self.acroForm.textfield(name=name, x=x-1, y=y - 1, relative=False, width=width, height=height,
-                                fontName='Helvetica', fontSize=style.fontSize, textColor=style.textColor,
-                                fillColor=reportlab.lib.colors.HexColor(0xF4F4FF),
-                                borderWidth=0.5, borderColor=colors.lightgrey)
+                                fontName=fname, fontSize=style.fontSize, textColor=style.textColor,
+                                fillColor=reportlab.lib.colors.HexColor(0xFFFFFF00, hasAlpha=True),
+                                borderWidth=0.25, borderColor=reportlab.lib.colors.HexColor(0xA0A0A010, hasAlpha=True))
 
     def draw_rect(self, r: Rect, method: DrawMethod, rounded=None):
         method = self._set_drawing_styles(method)
@@ -239,6 +243,7 @@ def install_fonts() -> [str]:
     install_font('Typewriter', 'SpecialElite', user_fonts)
     install_font('Monster', 'mrsmonster', user_fonts, leading=1.1)
     install_font('Script', 'Parisienne', user_fonts, leading=1.1)
+    install_font('Medieval', 'Seagram', user_fonts, leading=1.25, multiplier=1.1)
 
     install_font('MotionPicture', 'MotionPicture', user_fonts, leading=1.0, multiplier=1.2)
     install_font('Symbola', 'Symbola', user_fonts)

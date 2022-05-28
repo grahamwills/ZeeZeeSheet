@@ -21,28 +21,29 @@ Description
 .. block:: style=big strong=huge
 
 Base Info
- - Tier: **3** -- Effort: **3**
-
+ - Tier: **6** -- Effort: **6**
 
 .. block:: badge badge:shape=oval badge:tags=Pool,Edge badge:shape-style=badge
    padding=12 style=ornate strong=str
 
 Pools
- - Might        |   | **10**    |
- - Speed        |   | **13**    | 1
- - Intellect    |   | **21**    | 2
+ - Might        |   | **18**    |
+ - Speed        |   | **14**    | 2
+ - Intellect    |   | **25**    | 4
 
 .. title:: banner style=banner
 .. block:: default style=edged emphasis=red
 
-Recoveries -- **D6 + 3**
+Recoveries -- **D6 + 6 + 1**
  - [ ] 1 action | [ ] 10 mins | [ ] 1 hour | [ ] 10 hours
 
 
 Skills
  - Magic                    | **Specialized**
+ - Craft Chaos tech         | **Specialized**
+ - Craft: Clockwork         | **Specialized**
 
- - Craft: Clockwork         | Trained
+ - Ranged (physical damage) | Trained
  - Craft: Weapons           | Trained
  - Identification           | Trained
  - Intellect defense        | Trained
@@ -57,39 +58,36 @@ Skills
 
 Special Abilities
  - **Chaotic susceptibiity**: +1 damage from mental attacks
+ - **Spellweaving**: halves cost of all spells, rounding down
  - **Chaotic Recovery**: On 10 hour recovery can re-roll, but GM can intrude
  - **Spell Affinity**: Every day, choose a spell to cost one less
- - **See Beyond**: I see dead people and auras *(Perception asset)*
+ - **See Beyond**: See dead people & auras *(Perception asset)*
+ - **Master of Magic**: All spells and magic skills eased
+ - **Cypher Lord**: Absorb a cypher to make effects permanent
 
-Spells
- - I    | **Onslaught**             | Does 4 physical or 2 mental damage
- - I    | **Resonance Field**       | Defend with intellect for one minute. On a defense of 19-20 attacker takes 1 or 4 damage
- - 2I   | **Far Step**              | Leap up to long range
- - 3I   | **Clockwork Companion**   | level 3, one hour (*"Zhu Li"*)
- - 3I   | **Stasis**                | Lasts one minute
- - 3I   | **Machine Efficiency**    | For one minutes adds +2 to machine's level or allows it to ease two levels as an asset.
+Spells -- Cost is intellect
+ - 0 (1)   | **Onslaught**             | Does 4 physical or 2 mental damage
+ - 0 (1)   | **Resonance Field**       | Defend with intellect for one minute. On a defense of 19-20 attacker takes 1 or 4 damage
+ - 1 (2)   | **Far Step**              | Leap up to long range
+ - 1 (3)   | **Clockwork Companion**   | level 3, one hour (*"Zhu Li"*)
+ - 1 (3)   | **Stasis**                | Lasts one minute
+ - 1 (3)   | **Machine Efficiency**    | For one minutes adds +2 to machine's level or allows it to ease two levels as an asset.
+ - 3 (6)   | **Haste**                 | Speed tasks eased for one minute, may take an exta action in that time (aka rapid processing)
+ - 3 (7)   | **Absorb**                | Active or reactive negates magic and gives me d10 int pool
+ - 3 (6)   | **Teleport**              | To previously seen destination. One level of effort for each additional 3 ppl
 
-Artifacts and Cyphers
+Artifacts, Cyphers, Equipment
+ - 2 Mechanical Ethiks (level 5 skills; Level 6 for being nice (Ethik β) and cooking (Ethik δ)
  - Anti-magic Lab Coat (1/20)
- - Potion of knowledege enhancement
- - `_______________________________________`
- - `_______________________________________`
-
-Equipment
- - Bulls-eye Lantern
- - Compass
- - Fake 2-H dwarven axe and red beard
- - `_______________________________________`
- - `_______________________________________`
-
-Misc
- - Known Passages to Dwarvenhearth (asset)
- - `_______________________________________`
- - `_______________________________________`
-
+ - Energy Armor (armor 3 vs. one energy form for a day)
+ - Firestones [X][X][][][] • burn forever • fist-sized • crafting
+ - Bulls-eye Lantern, Compass
+ - +2 magic Fire-Axe (2H, infused with a  firestone)
+ - Great Romantic Poem (level 8)
+ - Epic Forging Song (level 11)
 
 Advancement
- - **XP**: [X] [X] [X] [X] [] [] [] []
+ - **XP**: [] [] [] [] [] [] [] []
 
  - [ ] Increase Abilities -- 4 pool
  - [ ] Move to perfection -- +1 edge
@@ -103,7 +101,12 @@ Advances Taken
  - 2: **Inverted Pyramid Focus**
  - 2: Effort, Skill (Magic), Edge, Spell (Machine Companion)
  - 3: **Crafts Unique**: Specialized in *Craft Chaos Tech*,
-   **Adept**: Trained in Ranged attacks doing physical damage, Extra Cipher
+ - 3: **Adept**: Trained in Ranged  doing physical damage, Extra Cipher
+ - 4: **Inverted Pyramid Focus**
+ - 4: Spellweaving, Spell (Rapid Processing / Haste);
+ - 5: **Crafts Unique**: Two level 6 Artifacts, Spell (Teleport)
+ - 6: **Inverted Pyramid Focus**: Master of Magic, Cypher Lord
+ - 6: Cypher Lord, Spell (Absorb)
 
 -----------------------------------------
 

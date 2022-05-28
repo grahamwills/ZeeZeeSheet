@@ -62,6 +62,13 @@ LoveYou
  - *Pack my box with five dozen liquor jugs*
  - **How vexingly quick daft zebras jump**
 
+.. block:: style=font_sample_Medieval
+
+Medieval
+ - The five boxing wizards jump quickly
+ - *Pack my box with five dozen liquor jugs*
+ - **How vexingly quick daft zebras jump**
+
 .. block:: style=font_sample_Monster
 
 Monster
@@ -178,6 +185,9 @@ font_sample_LoveYou
 
 font_sample_Monster
 	inherit=font_sample_base family=Monster
+
+font_sample_Medieval
+	inherit=font_sample_base family=Medieval
 
 font_sample_MotionPicture
 	inherit=font_sample_base family=MotionPicture

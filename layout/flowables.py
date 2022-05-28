@@ -177,9 +177,13 @@ def _element_to_html(e: Element, pdf: PDF, base_style: Style):
 
     if e.which == ElementType.CHECKBOX:
         target = _UNCHECKED_BOX if e.value in {'O', 'o', ' ', '0'} else _CHECKED_BOX
-        return "<img height=%d width=%d src='%s'/>" % (style.size, style.size, target)
+        return "<img valign=0 height=%d width=%d src='%s'/>" % (style.size, style.size, target)
     if e.which == ElementType.TEXTFIELD:
-        return "<img height=%d width=100%% src='%s'/>" % (style.size + 2, _TEXTFIELD)
+        width = '100%'
+        # Short items have a defined size; if 5 or longer, we assume they fill the space
+        if len(e.value) < 5:
+            width = round(0.6 * style.size * (len(e.value)))
+        return "<img height=%d width=%s src='%s'/>" % (style.size + 2, width, _TEXTFIELD)
     if e.which != ElementType.TEXT:
         face = " face='Symbola'"
     if face or size or color:
